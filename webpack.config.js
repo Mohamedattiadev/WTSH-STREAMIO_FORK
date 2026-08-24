@@ -224,7 +224,29 @@ module.exports = (env, argv) => ({
                 changeOrigin: true,
                 ws: true
             }
-        ]
+        ],
+        // Vercel serverless functions under api/ don't run under plain `webpack serve` - only
+        // Vercel's own runtime (or `vercel dev`) executes them. This re-hosts api/chat.js's
+        // handler directly on the dev server's own (already-Express) app so `/api/chat` works
+        // identically to production without requiring a Vercel account/link for local dev.
+        setupMiddlewares: (middlewares, devServer) => {
+            devServer.app.post('/api/chat', (req, res) => {
+                let body = '';
+                req.on('data', (chunk) => { body += chunk; });
+                req.on('end', async () => {
+                    try {
+                        req.body = body.length > 0 ? JSON.parse(body) : {};
+                    } catch (error) {
+                        res.status(400).json({ error: 'Invalid JSON body' });
+                        return;
+                    }
+                    delete require.cache[require.resolve('./api/chat.js')];
+                    const handler = require('./api/chat.js');
+                    await handler(req, res);
+                });
+            });
+            return middlewares;
+        }
     },
     optimization: {
         minimize: true,
