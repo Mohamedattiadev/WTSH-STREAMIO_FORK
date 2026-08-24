@@ -150,7 +150,7 @@
         flex-direction: row;
         align-items: center;
         justify-content: center;
-        background-color: var(--secondary-accent-color);
+        background-color: var(--primary-accent-color);
         height: 4rem;
         padding: 0 2rem;
         margin: 1rem auto;
@@ -158,8 +158,12 @@
         border-radius: 2rem;
 
         &:hover {
-            outline: var(--focus-outline-size) solid var(--secondary-accent-color);
+            outline: var(--focus-outline-size) solid var(--primary-accent-color);
             background-color: transparent;
+
+            .icon, .label {
+                color: var(--primary-foreground-color);
+            }
         }
 
         .icon {
@@ -167,7 +171,7 @@
             width: 2rem;
             height: 2rem;
             margin-right: 1rem;
-            color: var(--primary-foreground-color);
+            color: var(--secondary-foreground-color);
         }
 
         .label {
@@ -176,7 +180,7 @@
             font-weight: 700;
             max-height: 3.6em;
             text-align: center;
-            color: var(--primary-foreground-color);
+            color: var(--secondary-foreground-color);
             margin-bottom: 0;
         }
     }

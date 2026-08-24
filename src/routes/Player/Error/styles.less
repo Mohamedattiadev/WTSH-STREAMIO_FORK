@@ -37,11 +37,15 @@
         border-radius: 3.5rem;
         margin-top: 1.5rem;
         padding: 0 2rem;
-        background-color: var(--secondary-accent-color);
+        background-color: var(--primary-accent-color);
 
         &:hover {
-            outline: var(--focus-outline-size) solid var(--secondary-accent-color);
+            outline: var(--focus-outline-size) solid var(--primary-accent-color);
             background-color: transparent;
+
+            .icon, .label {
+                color: var(--primary-foreground-color);
+            }
         }
 
         .icon {
@@ -49,7 +53,7 @@
             width: 1.5rem;
             height: 1.5rem;
             margin-right: 1rem;
-            color: var(--primary-foreground-color);
+            color: var(--secondary-foreground-color);
         }
 
         .label {
@@ -57,7 +61,7 @@
             max-height: 2.4em;
             font-size: 1.1rem;
             font-weight: 500;
-            color: var(--primary-foreground-color);
+            color: var(--secondary-foreground-color);
             text-align: center;
         }
     }

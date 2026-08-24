@@ -11,11 +11,15 @@
     border: 0.15rem solid transparent;
     border-radius: var(--border-radius);
     background-color: var(--overlay-color);
-    transition: border-color 0.1s ease-out;
+    box-shadow: 0 0.3rem 0.75rem rgba(0, 0, 0, 0.25);
+    transition: border-color 0.15s ease-out, background-color 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out;
     cursor: pointer;
 
     &:hover {
-        border-color: var(--overlay-color);
+        border-color: var(--primary-accent-color-soft);
+        background-color: var(--surface-elevated-color);
+        box-shadow: var(--card-hover-shadow);
+        transform: translateY(-0.15rem);
     }
 
     .logo-container {
@@ -57,7 +61,10 @@
             flex-basis: auto;
             padding: 0 0.5rem;
             max-height: 3.6em;
-            font-size: 1.6rem;
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 400;
+            letter-spacing: 0.02em;
             color: var(--primary-foreground-color);
         }
 
@@ -138,29 +145,37 @@
         }
 
         .install-button-container {
-            background-color: var(--secondary-accent-color);
+            background-color: var(--primary-accent-color);
 
             &:hover {
-                outline: var(--focus-outline-size) solid var(--secondary-accent-color);
+                outline: var(--focus-outline-size) solid var(--primary-accent-color);
                 background-color: transparent;
+
+                .label {
+                    color: var(--primary-foreground-color);
+                }
             }
 
             .label {
-                color: var(--primary-foreground-color)
+                color: var(--secondary-foreground-color)
             }
         }
 
         .configure-button-container {
             flex: none;
-            background-color: var(--secondary-accent-color);
+            background-color: var(--primary-accent-color);
 
             &:hover {
-                outline: var(--focus-outline-size) solid var(--secondary-accent-color);
+                outline: var(--focus-outline-size) solid var(--primary-accent-color);
                 background-color: transparent;
+
+                .icon {
+                    color: var(--primary-foreground-color);
+                }
             }
 
             .icon {
-                color: var(--primary-foreground-color)
+                color: var(--secondary-foreground-color)
             }
         }
 

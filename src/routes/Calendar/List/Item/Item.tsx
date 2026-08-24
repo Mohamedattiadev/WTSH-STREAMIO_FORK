@@ -1,10 +1,10 @@
 // Copyright (C) 2017-2024 Smart code 203358507
 
 import React, { useEffect, useMemo, useRef } from 'react';
-import Icon from '@stremio/stremio-icons/react';
+import Icon from 'stremio/components/Icon';
 import classNames from 'classnames';
 import { useNavigateWithOrigin } from 'stremio-router';
-import { Button } from 'stremio/components';
+import { Button, Image } from 'stremio/components';
 import useCalendarDate from '../../useCalendarDate';
 import styles from './Item.less';
 
@@ -56,13 +56,16 @@ const Item = ({ selected, monthInfo, date, items, profile, onClick }: Props) => 
             </div>
             <div className={styles['body']}>
                 {
-                    items.map(({ id, name, season, episode, deepLinks }) => (
+                    items.map(({ id, name, poster, season, episode, deepLinks }) => (
                         <Button className={styles['video']} key={id} href={deepLinks.metaDetailsStreams} onClick={(event) => onVideoClick(event, deepLinks.metaDetailsStreams)}>
-                            <div className={styles['name']}>
-                                {name}
-                            </div>
-                            <div className={styles['info']}>
-                                S{season}E{episode}
+                            <Image className={styles['thumb']} src={poster} alt={name} />
+                            <div className={styles['body-text']}>
+                                <div className={styles['name']}>
+                                    {name}
+                                </div>
+                                <div className={styles['info']}>
+                                    S{season}E{episode}
+                                </div>
                             </div>
                             <Icon className={styles['icon']} name={'play'} />
                         </Button>

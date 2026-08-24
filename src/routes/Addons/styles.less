@@ -38,6 +38,52 @@
             z-index: 1;
         }
 
+        .tabs-container {
+            flex: none;
+            align-self: stretch;
+            display: flex;
+            flex-direction: row;
+            padding: 1.5rem 1.5rem 0 1.5rem;
+            z-index: 2;
+
+            .tab {
+                flex: none;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 2.5rem;
+                padding: 0 1.5rem;
+                margin-right: 1rem;
+                border-radius: 3rem;
+                background-color: var(--overlay-color);
+                opacity: 0.6;
+                transition: background-color 0.15s ease-out, opacity 0.15s ease-out;
+
+                &:hover {
+                    opacity: 0.8;
+                }
+
+                &:focus {
+                    outline-color: var(--primary-accent-color);
+                }
+
+                &.selected {
+                    opacity: 1;
+                    background-color: var(--primary-accent-color-soft);
+
+                    .label {
+                        color: var(--primary-accent-color);
+                    }
+                }
+
+                .label {
+                    font-size: 1rem;
+                    font-weight: 700;
+                    color: var(--primary-foreground-color);
+                }
+            }
+        }
+
         .selectable-inputs-container {
             flex: none;
             align-self: stretch;
@@ -58,12 +104,16 @@
                 margin-right: 1.5rem;
                 padding: 0 1.5rem;
                 border-radius: 3rem;
-                background-color: var(--secondary-accent-color);
+                background-color: var(--primary-accent-color);
                 z-index: 3;
 
                 &:hover {
-                    outline: var(--focus-outline-size) solid var(--secondary-accent-color);
+                    outline: var(--focus-outline-size) solid var(--primary-accent-color);
                     background-color: transparent;
+
+                    .icon, .add-button-label {
+                        color: var(--primary-foreground-color);
+                    }
                 }
 
                 &:focus {
@@ -75,7 +125,7 @@
                     width: 1.2rem;
                     height: 1.2rem;
                     margin-right: 0.5rem;
-                    color: var(--primary-foreground-color);
+                    color: var(--secondary-foreground-color);
                 }
 
                 .add-button-label {
@@ -85,7 +135,7 @@
                     max-height: 2.4em;
                     font-size: 1rem;
                     font-weight: 700;
-                    color: var(--primary-foreground-color);
+                    color: var(--secondary-foreground-color);
                 }
             }
 

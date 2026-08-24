@@ -3,6 +3,7 @@
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import classnames from 'classnames';
+import Icon from 'stremio/components/Icon';
 import { Button } from 'stremio/components';
 import { useCore } from 'stremio/core';
 import useProfile from 'stremio/common/useProfile';
@@ -54,6 +55,7 @@ const StreamingServerWarning = ({ className }: Props) => {
 
     return (
         <div className={classnames(className, styles['warning-container'])}>
+            <Icon className={styles['warning-icon']} name={'warning'} />
             <div className={styles['warning-statement']}>
                 {t('SETTINGS_SERVER_UNAVAILABLE')}
             </div>

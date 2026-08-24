@@ -1,7 +1,7 @@
 // Copyright (C) 2017-2026 Smart code 203358507
 
 import React from 'react';
-import Icon from '@stremio/stremio-icons/react';
+import Icon from 'stremio/components/Icon';
 import Button from '../Button';
 import Transition from '../Transition';
 import styles from './UpdateBanner.less';

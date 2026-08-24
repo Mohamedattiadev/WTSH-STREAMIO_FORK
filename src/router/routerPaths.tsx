@@ -35,6 +35,11 @@ export default [
         element: <routes.Search />,
     },
     {
+        path: '/chat',
+        view: 1,
+        element: <routes.Chat />,
+    },
+    {
         path: '/metadetails/:type?/:id?/:videoId?',
         view: 2,
         element: <routes.MetaDetails />,

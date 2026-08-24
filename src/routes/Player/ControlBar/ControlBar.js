@@ -3,8 +3,8 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const classnames = require('classnames');
-const { default: Icon } = require('@stremio/stremio-icons/react');
-const { Button } = require('stremio/components');
+const { default: Icon } = require('stremio/components/Icon');
+const { Button, ChatIcon } = require('stremio/components');
 const { useServices } = require('stremio/services');
 const SeekBar = require('./SeekBar');
 const VolumeSlider = require('./VolumeSlider');
@@ -34,10 +34,15 @@ const ControlBar = React.forwardRef(({
     onUnmuteRequested,
     onVolumeChangeRequested,
     onSeekRequested,
+    onSeekPrev,
+    onSeekNext,
+    seekTimeDuration,
     onToggleSubtitlesMenu,
     onToggleAudioMenu,
     onToggleSpeedMenu,
     onToggleSideDrawer,
+    onToggleSearchPanel,
+    onToggleChatPanel,
     onToggleOptionsMenu,
     shellCastSupported,
     onToggleCastDevicesMenu,
@@ -64,6 +69,12 @@ const ControlBar = React.forwardRef(({
     const onVideosButtonMouseDown = React.useCallback((event) => {
         event.nativeEvent.videosMenuClosePrevented = true;
     }, []);
+    const onSearchButtonMouseDown = React.useCallback((event) => {
+        event.nativeEvent.searchPanelClosePrevented = true;
+    }, []);
+    const onChatButtonMouseDown = React.useCallback((event) => {
+        event.nativeEvent.chatPanelClosePrevented = true;
+    }, []);
     const onOptionsButtonMouseDown = React.useCallback((event) => {
         event.nativeEvent.optionsMenuClosePrevented = true;
     }, []);
@@ -73,6 +84,17 @@ const ControlBar = React.forwardRef(({
     const onCastDevicesButtonMouseDown = React.useCallback((event) => {
         event.nativeEvent.castDevicesMenuClosePrevented = true;
     }, []);
+    const seekSeconds = typeof seekTimeDuration === 'number' ? Math.round(seekTimeDuration / 1000) : null;
+    const onSeekPrevButtonClick = React.useCallback((event) => {
+        if (typeof onSeekPrev === 'function') {
+            onSeekPrev(event);
+        }
+    }, [onSeekPrev]);
+    const onSeekNextButtonClick = React.useCallback((event) => {
+        if (typeof onSeekNext === 'function') {
+            onSeekNext(event);
+        }
+    }, [onSeekNext]);
     const onPlayPauseButtonClick = React.useCallback(() => {
         if (paused) {
             if (typeof onPlayRequested === 'function') {
@@ -133,9 +155,27 @@ const ControlBar = React.forwardRef(({
                 playbackSpeed={playbackSpeed}
             />
             <div className={styles['control-bar-buttons-container']}>
+                {
+                    typeof onSeekPrev === 'function' ?
+                        <Button className={classnames(styles['control-bar-button'], styles['skip-button'])} title={t('PLAYER_SEEK_BACKWARD')} tabIndex={-1} onClick={onSeekPrevButtonClick}>
+                            <Icon className={styles['icon']} name={'skip-back'} />
+                            {seekSeconds !== null ? <div className={styles['skip-label']}>{seekSeconds}</div> : null}
+                        </Button>
+                        :
+                        null
+                }
                 <Button className={classnames(styles['control-bar-button'], { 'disabled': typeof paused !== 'boolean' })} title={paused ? t('PLAYER_PLAY') : t('PLAYER_PAUSE')} tabIndex={-1} onClick={onPlayPauseButtonClick}>
                     <Icon className={styles['icon']} name={typeof paused !== 'boolean' || paused ? 'play' : 'pause'} />
                 </Button>
+                {
+                    typeof onSeekNext === 'function' ?
+                        <Button className={classnames(styles['control-bar-button'], styles['skip-button'])} title={t('PLAYER_SEEK_FORWARD')} tabIndex={-1} onClick={onSeekNextButtonClick}>
+                            <Icon className={styles['icon']} name={'skip-forward'} />
+                            {seekSeconds !== null ? <div className={styles['skip-label']}>{seekSeconds}</div> : null}
+                        </Button>
+                        :
+                        null
+                }
                 {
                     nextVideo !== null ?
                         <Button className={classnames(styles['control-bar-button'])} title={t('PLAYER_NEXT_VIDEO')} tabIndex={-1} onClick={onNextVideoButtonClick}>
@@ -168,6 +208,15 @@ const ControlBar = React.forwardRef(({
                         : null
                 }
                 <div className={styles['spacing']} />
+                {
+                    metaItem?.content?.videos?.length > 0 ?
+                        <Button className={styles['episodes-button']} title={'Episodes'} tabIndex={-1} onMouseDown={onVideosButtonMouseDown} onClick={onToggleSideDrawer}>
+                            <Icon className={styles['icon']} name={'episodes'} />
+                            <div className={styles['label']}>Episodes</div>
+                        </Button>
+                        :
+                        null
+                }
                 <Button className={styles['control-bar-buttons-menu-button']} onClick={toggleButtonsMenu}>
                     <Icon className={styles['icon']} name={'more-vertical'} />
                 </Button>
@@ -190,14 +239,12 @@ const ControlBar = React.forwardRef(({
                     <Button className={classnames(styles['control-bar-button'], { 'disabled': !Array.isArray(audioTracks) || audioTracks.length === 0 })} tabIndex={-1} onMouseDown={onAudioButtonMouseDown} onClick={onToggleAudioMenu}>
                         <Icon className={styles['icon']} name={'audio-tracks'} />
                     </Button>
-                    {
-                        metaItem?.content?.videos?.length > 0 ?
-                            <Button className={styles['control-bar-button']} tabIndex={-1} onMouseDown={onVideosButtonMouseDown} onClick={onToggleSideDrawer}>
-                                <Icon className={styles['icon']} name={'episodes'} />
-                            </Button>
-                            :
-                            null
-                    }
+                    <Button className={styles['control-bar-button']} title={'Search'} tabIndex={-1} onMouseDown={onSearchButtonMouseDown} onClick={onToggleSearchPanel}>
+                        <Icon className={styles['icon']} name={'search'} />
+                    </Button>
+                    <Button className={styles['control-bar-button']} title={'Ask WTS'} tabIndex={-1} onMouseDown={onChatButtonMouseDown} onClick={onToggleChatPanel}>
+                        <ChatIcon className={styles['icon']} outline />
+                    </Button>
                     <Button className={classnames(styles['control-bar-button'], { 'disabled': videoScale === null })} title={videoScaleLabel} tabIndex={-1} onClick={onVideoScaleChanged}>
                         <Icon className={styles['icon']} name={'aspect-ratio'} />
                     </Button>
@@ -235,10 +282,15 @@ ControlBar.propTypes = {
     onUnmuteRequested: PropTypes.func,
     onVolumeChangeRequested: PropTypes.func,
     onSeekRequested: PropTypes.func,
+    onSeekPrev: PropTypes.func,
+    onSeekNext: PropTypes.func,
+    seekTimeDuration: PropTypes.number,
     onToggleSubtitlesMenu: PropTypes.func,
     onToggleAudioMenu: PropTypes.func,
     onToggleSpeedMenu: PropTypes.func,
     onToggleSideDrawer: PropTypes.func,
+    onToggleSearchPanel: PropTypes.func,
+    onToggleChatPanel: PropTypes.func,
     onToggleOptionsMenu: PropTypes.func,
     shellCastSupported: PropTypes.bool,
     onToggleCastDevicesMenu: PropTypes.func,

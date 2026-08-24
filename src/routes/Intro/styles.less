@@ -37,11 +37,22 @@
 
         .logo-container {
             flex: none;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
             margin-bottom: 3rem;
 
             .logo {
                 height: 5rem;
-                opacity: 0.9;
+                filter: drop-shadow(0 4px 10px rgba(255, 61, 46, 0.5));
+            }
+
+            .logo-wordmark {
+                font-family: var(--font-display);
+                font-weight: 800;
+                font-size: 2.75rem;
+                letter-spacing: 0.01em;
+                color: var(--primary-foreground-color);
             }
         }
 
@@ -292,6 +303,10 @@
             .logo-container {
                 .logo {
                     height: 4rem;
+                }
+
+                .logo-wordmark {
+                    font-size: 2.2rem;
                 }
             }
 

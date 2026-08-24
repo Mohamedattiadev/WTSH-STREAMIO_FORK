@@ -4,8 +4,10 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const classnames = require('classnames');
 const { useTranslation } = require('react-i18next');
+const { useNavigate } = require('react-router');
 const filterInvalidDOMProps = require('filter-invalid-dom-props').default;
-const { default: Icon } = require('@stremio/stremio-icons/react');
+const { default: toPath } = require('stremio-router/toPath');
+const { default: Icon } = require('stremio/components/Icon');
 const { default: Button } = require('stremio/components/Button');
 const { default: Image } = require('stremio/components/Image');
 const Multiselect = require('stremio/components/Multiselect');
@@ -14,9 +16,33 @@ const { default: getMetaDetailsHref } = require('stremio/common/getMetaDetailsHr
 const { ICON_FOR_TYPE } = require('stremio/common/CONSTANTS');
 const styles = require('./styles');
 
-const MetaItem = React.memo(({ className, type, name, poster, posterShape, posterChangeCursor, progress, newVideos, options, deepLinks, href: customHref, dataset, optionOnSelect, onDismissClick, onPlayClick, watched, ...props }) => {
+const MetaItem = React.memo(({ className, type, name, poster, posterShape, posterChangeCursor, progress, newVideos, options, deepLinks, trailerStreams, releaseInfo, href: customHref, dataset, optionOnSelect, onDismissClick, onPlayClick, watched, badgeLabel, ...props }) => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const [menuOpen, onMenuOpen, onMenuClose] = useBinaryState(false);
+    const subtitle = React.useMemo(() => {
+        const typeLabel = typeof type === 'string' && type.length > 0 ? type.charAt(0).toUpperCase() + type.slice(1) : null;
+        if (typeLabel === null) {
+            return typeof releaseInfo === 'string' && releaseInfo.length > 0 ? releaseInfo : null;
+        }
+
+        return typeof releaseInfo === 'string' && releaseInfo.length > 0 ? `${typeLabel} · ${releaseInfo}` : typeLabel;
+    }, [type, releaseInfo]);
+    const trailerHref = React.useMemo(() => {
+        if (onPlayClick || !Array.isArray(trailerStreams) || trailerStreams.length === 0) {
+            return null;
+        }
+
+        const [trailerStream] = trailerStreams;
+        return trailerStream?.deepLinks?.player ?? null;
+    }, [onPlayClick, trailerStreams]);
+    const trailerOnClick = React.useCallback((event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (typeof trailerHref === 'string') {
+            navigate(toPath(trailerHref));
+        }
+    }, [navigate, trailerHref]);
     const href = React.useMemo(() => {
         return typeof customHref === 'string' ? customHref : getMetaDetailsHref(deepLinks);
     }, [customHref, deepLinks]);
@@ -64,18 +90,9 @@ const MetaItem = React.memo(({ className, type, name, poster, posterShape, poste
         <Button title={name} href={href} {...filterInvalidDOMProps(props)} className={classnames(className, styles['meta-item-container'], styles['poster-shape-poster'], styles[`poster-shape-${posterShape}`], { 'active': menuOpen })} onClick={metaItemOnClick}>
             <div className={classnames(styles['poster-container'], { 'poster-change-cursor': posterChangeCursor })}>
                 {
-                    onDismissClick ?
-                        <div title={t('LIBRARY_RESUME_DISMISS')} className={styles['dismiss-icon-layer']} onClick={dismissOnClick}>
-                            <Icon className={styles['dismiss-icon']} name={'close'} />
-                            <div className={styles['dismiss-icon-backdrop']} />
-                        </div>
-                        :
-                        null
-                }
-                {
-                    watched ?
-                        <div className={styles['watched-icon-layer']}>
-                            <Icon className={styles['watched-icon']} name={'checkmark'} />
+                    typeof badgeLabel === 'string' && badgeLabel.length > 0 ?
+                        <div className={styles['source-badge-layer']}>
+                            <div className={styles['source-badge-label']}>{badgeLabel}</div>
                         </div>
                         :
                         null
@@ -88,21 +105,55 @@ const MetaItem = React.memo(({ className, type, name, poster, posterShape, poste
                         renderFallback={renderPosterFallback}
                     />
                 </div>
+                <div className={styles['poster-scrim']} />
                 {
                     onPlayClick ?
                         <div title={t('CONTINUE_WATCHING')} className={styles['play-icon-layer']} onClick={playOnClick}>
                             <Icon className={styles['play-icon']} name={'play'} />
-                            <div className={styles['play-icon-outer']} />
-                            <div className={styles['play-icon-background']} />
+                        </div>
+                        :
+                        typeof trailerHref === 'string' ?
+                            <div title={'Trailer'} className={styles['poster-trailer']} onClick={trailerOnClick}>
+                                <Icon className={styles['icon']} name={'play'} />
+                                <span>Trailer</span>
+                            </div>
+                            :
+                            null
+                }
+                {
+                    (onDismissClick || (Array.isArray(options) && options.length > 0)) ?
+                        <div className={styles['poster-actions']}>
+                            {
+                                onDismissClick ?
+                                    <div title={t('LIBRARY_RESUME_DISMISS')} className={classnames(styles['action-btn'], styles['danger'])} onClick={dismissOnClick}>
+                                        <Icon className={styles['icon']} name={'close'} />
+                                    </div>
+                                    :
+                                    null
+                            }
+                            {
+                                Array.isArray(options) && options.length > 0 ?
+                                    <Multiselect
+                                        className={styles['action-btn']}
+                                        renderLabelContent={renderMenuLabelContent}
+                                        options={options}
+                                        onOpen={onMenuOpen}
+                                        onClose={onMenuClose}
+                                        onSelect={menuOnSelect}
+                                        tabIndex={-1}
+                                        onClick={menuOnClick}
+                                    />
+                                    :
+                                    null
+                            }
                         </div>
                         :
                         null
                 }
                 {
-                    progress > 0 ?
-                        <div className={styles['progress-bar-layer']}>
-                            <div className={styles['progress-bar']} style={{ width: `${progress}%` }} />
-                            <div className={styles['progress-bar-background']} />
+                    watched ?
+                        <div className={styles['watched-icon-layer']}>
+                            <Icon className={styles['watched-icon']} name={'checkmark'} />
                         </div>
                         :
                         null
@@ -122,25 +173,33 @@ const MetaItem = React.memo(({ className, type, name, poster, posterShape, poste
                         :
                         null
                 }
+                {
+                    typeof name === 'string' && name.length > 0 ?
+                        <div className={styles['title-label']}>{name}</div>
+                        :
+                        null
+                }
+                {
+                    progress > 0 ?
+                        <div className={styles['progress-bar-layer']}>
+                            <div className={styles['progress-bar']} style={{ width: `${progress}%` }} />
+                        </div>
+                        :
+                        null
+                }
             </div>
             {
-                (typeof name === 'string' && name.length > 0) || (Array.isArray(options) && options.length > 0) ?
-                    <div className={styles['title-bar-container']}>
-                        <div className={styles['title-label']}>
-                            {typeof name === 'string' && name.length > 0 ? name : ''}
-                        </div>
+                (typeof name === 'string' && name.length > 0) || subtitle !== null ?
+                    <div className={styles['card-info']}>
                         {
-                            Array.isArray(options) && options.length > 0 ?
-                                <Multiselect
-                                    className={styles['menu-label-container']}
-                                    renderLabelContent={renderMenuLabelContent}
-                                    options={options}
-                                    onOpen={onMenuOpen}
-                                    onClose={onMenuClose}
-                                    onSelect={menuOnSelect}
-                                    tabIndex={-1}
-                                    onClick={menuOnClick}
-                                />
+                            typeof name === 'string' && name.length > 0 ?
+                                <div className={styles['card-title']}>{name}</div>
+                                :
+                                null
+                        }
+                        {
+                            subtitle !== null ?
+                                <div className={styles['card-sub']}>{subtitle}</div>
                                 :
                                 null
                         }
@@ -170,12 +229,19 @@ MetaItem.propTypes = {
         metaDetailsStreams: PropTypes.string,
         player: PropTypes.string
     }),
+    trailerStreams: PropTypes.arrayOf(PropTypes.shape({
+        deepLinks: PropTypes.shape({
+            player: PropTypes.string
+        })
+    })),
+    releaseInfo: PropTypes.string,
     dataset: PropTypes.object,
     optionOnSelect: PropTypes.func,
     onDismissClick: PropTypes.func,
     onPlayClick: PropTypes.func,
     onClick: PropTypes.func,
-    watched: PropTypes.bool
+    watched: PropTypes.bool,
+    badgeLabel: PropTypes.string
 };
 
 module.exports = MetaItem;

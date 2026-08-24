@@ -2,6 +2,7 @@
 
 const path = require('path');
 const os = require('os');
+const crypto = require('crypto');
 const { execSync } = require('child_process');
 const webpack = require('webpack');
 const threadLoader = require('thread-loader');
@@ -12,7 +13,23 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const packageJson = require('./package.json');
 
-const COMMIT_HASH = execSync('git rev-parse HEAD').toString().trim();
+// Local-dev only: fills in process.env from .env/.env.local for whatever isn't already set
+// (dotenv never overrides real env vars, so this is a no-op on Vercel, which sets these via its
+// own project settings before the build even starts - see webpack.EnvironmentPlugin below).
+require('dotenv').config();
+require('dotenv').config({ path: '.env.local', override: true });
+
+// Used purely as a cache-busting path segment for build assets - doesn't need to be an actual
+// git hash. Vercel CLI deploys (not Git-integrated) upload a plain file tarball with no .git
+// directory, so `git rev-parse` has nothing to read there; VERCEL_GIT_COMMIT_SHA covers
+// Git-integrated Vercel builds, and a random fallback covers everything else.
+const COMMIT_HASH = (() => {
+    try {
+        return execSync('git rev-parse HEAD').toString().trim();
+    } catch (e) {
+        return process.env.VERCEL_GIT_COMMIT_SHA || crypto.randomUUID().replace(/-/g, '');
+    }
+})();
 
 const THREAD_LOADER = {
     loader: 'thread-loader',
@@ -185,8 +202,29 @@ module.exports = (env, argv) => ({
         host: '0.0.0.0',
         static: false,
         hot: false,
-        server: 'https',
-        liveReload: false
+        // Plain http by default so the local Streaming Server (http://127.0.0.1:11470,
+        // no TLS) is reachable — a secure (https) page has its outgoing http:// fetches
+        // auto-upgraded to https by the browser, which fails against a non-TLS server.
+        // Set DEV_SERVER_HTTPS=true to serve over https instead (needed to test
+        // Chromecast locally, which requires a secure origin).
+        server: process.env.DEV_SERVER_HTTPS === 'true' ? 'https' : 'http',
+        liveReload: false,
+        // The Streaming Server (whether a local native install or the stremio/server
+        // Docker image) doesn't send Access-Control-Allow-Origin for arbitrary dev
+        // origins, so a direct cross-origin fetch from the app gets CORS-blocked
+        // (confirmed: browser reports "No 'Access-Control-Allow-Origin' header").
+        // Proxying it under the app's own origin sidesteps CORS entirely — add
+        // `http://localhost:8080/streaming-server/` as a Streaming Server URL in
+        // Settings to use this instead of the direct 127.0.0.1:11470 URL.
+        proxy: [
+            {
+                context: ['/streaming-server'],
+                target: 'http://127.0.0.1:11470',
+                pathRewrite: { '^/streaming-server': '' },
+                changeOrigin: true,
+                ws: true
+            }
+        ]
     },
     optimization: {
         minimize: true,
@@ -211,6 +249,8 @@ module.exports = (env, argv) => ({
         new webpack.ProgressPlugin(),
         new webpack.EnvironmentPlugin({
             SENTRY_DSN: null,
+            SUPABASE_URL: null,
+            SUPABASE_ANON_KEY: null,
             ...env,
             SERVICE_WORKER_DISABLED: false,
             DEBUG: argv.mode !== 'production',
@@ -230,6 +270,7 @@ module.exports = (env, argv) => ({
             patterns: [
                 { from: 'assets/favicons', to: 'favicons' },
                 { from: 'assets/images', to: 'images' },
+                { from: 'assets/fonts', to: 'assets/fonts' },
                 { from: 'assets/screenshots/*.webp', to: 'screenshots/[name][ext]' },
                 { from: '.well-known', to: '.well-known' },
                 { from: 'manifest.json', to: 'manifest.json' },

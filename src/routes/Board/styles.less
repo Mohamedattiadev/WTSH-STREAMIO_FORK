@@ -5,6 +5,7 @@
 
 :import('~stremio/components/MetaRow/styles.less') {
     meta-item: meta-item;
+    title-container: title-container;
 }
 
 :import('~stremio/components/MetaRow/MetaRowPlaceholder/styles.less') {
@@ -32,11 +33,25 @@
                 margin-top: 1rem;
                 margin-bottom: 2rem;
             }
+
+            .continue-watching-row {
+                padding: 1.5rem 1rem;
+                margin-left: -1rem;
+                margin-right: -1rem;
+                border-radius: var(--border-radius);
+                background: linear-gradient(90deg, var(--primary-accent-color-soft) 0%, transparent 70%);
+
+                .title-container {
+                    color: var(--primary-accent-color);
+                    font-weight: 800;
+                }
+            }
         }
     }
 
     .board-warning-container {
         position: absolute;
+        z-index: 2;
         bottom: calc(var(--safe-area-inset-bottom) + 0.5rem);
         left: calc(var(--safe-area-inset-left) + 0.5rem);
         right: calc(var(--safe-area-inset-right) + 0.5rem);

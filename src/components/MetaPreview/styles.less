@@ -83,8 +83,10 @@
         }
 
         .logo-placeholder {
+            font-family: var(--font-display);
+            font-weight: 800;
             font-size: 1.7rem;
-            color: @color-surface-light5-90;
+            color: var(--primary-foreground-color);
         }
 
         .runtime-release-info-container {
@@ -201,8 +203,10 @@
             }
 
             &.show-button {
+                background-color: var(--primary-accent-color);
+
                 &:hover, &:focus {
-                    background-color: var( --secondary-accent-color);
+                    background-color: var(--ember-2);
                     outline: none;
                 }
             }

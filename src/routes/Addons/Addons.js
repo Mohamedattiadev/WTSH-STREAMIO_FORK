@@ -1,11 +1,11 @@
 // Copyright (C) 2017-2023 Smart code 203358507
 
 const React = require('react');
-const { useParams } = require('react-router');
+const { useParams, useNavigate } = require('react-router');
 const { useSearchParams } = require('react-router-dom');
 const classnames = require('classnames');
 const { useTranslation } = require('react-i18next');
-const { default: Icon } = require('@stremio/stremio-icons/react');
+const { default: Icon } = require('stremio/components/Icon');
 const { useCore } = require('stremio/core');
 const { usePlatform, useBinaryState, withCoreSuspender } = require('stremio/common');
 const { AddonDetailsModal, Button, Image, MainNavBars, ModalDialog, SearchBar, SharePrompt, TextInput, MultiselectMenu } = require('stremio/components');
@@ -17,6 +17,8 @@ const useAddonDetailsTransportUrl = require('./useAddonDetailsTransportUrl');
 const useSelectableInputs = require('./useSelectableInputs');
 const styles = require('./styles');
 const { AddonPlaceholder } = require('./AddonPlaceholder');
+const RegionalHub = require('./RegionalHub');
+const { OFFICIAL_ADDON_CATALOG, COMMUNITY_ADDON_CATALOG } = require('./CONSTANTS');
 
 const Addons = () => {
     const { type, transportUrl, catalogId } = useParams();
@@ -29,9 +31,30 @@ const Addons = () => {
     const { t } = useTranslation();
     const platform = usePlatform();
     const core = useCore();
+    const navigate = useNavigate();
     const toast = useToast();
     const installedAddons = useInstalledAddons(urlParams);
     const remoteAddons = useRemoteAddons(urlParams);
+    const goToInstalledAddons = React.useCallback(() => {
+        navigate('/addons');
+    }, [navigate]);
+    const goToCatalog = React.useCallback((catalog) => {
+        const { type, transportUrl, catalogId } = catalog;
+        navigate(`/addons/${type}/${encodeURIComponent(transportUrl)}/${catalogId}`);
+    }, [navigate]);
+    const goToOfficialAddons = React.useCallback(() => {
+        goToCatalog(OFFICIAL_ADDON_CATALOG);
+    }, [goToCatalog]);
+    const goToCommunityAddons = React.useCallback(() => {
+        goToCatalog(COMMUNITY_ADDON_CATALOG);
+    }, [goToCatalog]);
+    const [regionalHubOpen, setRegionalHubOpen] = React.useState(false);
+    const goToRegionalHub = React.useCallback(() => {
+        setRegionalHubOpen(true);
+    }, []);
+    const activeRemoteCatalogId = remoteAddons.selected !== null ? remoteAddons.selected.request.path.id : null;
+    const isOfficialTab = activeRemoteCatalogId === OFFICIAL_ADDON_CATALOG.catalogId;
+    const isCommunityTab = activeRemoteCatalogId === COMMUNITY_ADDON_CATALOG.catalogId;
     const [addonDetailsTransportUrl, setAddonDetailsTransportUrl] = useAddonDetailsTransportUrl(urlParams);
     const selectInputs = useSelectableInputs(installedAddons, remoteAddons);
     const [filtersModalOpen, openFiltersModal, closeFiltersModal] = useBinaryState(false);
@@ -121,88 +144,71 @@ const Addons = () => {
         closeAddAddonModal();
         setSearch('');
         clearSharedAddon();
+        setRegionalHubOpen(false);
     }, [urlParams, queryParams]);
     return (
         <MainNavBars className={styles['addons-container']} route={'addons'}>
             <div className={styles['addons-content']}>
-                <div className={styles['selectable-inputs-container']}>
-                    {selectInputs.map((selectInput, index) => (
-                        <MultiselectMenu
-                            {...selectInput}
-                            key={index}
-                            className={styles['select-input-container']}
-                        />
-                    ))}
-                    <div className={styles['spacing']} />
-                    <Button className={styles['add-button-container']} title={t('ADD_ADDON')} onClick={openAddAddonModal}>
-                        <Icon className={styles['icon']} name={'add'} />
-                        <div className={styles['add-button-label']}>{t('ADD_ADDON')}</div>
+                <div className={styles['tabs-container']}>
+                    <Button className={classnames(styles['tab'], { [styles['selected']]: installedAddons.selected !== null })} title={t('ADDON_MY')} onClick={goToInstalledAddons}>
+                        <div className={styles['label']}>{t('ADDON_MY')}</div>
                     </Button>
-                    <SearchBar
-                        className={styles['search-bar']}
-                        title={t('ADDON_SEARCH')}
-                        value={search}
-                        onChange={searchInputOnChange}
-                    />
-                    <Button className={styles['filter-button']} title={t('ALL_FILTERS')} onClick={openFiltersModal}>
-                        <Icon className={styles['filter-icon']} name={'filters'} />
+                    <Button className={classnames(styles['tab'], { [styles['selected']]: isOfficialTab })} title={t('ADDON_OFFICIAL')} onClick={goToOfficialAddons}>
+                        <div className={styles['label']}>{t('ADDON_OFFICIAL')}</div>
+                    </Button>
+                    <Button className={classnames(styles['tab'], { [styles['selected']]: isCommunityTab })} title={t('ADDON_COMMUNITY')} onClick={goToCommunityAddons}>
+                        <div className={styles['label']}>{t('ADDON_COMMUNITY')}</div>
+                    </Button>
+                    <Button className={classnames(styles['tab'], { [styles['selected']]: regionalHubOpen })} title={'Regional'} onClick={goToRegionalHub}>
+                        <div className={styles['label']}>{'Regional'}</div>
                     </Button>
                 </div>
                 {
-                    installedAddons.selected !== null ?
-                        installedAddons.selectable.types.length === 0 ?
-                            <div className={styles['message-container']}>
-                                {t('NO_ADDONS')}
-                            </div>
-                            :
-                            installedAddons.catalog.length === 0 ?
-                                <div className={styles['message-container']}>
-                                    {t('NO_ADDONS_FOR_TYPE')}
-                                </div>
-                                :
-                                <div className={styles['addons-list-container']}>
-                                    {
-                                        installedAddons.catalog
-                                            .filter(searchFilterPredicate)
-                                            .map((addon, index) => (
-                                                <Addon
-                                                    key={index}
-                                                    className={classnames(styles['addon'], 'animation-fade-in')}
-                                                    id={addon.manifest.id}
-                                                    name={addon.manifest.name}
-                                                    version={addon.manifest.version}
-                                                    logo={addon.manifest.logo}
-                                                    description={addon.manifest.description}
-                                                    types={addon.manifest.types}
-                                                    behaviorHints={addon.manifest.behaviorHints}
-                                                    installed={addon.installed}
-                                                    onInstall={onAddonInstall}
-                                                    onUninstall={onAddonUninstall}
-                                                    onConfigure={onAddonConfigure}
-                                                    onOpen={onAddonOpen}
-                                                    onShare={onAddonShare}
-                                                    dataset={{ addon }}
-                                                />
-                                            ))
-                                    }
-                                </div>
+                    regionalHubOpen ?
+                        null
                         :
-                        remoteAddons.selected !== null ?
-                            remoteAddons.catalog.content.type === 'Err' ?
+                        <div className={styles['selectable-inputs-container']}>
+                            {selectInputs.map((selectInput, index) => (
+                                <MultiselectMenu
+                                    {...selectInput}
+                                    key={index}
+                                    className={styles['select-input-container']}
+                                />
+                            ))}
+                            <div className={styles['spacing']} />
+                            <Button className={styles['add-button-container']} title={t('ADD_ADDON')} onClick={openAddAddonModal}>
+                                <Icon className={styles['icon']} name={'add'} />
+                                <div className={styles['add-button-label']}>{t('ADD_ADDON')}</div>
+                            </Button>
+                            <SearchBar
+                                className={styles['search-bar']}
+                                title={t('ADDON_SEARCH')}
+                                value={search}
+                                onChange={searchInputOnChange}
+                            />
+                            <Button className={styles['filter-button']} title={t('ALL_FILTERS')} onClick={openFiltersModal}>
+                                <Icon className={styles['filter-icon']} name={'filters'} />
+                            </Button>
+                        </div>
+                }
+                {
+                    regionalHubOpen ?
+                        <RegionalHub className={styles['addons-list-container']} />
+                        :
+                        installedAddons.selected !== null ?
+                            installedAddons.selectable.types.length === 0 ?
                                 <div className={styles['message-container']}>
-                                    {remoteAddons.catalog.content.content}
+                                    {t('NO_ADDONS')}
                                 </div>
                                 :
-                                remoteAddons.catalog.content.type === 'Loading' ?
-                                    <div className={styles['addons-list-container']}>
-                                        {Array.from({ length: 6 }).map((_, index) => (
-                                            <AddonPlaceholder key={index} className={styles['addon']} />
-                                        ))}
+                                installedAddons.catalog.length === 0 ?
+                                    <div className={styles['message-container']}>
+                                        {t('NO_ADDONS_FOR_TYPE')}
                                     </div>
                                     :
                                     <div className={styles['addons-list-container']}>
                                         {
-                                            remoteAddons.catalog.content.content
+                                            installedAddons.catalog
                                                 .filter(searchFilterPredicate)
                                                 .map((addon, index) => (
                                                     <Addon
@@ -227,11 +233,51 @@ const Addons = () => {
                                         }
                                     </div>
                             :
-                            <div className={styles['addons-list-container']}>
-                                {Array.from({ length: 6 }).map((_, index) => (
-                                    <AddonPlaceholder key={index} className={styles['addon']} />
-                                ))}
-                            </div>
+                            remoteAddons.selected !== null ?
+                                remoteAddons.catalog.content.type === 'Err' ?
+                                    <div className={styles['message-container']}>
+                                        {remoteAddons.catalog.content.content}
+                                    </div>
+                                    :
+                                    remoteAddons.catalog.content.type === 'Loading' ?
+                                        <div className={styles['addons-list-container']}>
+                                            {Array.from({ length: 6 }).map((_, index) => (
+                                                <AddonPlaceholder key={index} className={styles['addon']} />
+                                            ))}
+                                        </div>
+                                        :
+                                        <div className={styles['addons-list-container']}>
+                                            {
+                                                remoteAddons.catalog.content.content
+                                                    .filter(searchFilterPredicate)
+                                                    .map((addon, index) => (
+                                                        <Addon
+                                                            key={index}
+                                                            className={classnames(styles['addon'], 'animation-fade-in')}
+                                                            id={addon.manifest.id}
+                                                            name={addon.manifest.name}
+                                                            version={addon.manifest.version}
+                                                            logo={addon.manifest.logo}
+                                                            description={addon.manifest.description}
+                                                            types={addon.manifest.types}
+                                                            behaviorHints={addon.manifest.behaviorHints}
+                                                            installed={addon.installed}
+                                                            onInstall={onAddonInstall}
+                                                            onUninstall={onAddonUninstall}
+                                                            onConfigure={onAddonConfigure}
+                                                            onOpen={onAddonOpen}
+                                                            onShare={onAddonShare}
+                                                            dataset={{ addon }}
+                                                        />
+                                                    ))
+                                            }
+                                        </div>
+                                :
+                                <div className={styles['addons-list-container']}>
+                                    {Array.from({ length: 6 }).map((_, index) => (
+                                        <AddonPlaceholder key={index} className={styles['addon']} />
+                                    ))}
+                                </div>
                 }
             </div>
             {

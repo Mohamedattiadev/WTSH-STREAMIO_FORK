@@ -3,6 +3,8 @@
 import React, { memo } from 'react';
 import classnames from 'classnames';
 import { VerticalNavBar, HorizontalNavBar } from 'stremio/components/NavBar';
+import ChatFab from 'stremio/components/ChatFab';
+import ChatIcon from 'stremio/components/ChatIcon';
 import { useContentGamepadNavigation, useVerticalNavGamepadNavigation } from 'stremio/services/GamepadNavigation';
 import styles from './MainNavBars.less';
 
@@ -10,6 +12,7 @@ const TABS = [
     { id: 'board', label: 'Board', icon: 'home', href: '/' },
     { id: 'discover', label: 'Discover', icon: 'discover', href: '/discover' },
     { id: 'library', label: 'Library', icon: 'library', href: '/library' },
+    { id: 'chat', label: 'Chat', iconComponent: ChatIcon, href: '/chat' },
     { id: 'calendar', label: 'Calendar', icon: 'calendar', href: '/calendar' },
     { id: 'addons', label: 'ADDONS', icon: 'addons', href: '/addons' },
     { id: 'settings', label: 'SETTINGS', icon: 'settings', href: '/settings' },
@@ -32,22 +35,30 @@ const MainNavBars = memo(({ className, route, query, children }: Props) => {
 
     return (
         <div className={classnames(className, styles['main-nav-bars-container'])}>
-            <HorizontalNavBar
-                className={styles['horizontal-nav-bar']}
-                route={route}
-                query={query}
-                backButton={false}
-                searchBar={true}
-                fullscreenButton={true}
-                navMenu={true}
-            />
             <VerticalNavBar
                 ref={navRef}
                 className={styles['vertical-nav-bar']}
                 selected={route}
                 tabs={TABS}
             />
-            <div ref={contentRef} className={styles['nav-content-container']}>{children}</div>
+            <div className={styles['main-column']}>
+                <HorizontalNavBar
+                    className={styles['horizontal-nav-bar']}
+                    route={route}
+                    query={query}
+                    backButton={false}
+                    searchBar={true}
+                    fullscreenButton={true}
+                    navMenu={true}
+                />
+                <div ref={contentRef} className={styles['nav-content-container']}>{children}</div>
+            </div>
+            {
+                route !== 'chat' ?
+                    <ChatFab />
+                    :
+                    null
+            }
         </div>
     );
 });

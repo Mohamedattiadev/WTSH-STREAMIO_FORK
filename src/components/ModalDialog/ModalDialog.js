@@ -8,7 +8,7 @@ const { useModalsContainer } = require('stremio/router/ModalsContainerContext');
 const Modal = require('stremio/router/Modal');
 const { default: useRouteFocused } = require('stremio/common/useRouteFocused');
 const { default: Button } = require('stremio/components/Button');
-const { default: Icon } = require('@stremio/stremio-icons/react');
+const { default: Icon } = require('stremio/components/Icon');
 const styles = require('./styles');
 
 const ModalDialog = ({ className, title, buttons, children, dataset, onCloseRequest, background, ...props }) => {

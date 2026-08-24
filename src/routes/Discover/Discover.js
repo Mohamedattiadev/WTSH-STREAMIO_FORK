@@ -5,7 +5,7 @@ const { useTranslation } = require('react-i18next');
 const { useParams } = require('react-router');
 const { useSearchParams } = require('react-router-dom');
 const classnames = require('classnames');
-const { default: Icon } = require('@stremio/stremio-icons/react');
+const { default: Icon } = require('stremio/components/Icon');
 const { useCore } = require('stremio/core');
 const { CONSTANTS, useBinaryState, useOnScrollToBottom, withCoreSuspender } = require('stremio/common');
 const { AddonDetailsModal, Button, DelayedRenderer, Image, MainNavBars, MetaItem, MetaPreview, ModalDialog, MultiselectMenu } = require('stremio/components');
@@ -197,6 +197,8 @@ const Discover = () => {
                                                 posterShape={metaItem.posterShape}
                                                 playname={selectedMetaItemIndex === index}
                                                 deepLinks={metaItem.deepLinks}
+                                                trailerStreams={metaItem.trailerStreams}
+                                                releaseInfo={metaItem.releaseInfo}
                                                 watched={metaItem.watched}
                                                 data-index={index}
                                                 onClick={metaItemOnClick}

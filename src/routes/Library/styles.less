@@ -21,79 +21,101 @@
         height: 100%;
         margin-bottom: calc(var(--bottom-overlay-size) * -1);
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
 
-        .meta-items-container {
-            padding: 0 1.5rem;
-            z-index: 1;
-        }
-
-        .selectable-inputs-container {
-            flex: none;
-            align-self: stretch;
-            display: flex;
-            flex-direction: row;
-            padding: 1.5rem;
-            overflow: visible;
-            z-index: 2;
-
-            .select-input-container {
-                flex-grow: 0;
-                flex-shrink: 1;
-                flex-basis: 15rem;
-                height: 2.75rem;
-                background-color: var(--overlay-color);
-
-                &:not(:last-child) {
-                    margin-right: 1.5rem;
-                }
-
-                .multiselect-menu-container {
-                    overflow: auto;
-                }
-            }
-        }
-
-        .message-container {
-            flex: 0 1 auto;
+        .catalog-container {
+            flex: 1;
             align-self: stretch;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 0 1.5rem;
-            overflow-y: auto;
+            contain: strict;
 
-            &:first-child {
-                padding: 4rem;
+            .meta-items-container {
+                padding: 0 1.5rem;
+                z-index: 1;
             }
 
-            .image {
+            .selectable-inputs-container {
                 flex: none;
-                width: 12rem;
-                height: 12rem;
-                margin-bottom: 2rem;
-                object-fit: contain;
-                object-position: center;
-                opacity: 0.9;
+                align-self: stretch;
+                display: flex;
+                flex-direction: row;
+                padding: 1.5rem;
+                overflow: visible;
+                z-index: 2;
+
+                .select-input-container {
+                    flex-grow: 0;
+                    flex-shrink: 1;
+                    flex-basis: 15rem;
+                    height: 2.75rem;
+                    background-color: var(--overlay-color);
+
+                    &:not(:last-child) {
+                        margin-right: 1.5rem;
+                    }
+
+                    .multiselect-menu-container {
+                        overflow: auto;
+                    }
+                }
             }
 
-            .message-label {
-                flex: none;
-                margin-bottom: 2rem;
-                font-size: 2rem;
-                font-weight: 400;
-                text-align: center;
-                color: var(--primary-foreground-color);
+            .message-container {
+                flex: 0 1 auto;
+                align-self: stretch;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 0 1.5rem;
+                overflow-y: auto;
+
+                &:first-child {
+                    padding: 4rem;
+                }
+
+                .image {
+                    flex: none;
+                    width: 12rem;
+                    height: 12rem;
+                    margin-bottom: 2rem;
+                    object-fit: contain;
+                    object-position: center;
+                    opacity: 0.9;
+                }
+
+                .message-label {
+                    flex: none;
+                    margin-bottom: 2rem;
+                    font-size: 2rem;
+                    font-weight: 400;
+                    text-align: center;
+                    color: var(--primary-foreground-color);
+                }
+            }
+
+            .meta-items-container {
+                flex: 1;
+                align-self: stretch;
+                display: grid;
+                grid-auto-rows: max-content;
+                align-items: center;
+                grid-gap: 0.5rem;
+                margin-right: 1.5rem;
+                overflow-y: auto;
             }
         }
 
-        .meta-items-container {
-            flex: 1;
-            align-self: stretch;
-            display: grid;
-            grid-auto-rows: max-content;
-            align-items: center;
-            grid-gap: 0.5rem;
+        .meta-preview-container {
+            flex: none;
+            align-self: center;
+            width: 22rem;
+            max-height: calc(100% - 3rem);
+            margin: 1.5rem 1.5rem 1.5rem 0;
+            padding: 1.5rem 1.75rem;
+            border-radius: 1rem;
+            border: 0.06rem solid var(--overlay-color);
+            background-color: var(--modal-background-color);
             overflow-y: auto;
         }
     }
@@ -172,6 +194,11 @@
         .library-content {
             .meta-items-container {
                 grid-template-columns: repeat(5, 1fr);
+                margin-right: 0;
+            }
+
+            .meta-preview-container {
+                display: none;
             }
         }
     }

@@ -5,22 +5,93 @@ const classnames = require('classnames');
 const debounce = require('lodash.debounce');
 const useTranslate = require('stremio/common/useTranslate');
 const { useStreamingServer, useNotifications, withCoreSuspender, getVisibleChildrenRange, useProfile } = require('stremio/common');
+const useAutoInstallEssentialAddons = require('stremio/common/useAutoInstallEssentialAddons');
 const { ContinueWatchingItem, EventModal, MainNavBars, MetaItem, MetaRow } = require('stremio/components');
 const useBoard = require('./useBoard');
 const useContinueWatchingPreview = require('./useContinueWatchingPreview');
+const Hero = require('./Hero');
+const LocalizedChannels = require('./LocalizedChannels');
 const styles = require('./styles');
 const { default: StreamingServerWarning } = require('./StreamingServerWarning');
+
+const GENRE_LINK_CATEGORY = 'genres';
+
+const extractGenres = (item) => {
+    return Array.isArray(item.links) ?
+        item.links
+            .filter((link) => typeof link.category === 'string' && link.category.toLowerCase() === GENRE_LINK_CATEGORY && typeof link.name === 'string')
+            .map((link) => link.name)
+        :
+        [];
+};
 
 const THRESHOLD = 5;
 
 const Board = () => {
     const t = useTranslate();
+    useAutoInstallEssentialAddons();
     const streamingServer = useStreamingServer();
     const continueWatchingPreview = useContinueWatchingPreview();
     const [board, loadBoardRows] = useBoard();
     const notifications = useNotifications();
     const profile = useProfile();
     const boardCatalogsOffset = continueWatchingPreview.items.length > 0 ? 1 : 0;
+    const heroItems = React.useMemo(() => {
+        const seenIds = new Set();
+        const items = [];
+        continueWatchingPreview.items.slice(0, 3).forEach((item) => {
+            if (item && !seenIds.has(item.id)) {
+                seenIds.add(item.id);
+                items.push({ item, resumable: true });
+            }
+        });
+        const readyCatalog = board.catalogs.find((catalog) => catalog.content?.type === 'Ready' && catalog.content.content.length > 0);
+        if (readyCatalog) {
+            readyCatalog.content.content.forEach((item) => {
+                if (items.length >= 5 || !item || seenIds.has(item.id)) {
+                    return;
+                }
+
+                seenIds.add(item.id);
+                items.push({ item, resumable: false });
+            });
+        }
+        return items;
+    }, [continueWatchingPreview.items, board.catalogs]);
+    const recommendedItems = React.useMemo(() => {
+        const genreCounts = new Map();
+        continueWatchingPreview.items.forEach((item) => {
+            extractGenres(item).forEach((genre) => {
+                genreCounts.set(genre, (genreCounts.get(genre) ?? 0) + 1);
+            });
+        });
+        if (genreCounts.size === 0) {
+            return [];
+        }
+
+        const topGenres = new Set(
+            Array.from(genreCounts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([genre]) => genre)
+        );
+        const seenIds = new Set(continueWatchingPreview.items.map((item) => item.id));
+        const matches = [];
+        board.catalogs.forEach((catalog) => {
+            if (catalog.content?.type !== 'Ready') {
+                return;
+            }
+
+            catalog.content.content.forEach((item) => {
+                if (seenIds.has(item.id) || matches.length >= 10) {
+                    return;
+                }
+
+                if (extractGenres(item).some((genre) => topGenres.has(genre))) {
+                    seenIds.add(item.id);
+                    matches.push(item);
+                }
+            });
+        });
+        return matches;
+    }, [board.catalogs, continueWatchingPreview.items]);
     const scrollContainerRef = React.useRef();
     const showStreamingServerWarning = React.useMemo(() => {
         return streamingServer.settings !== null && streamingServer.settings.type === 'Err' && (
@@ -51,6 +122,13 @@ const Board = () => {
             <MainNavBars className={styles['board-content-container']} route={'board'}>
                 <div ref={scrollContainerRef} className={styles['board-content']} onScroll={onScroll}>
                     {
+                        heroItems.length > 0 ?
+                            <Hero items={heroItems} />
+                            :
+                            null
+                    }
+                    <LocalizedChannels className={classnames(styles['board-row'], 'animation-fade-in')} />
+                    {
                         continueWatchingPreview.items.length > 0 ?
                             <MetaRow
                                 className={classnames(styles['board-row'], styles['continue-watching-row'], 'animation-fade-in')}
@@ -58,6 +136,17 @@ const Board = () => {
                                 catalog={continueWatchingPreview}
                                 itemComponent={ContinueWatchingItem}
                                 notifications={notifications}
+                            />
+                            :
+                            null
+                    }
+                    {
+                        recommendedItems.length > 0 ?
+                            <MetaRow
+                                className={classnames(styles['board-row'], styles['board-row-poster'], 'animation-fade-in')}
+                                title={'Recommended for You'}
+                                catalog={{ items: recommendedItems }}
+                                itemComponent={MetaItem}
                             />
                             :
                             null

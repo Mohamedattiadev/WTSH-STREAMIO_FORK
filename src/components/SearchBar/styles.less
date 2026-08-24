@@ -6,15 +6,23 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    height: 3rem;
+    height: 3.2rem;
     padding: 0 1.5rem;
     border-radius: 3rem;
-    border: var(--focus-outline-size) solid transparent;
-    background-color: var(--overlay-color);
+    border: 0.06rem solid rgba(255, 255, 255, 0.08);
+    background-color: var(--surface-elevated-color);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 0.3rem 1rem rgba(0, 0, 0, 0.25);
+    transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
     cursor: text;
 
+    &:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+
     &:focus-within {
-        border: var(--focus-outline-size) solid var(--primary-foreground-color);
+        border-color: var(--primary-accent-color);
+        box-shadow: 0 0 0 0.15rem var(--primary-accent-color-soft), 0 0.3rem 1rem rgba(0, 0, 0, 0.25);
     }
 
     .search-input {

@@ -27,6 +27,8 @@ const { default: AudioMenu } = require('./AudioMenu');
 const SpeedMenu = require('./SpeedMenu');
 const { default: SideDrawerButton } = require('./SideDrawerButton');
 const { default: SideDrawer } = require('./SideDrawer');
+const SearchPanel = require('./SearchPanel');
+const ChatPanel = require('stremio/routes/Chat/ChatPanel');
 const usePlayer = require('./usePlayer');
 const { default: usePlayOnDevice } = require('./usePlayOnDevice');
 const { default: useKeyboardSeek } = require('./useKeyboardSeek');
@@ -105,10 +107,12 @@ const Player = () => {
     const [castDevicesMenuOpen, , closeCastDevicesMenu, toggleCastDevicesMenu] = useBinaryState(false);
     const [nextVideoPopupOpen, openNextVideoPopup, closeNextVideoPopup] = useBinaryState(false);
     const [sideDrawerOpen, , closeSideDrawer, toggleSideDrawer] = useBinaryState(false);
+    const [searchPanelOpen, , closeSearchPanel, toggleSearchPanel] = useBinaryState(false);
+    const [chatPanelOpen, , closeChatPanel, toggleChatPanel] = useBinaryState(false);
 
     const menusOpen = React.useMemo(() => {
-        return optionsMenuOpen || subtitlesMenuOpen || audioMenuOpen || speedMenuOpen || statisticsMenuOpen || castDevicesMenuOpen || sideDrawerOpen || nextVideoPopupOpen;
-    }, [optionsMenuOpen, subtitlesMenuOpen, audioMenuOpen, speedMenuOpen, statisticsMenuOpen, castDevicesMenuOpen, sideDrawerOpen, nextVideoPopupOpen]);
+        return optionsMenuOpen || subtitlesMenuOpen || audioMenuOpen || speedMenuOpen || statisticsMenuOpen || castDevicesMenuOpen || sideDrawerOpen || searchPanelOpen || chatPanelOpen || nextVideoPopupOpen;
+    }, [optionsMenuOpen, subtitlesMenuOpen, audioMenuOpen, speedMenuOpen, statisticsMenuOpen, castDevicesMenuOpen, sideDrawerOpen, searchPanelOpen, chatPanelOpen, nextVideoPopupOpen]);
 
     const closeMenus = React.useCallback(() => {
         closeOptionsMenu();
@@ -118,6 +122,8 @@ const Player = () => {
         closeStatisticsMenu();
         closeCastDevicesMenu();
         closeSideDrawer();
+        closeSearchPanel();
+        closeChatPanel();
     }, []);
 
     const castDevices = React.useMemo(() => {
@@ -397,6 +403,8 @@ const Player = () => {
         }
 
         closeSideDrawer();
+        closeSearchPanel();
+        closeChatPanel();
     }, []);
 
     const onContainerMouseMove = React.useCallback((event) => {
@@ -1051,6 +1059,9 @@ const Player = () => {
                 onUnmuteRequested={onUnmuteRequested}
                 onVolumeChangeRequested={onVolumeChangeRequested}
                 onSeekRequested={onSeekRequested}
+                onSeekPrev={onSeekPrev}
+                onSeekNext={onSeekNext}
+                seekTimeDuration={settings.seekTimeDuration}
                 onToggleOptionsMenu={toggleOptionsMenu}
                 shellCastSupported={shellCastSupported}
                 onToggleCastDevicesMenu={toggleCastDevicesMenu}
@@ -1062,6 +1073,8 @@ const Player = () => {
                 onVideoScaleChanged={onVideoScaleChanged}
                 onToggleStatisticsMenu={toggleStatisticsMenu}
                 onToggleSideDrawer={toggleSideDrawer}
+                onToggleSearchPanel={toggleSearchPanel}
+                onToggleChatPanel={toggleChatPanel}
                 onMouseMove={onBarMouseMove}
                 onMouseOver={onBarMouseMove}
                 onTouchEnd={onContainerMouseLeave}
@@ -1104,6 +1117,19 @@ const Player = () => {
                     seriesInfo={player.seriesInfo}
                     closeSideDrawer={closeSideDrawer}
                     selected={player.selected?.streamRequest?.path?.id}
+                />
+            </Transition>
+            <Transition when={searchPanelOpen} name={'slide-left'}>
+                <SearchPanel
+                    className={classnames(styles['layer'], styles['side-drawer-layer'])}
+                    closeSearchPanel={closeSearchPanel}
+                />
+            </Transition>
+            <Transition when={chatPanelOpen} name={'slide-left'}>
+                <ChatPanel
+                    className={classnames(styles['layer'], styles['side-drawer-layer'])}
+                    compact
+                    closeChatPanel={closeChatPanel}
                 />
             </Transition>
             <Transition when={subtitlesMenuOpen} name={'fade'}>

@@ -4,12 +4,12 @@ const React = require('react');
 const { useTranslation } = require('react-i18next');
 const { useSearchParams, useNavigate } = require('react-router-dom');
 const classnames = require('classnames');
-const { default: Icon } = require('@stremio/stremio-icons/react');
+const { default: Icon } = require('stremio/components/Icon');
 const Modal = require('stremio/router/Modal');
 const { useCore } = require('stremio/core');
 const { useBinaryState } = require('stremio/common');
 const { default: useRouteFocused } = require('stremio/common/useRouteFocused');
-const { Button, Image, Checkbox } = require('stremio/components');
+const { Button, Logo, Checkbox } = require('stremio/components');
 const CredentialsTextInput = require('./CredentialsTextInput');
 const PasswordResetModal = require('./PasswordResetModal');
 const useFacebookLogin = require('./useFacebookLogin');
@@ -296,7 +296,8 @@ const Intro = () => {
             <div className={styles['background-container']} />
             <div className={styles['heading-container']}>
                 <div className={styles['logo-container']}>
-                    <Image className={styles['logo']} src={require('/assets/images/logo.png')} alt={' '} />
+                    <Logo className={styles['logo']} />
+                    <span className={styles['logo-wordmark']}>WTS</span>
                 </div>
                 <div className={styles['title-container']}>
                     {t('WEBSITE_SLOGAN_NEW_NEW')}

@@ -1,36 +1,28 @@
-// Copyright (C) 2017-2024 Smart code 203358507
+// Copyright (C) 2017-2026 Smart code 203358507
 
 @import (reference) '~@stremio/stremio-colors/less/stremio-colors.less';
 @import (reference) '~stremio/common/screen-sizes.less';
 
 .horizontal-nav-bar-container {
+    flex: none;
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    gap: 1rem;
     height: var(--horizontal-nav-bar-size);
-    padding-right: 1rem;
-    background-color: transparent;
+    padding: 0 1.5rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.005));
+    border-bottom: 0.06rem solid var(--overlay-color);
     overflow: visible;
     padding-top: var(--safe-area-inset-top);
     box-sizing: content-box;
 
+    // The rail already carries the wordmark, so the flat topbar never shows a logo - only
+    // standalone contexts (Player/MetaDetails/NotFound) use this bar, and they always pass
+    // backButton, so .logo-container never actually renders there anyway.
     .logo-container {
-        flex: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: var(--vertical-nav-bar-size);
-        height: var(--horizontal-nav-bar-size);
-
-        .logo {
-            flex: none;
-            width: 2.5rem;
-            height: 2.5rem;
-            object-position: center;
-            object-fit: contain;
-            opacity: 0.9;
-        }
+        display: none;
     }
 
     .back-button-container {
@@ -40,25 +32,27 @@
     .title {
         flex: 4 0 0;
         padding: 0 1rem;
-        font-size: 1.2rem;
-        font-style: normal;
-        font-weight: 500;
+        font-family: var(--font-display);
+        font-size: 1.1rem;
+        font-weight: 600;
         letter-spacing: 0.01rem;
         white-space: nowrap;
         text-overflow: ellipsis;
-        color: @color-secondaryvariant2-light1-90;
+        color: var(--primary-foreground-color);
     }
 
     .search-bar {
-        height: 3.25rem;
-        width: 30rem;
+        flex: 1;
+        height: 2.75rem;
+        max-width: 30rem;
     }
 
     .buttons-container {
         display: flex;
         flex-direction: row;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.35rem;
+        margin-left: auto;
         overflow: visible;
     }
 
@@ -67,7 +61,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        height: 3.5rem;
+        height: 2.75rem;
         padding: 0 0.5rem;
         opacity: 0.6;
         user-select: none;
@@ -86,26 +80,27 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 3.5rem;
-        height: 3.5rem;
-        border-radius: 0.75rem;
-        opacity: 0.6;
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 0.7rem;
+        background-color: transparent;
+        opacity: 1;
+        transition: background-color 0.15s ease-out, color 0.15s ease-out;
 
         .icon {
             flex: none;
-            width: 2rem;
-            height: 2rem;
-            color: var(--primary-foreground-color);
-            opacity: 0.6;
+            width: 1.1rem;
+            height: 1.1rem;
+            color: var(--muted-foreground-color);
+            opacity: 1;
+            transition: color 0.15s ease-out;
         }
 
         .active() {
-            background-color: var(--overlay-color);
-            opacity: 1;
+            background-color: var(--primary-accent-color-soft);
 
             .icon {
-                color: var(--primary-foreground-color);
-                opacity: 0.8;
+                color: var(--ember-soft);
             }
         }
 
@@ -119,23 +114,126 @@
             }
         }
     }
+
+    .avatar-group-container {
+        flex: none;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0 0.15rem;
+        border-radius: 2.5rem;
+        background-color: transparent;
+        transition: background-color 0.15s ease-out;
+
+        &:global(.active) {
+            background-color: var(--overlay-color);
+        }
+
+        @media (pointer: fine) {
+            &:hover {
+                background-color: var(--overlay-color);
+            }
+        }
+
+        .welcome-text {
+            font-size: 0.82rem;
+            color: var(--muted-foreground-color);
+            white-space: nowrap;
+
+            strong {
+                color: var(--primary-foreground-color);
+                font-weight: 700;
+            }
+        }
+
+        .avatar-container {
+            flex: none;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--ember), var(--ember-2));
+            border: 0.06rem solid rgba(255, 255, 255, 0.18);
+
+            .icon {
+                width: 1.1rem;
+                height: 1.1rem;
+                color: var(--secondary-foreground-color);
+                opacity: 1;
+            }
+
+            .avatar-initials {
+                font-family: var(--font-display);
+                font-weight: 800;
+                font-size: 0.78rem;
+                color: var(--secondary-foreground-color);
+            }
+        }
+
+        .avatar-chevron {
+            flex: none;
+            width: 0.7rem;
+            height: 0.7rem;
+            color: var(--muted-foreground-color);
+        }
+    }
+
+    .notifications-button-container {
+        position: relative;
+
+        .notifications-badge {
+            position: absolute;
+            top: 0.35rem;
+            right: 0.35rem;
+            min-width: 1rem;
+            height: 1rem;
+            padding: 0 0.2rem;
+            border-radius: 1rem;
+            background-color: var(--primary-accent-color);
+            box-shadow: 0 0 6px rgba(255, 95, 54, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 0.58rem;
+            font-weight: 700;
+            color: var(--secondary-foreground-color);
+        }
+    }
+}
+
+@media only screen and (max-width: @xsmall) {
+    .horizontal-nav-bar-container {
+        .welcome-text {
+            display: none;
+        }
+    }
 }
 
 @media only screen and (max-width: @minimum) {
     .horizontal-nav-bar-container {
         justify-content: space-between;
-        padding-right: 0;
+        height: 3.6rem;
+        padding-right: 0.75rem;
 
         .logo-container {
             width: var(--horizontal-nav-bar-size);
         }
 
         .button-container {
-            margin: 0 1rem;
+            margin: 0 0.5rem;
 
             &:not(.back-button-container):not(.menu-button-container) {
                 display: none;
             }
+        }
+
+        .avatar-group-container {
+            padding: 0;
+            gap: 0;
         }
     }
 }

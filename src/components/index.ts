@@ -5,12 +5,15 @@ import Checkbox from './Checkbox';
 import Chips from './Chips';
 import ColorInput from './ColorInput';
 import ContextMenu from './ContextMenu';
+import ChatFab from './ChatFab';
+import ChatIcon from './ChatIcon';
 import ContinueWatchingItem from './ContinueWatchingItem';
 import DelayedRenderer from './DelayedRenderer';
 import EventModal from './EventModal';
 import HorizontalScroll from './HorizontalScroll';
 import Image from './Image';
 import LibItem from './LibItem';
+import Logo from './Logo';
 import MainNavBars from './MainNavBars';
 import MetaItem from './MetaItem';
 import MetaPreview from './MetaPreview';
@@ -41,12 +44,15 @@ export {
     Chips,
     ColorInput,
     ContextMenu,
+    ChatFab,
+    ChatIcon,
     ContinueWatchingItem,
     DelayedRenderer,
     EventModal,
     HorizontalScroll,
     Image,
     LibItem,
+    Logo,
     MainNavBars,
     MetaItem,
     MetaPreview,

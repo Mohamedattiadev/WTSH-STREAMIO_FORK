@@ -1,0 +1,181 @@
+.ember-account {
+    .status-label {
+        font-size: 0.85rem;
+        color: var(--muted-foreground-color);
+    }
+
+    .error-label {
+        font-size: 0.8rem;
+        color: #ff8a80;
+    }
+
+    .signed-in-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+    }
+
+    .signed-in-row {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.75rem;
+
+        .signed-in-email {
+            flex: 1;
+            min-width: 0;
+            font-size: 0.9rem;
+            color: var(--primary-foreground-color);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sign-out-button {
+            all: unset;
+            box-sizing: border-box;
+            flex: none;
+            cursor: pointer;
+            height: 2.3rem;
+            padding: 0 0.9rem;
+            border-radius: 0.6rem;
+            border: 0.06rem solid rgba(255, 255, 255, 0.16);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--primary-foreground-color);
+
+            &:hover {
+                background-color: var(--overlay-color);
+            }
+        }
+    }
+
+    .reminders-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        max-width: 26rem;
+
+        .reminders-heading {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--muted-foreground-color);
+            margin-bottom: 0.15rem;
+        }
+
+        .reminder-row {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.5rem 0.7rem;
+            border-radius: 0.6rem;
+            background-color: var(--overlay-color);
+
+            .reminder-title {
+                flex: 1;
+                min-width: 0;
+                font-size: 0.82rem;
+                color: var(--primary-foreground-color);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .reminder-date {
+                flex: none;
+                font-family: var(--font-mono);
+                font-size: 0.72rem;
+                color: var(--ember-soft);
+            }
+
+            .reminder-remove {
+                all: unset;
+                box-sizing: border-box;
+                flex: none;
+                cursor: pointer;
+                width: 1.4rem;
+                height: 1.4rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                color: var(--muted-foreground-color);
+                font-size: 1rem;
+                line-height: 1;
+
+                &:hover {
+                    background-color: rgba(255, 255, 255, 0.1);
+                    color: var(--primary-foreground-color);
+                }
+            }
+        }
+    }
+
+    .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        max-width: 22rem;
+
+        .input {
+            all: unset;
+            box-sizing: border-box;
+            width: 100%;
+            height: 2.6rem;
+            padding: 0 0.9rem;
+            border-radius: 0.6rem;
+            background-color: var(--overlay-color);
+            border: 0.06rem solid var(--overlay-color);
+            color: var(--primary-foreground-color);
+            font-size: 0.85rem;
+            transition: border-color 0.15s ease-out;
+
+            &:focus {
+                border-color: var(--primary-accent-color);
+            }
+        }
+
+        .auth-actions {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.9rem;
+            flex-wrap: wrap;
+        }
+
+        .submit-button {
+            all: unset;
+            box-sizing: border-box;
+            cursor: pointer;
+            flex: none;
+            height: 2.5rem;
+            padding: 0 1.1rem;
+            border-radius: 0.6rem;
+            background-color: var(--primary-accent-color);
+            color: var(--secondary-foreground-color);
+            font-size: 0.85rem;
+            font-weight: 700;
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: default;
+            }
+        }
+
+        .switch-mode-button {
+            all: unset;
+            box-sizing: border-box;
+            cursor: pointer;
+            flex: none;
+            font-size: 0.78rem;
+            color: var(--ember-soft);
+
+            &:hover {
+                color: var(--ember);
+            }
+        }
+    }
+}

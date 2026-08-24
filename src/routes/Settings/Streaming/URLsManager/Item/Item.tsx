@@ -6,7 +6,7 @@ import { DEFAULT_STREAMING_SERVER_URL } from 'stremio/common/CONSTANTS';
 import { useTranslation } from 'react-i18next';
 import { Button, RadioButton } from 'stremio/components';
 import useStreamingServer from 'stremio/common/useStreamingServer';
-import Icon from '@stremio/stremio-icons/react';
+import Icon from 'stremio/components/Icon';
 import styles from './Item.less';
 import classNames from 'classnames';
 import useStreamingServerUrls from '../useStreamingServerUrls';
@@ -42,7 +42,15 @@ const Item = ({ url }: Props) => {
             <div className={styles['actions']}>
                 {
                     selected ?
-                        <div className={styles['status']}>
+                        <div
+                            className={styles['status']}
+                            title={
+                                defaultUrl && streamingServer.settings?.type === 'Err' ?
+                                    'This direct address only works if the Streaming Server app is running on this machine, and can be blocked by the browser even then. Add a proxied URL instead (Settings → Streaming → Add URL) for a connection that always works.'
+                                    :
+                                    undefined
+                            }
+                        >
                             <div className={classNames(styles['icon'], { [styles['ready']]: streamingServer.settings?.type === 'Ready' }, { [styles['error']]: streamingServer.settings?.type === 'Err' })} />
                             <div className={styles['label']}>
                                 {
@@ -53,7 +61,10 @@ const Item = ({ url }: Props) => {
                                             t('SETTINGS_SERVER_STATUS_ONLINE')
                                             :
                                             streamingServer.settings.type === 'Err' ?
-                                                t('SETTINGS_SERVER_STATUS_ERROR')
+                                                defaultUrl ?
+                                                    'No local server found'
+                                                    :
+                                                    t('SETTINGS_SERVER_STATUS_ERROR')
                                                 :
                                                 streamingServer.settings.type
                                 }

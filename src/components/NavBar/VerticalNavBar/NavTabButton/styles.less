@@ -1,82 +1,135 @@
-// Copyright (C) 2017-2024 Smart code 203358507
+// Copyright (C) 2017-2026 Smart code 203358507
 
 @import (reference) '~@stremio/stremio-colors/less/stremio-colors.less';
 @import (reference) '~stremio/common/screen-sizes.less';
 
 .nav-tab-button-container {
+    position: relative;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
+    gap: 0;
+    padding: 0;
     background-color: transparent;
     border-radius: 0.75rem;
+    outline-width: var(--focus-outline-size);
+    outline-color: var(--primary-accent-color);
+    outline-offset: calc(-1 * var(--focus-outline-size));
+    color: var(--muted-foreground-color);
+    transition: background-color 0.15s ease-out, color 0.15s ease-out;
+
+    &:focus {
+        outline-style: solid;
+    }
 
     @media (pointer: fine) {
         &:hover {
-            background-color: var(--overlay-color);
-
-            .label {
-                opacity: 0.6;
-            }
-
-            &:global(.selected) {
-                .label {
-                    opacity: 1;
-                }
-            }
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--primary-foreground-color);
         }
     }
 
     &:global(.selected) {
-        .icon {
-            opacity: 1;
-        }
+        color: var(--primary-foreground-color);
+        background-color: var(--primary-accent-color-soft);
 
-        .icon, .label {
+        .icon {
             color: var(--primary-accent-color);
+        }
+    }
+
+    &:global(.expanded) {
+        justify-content: flex-start;
+        gap: 0.75rem;
+        padding: 0 0.85rem;
+
+        .label {
+            opacity: 1;
+            max-width: 9rem;
+        }
+    }
+
+    &:not(:global(.expanded)) {
+        @media (pointer: fine) {
+            &:hover::after {
+                content: attr(data-label);
+                position: absolute;
+                left: calc(100% + 0.7rem);
+                top: 50%;
+                transform: translateY(-50%);
+                background-color: var(--surface-panel-2);
+                border: 0.06rem solid var(--overlay-color);
+                color: var(--primary-foreground-color);
+                font-size: 0.76rem;
+                font-weight: 600;
+                padding: 0.35rem 0.6rem;
+                border-radius: 0.5rem;
+                white-space: nowrap;
+                pointer-events: none;
+                box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.5);
+                z-index: 4;
+            }
         }
     }
 
     .icon, .logo {
         flex: none;
-        width: 2.2rem;
-        height: 2.2rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .icon {
-        color: var(--primary-foreground-color);
-        opacity: 0.35;
+        width: 1.3rem;
+        height: 1.3rem;
+        margin: 0;
+        color: currentColor;
+        transition: color 0.15s ease-out;
     }
 
     .label {
         flex: none;
-        position: relative;
-        max-width: 100%;
-        max-height: 2.4em;
-        padding: 0 0.5rem;
-        font-size: 0.8rem;
-        font-weight: 500;
+        max-width: 0;
+        max-height: none;
+        font-size: 0.82rem;
+        font-weight: 600;
         letter-spacing: 0.01rem;
-        text-align: center;
+        text-align: left;
         white-space: nowrap;
         text-overflow: ellipsis;
-        color: var(--primary-foreground-color);
+        color: inherit;
         opacity: 0;
         overflow: hidden;
+        transition: opacity 0.15s ease, max-width 0.28s cubic-bezier(.4, 0, .2, 1);
     }
 }
 
 @media only screen and (max-width: @minimum) {
     .nav-tab-button-container {
-        .label {
-            opacity: 0.6;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.2rem;
+        padding: 0.35rem 0.2rem;
+        border-radius: 0.6rem;
+
+        &:global(.expanded) {
+            flex-direction: column;
+            gap: 0.2rem;
+            padding: 0.35rem 0.2rem;
         }
 
         &:global(.selected) {
+            background-color: transparent;
+
             .label {
-                opacity: 1;
+                color: var(--primary-accent-color);
             }
+        }
+
+        &:not(:global(.expanded)):hover::after,
+        &:hover::after {
+            display: none;
+        }
+
+        .label {
+            opacity: 1;
+            max-width: 100%;
+            font-size: 0.58rem;
         }
     }
 }
