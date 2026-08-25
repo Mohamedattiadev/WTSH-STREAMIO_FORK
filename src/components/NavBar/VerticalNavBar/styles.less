@@ -48,7 +48,12 @@
         border-radius: 50%;
         background-color: var(--surface-panel-2);
         border: 0.06rem solid var(--overlay-color);
-        color: var(--muted-foreground-color);
+        // Not --muted-foreground-color (NavTabButton's resting icon color, for comparison) -
+        // that's legible against the rail's own background, but this button's small icon sits
+        // on its OWN darker circle stacked on top of the rail, and at only 0.85rem/2px-stroke
+        // the combination made it read as an empty dark circle at rest (confirmed via a
+        // high-DPI screenshot: the chevron was there, just too low-contrast to actually see).
+        color: rgba(245, 242, 236, 0.55);
         cursor: pointer;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
         z-index: 3;
