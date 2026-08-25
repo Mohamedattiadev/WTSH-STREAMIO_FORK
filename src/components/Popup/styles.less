@@ -59,3 +59,21 @@
         }
     }
 }
+
+// Popup's `portal` mode (see Popup.js) renders this same .menu-container in a portal to
+// document.body instead of nesting it under .label-container, so this modifier can't be scoped
+// under .label-container either - the portaled node is no longer its descendant. Position is set
+// inline (top/left, computed from the label's own on-screen position) instead of via the
+// menu-direction-* modifiers above, which only make sense relative to that ancestor.
+.menu-container-portal {
+    position: fixed;
+    // Above App's toast layer (1) and Popup's own in-place menu-container (10, this ancestor
+    // can never actually reach that high against a toast anyway - see Popup.js) but below a
+    // true full-screen overlay like BottomSheet (99).
+    z-index: 20;
+    visibility: hidden;
+
+    &.visible {
+        visibility: visible;
+    }
+}

@@ -105,6 +105,7 @@ const LanguageMenu = () => {
         <Popup
             open={open}
             direction={'bottom-right'}
+            portal
             onCloseRequest={close}
             renderLabel={renderLabel}
             renderMenu={renderMenu}

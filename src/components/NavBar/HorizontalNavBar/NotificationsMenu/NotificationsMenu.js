@@ -47,6 +47,7 @@ const NotificationsMenu = (props) => {
         <Popup
             open={menuOpen}
             direction={'bottom-left'}
+            portal
             onCloseRequest={closeMenu}
             renderLabel={renderLabel}
             renderMenu={renderMenu}
