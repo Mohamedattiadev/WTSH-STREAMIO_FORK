@@ -19,12 +19,12 @@
 
 .trailer-modal {
     .modal-dialog-container {
-        // Narrower than the mockup's own reference width - a 16:9 video at the old 36rem
-        // pushed total modal height (video + title/tags/description) past shorter browser
-        // windows' 80% max-height, forcing an internal scroll just to see the description
-        // and library button. 30rem plus the description clamp below comfortably fits
-        // without scrolling on real windowed (non-fullscreen) browser heights.
-        width: 30rem;
+        // Wider than the mockup's own literal reference (28rem) per explicit request - the
+        // user wants this wider than our prior 30rem, not matched to the mockup's number.
+        // A 16:9 video gets taller as this widens, so the info-container padding and
+        // description clamp below were trimmed further to compensate and keep this fitting
+        // without an internal scroll on real windowed (non-fullscreen) browser heights.
+        width: 35rem;
         max-width: 90%;
         padding: 0;
         overflow: hidden;
@@ -82,8 +82,8 @@
 .info-container {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    padding: 1.1rem 1.25rem 1.35rem;
+    gap: 0.5rem;
+    padding: 0.9rem 1.25rem 1.1rem;
 }
 
 .title {
@@ -115,7 +115,7 @@
     color: var(--muted-foreground-color);
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
     overflow: hidden;
 }
 
