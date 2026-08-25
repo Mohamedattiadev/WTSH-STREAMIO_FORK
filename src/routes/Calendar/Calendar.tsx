@@ -4,9 +4,11 @@ import React, { useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 import { useProfile, withCoreSuspender } from 'stremio/common';
 import { MainNavBars, BottomSheet } from 'stremio/components';
+import useSupabaseAuth from 'stremio/common/Supabase/useSupabaseAuth';
 import Selector from './Selector';
 import Table from './Table';
 import List from './List';
+import Reminders from './Reminders';
 import Details from './Details';
 import Placeholder from './Placeholder';
 import useCalendar from './useCalendar';
@@ -22,6 +24,7 @@ const Calendar = () => {
     }), [year, month]);
     const calendar = useCalendar(urlParams);
     const profile = useProfile();
+    const { user: supabaseUser } = useSupabaseAuth();
 
     const { toDayMonth } = useCalendarDate(profile);
 
@@ -51,13 +54,16 @@ const Calendar = () => {
                                 onChange={setSelected}
                             />
                         </div>
-                        <List
-                            items={calendar.items}
-                            selected={selected}
-                            monthInfo={calendar.monthInfo}
-                            profile={profile}
-                            onChange={setSelected}
-                        />
+                        <div className={styles['side']}>
+                            <List
+                                items={calendar.items}
+                                selected={selected}
+                                monthInfo={calendar.monthInfo}
+                                profile={profile}
+                                onChange={setSelected}
+                            />
+                            <Reminders />
+                        </div>
                         <BottomSheet title={detailsTitle} show={!!selected} onClose={onDetailsClose}>
                             <Details
                                 selected={selected}
@@ -66,7 +72,14 @@ const Calendar = () => {
                         </BottomSheet>
                     </div>
                     :
-                    <Placeholder />
+                    supabaseUser !== null ?
+                        <div className={classNames(styles['content'], 'animation-fade-in')}>
+                            <div className={styles['side']}>
+                                <Reminders />
+                            </div>
+                        </div>
+                        :
+                        <Placeholder />
             }
         </MainNavBars>
     );

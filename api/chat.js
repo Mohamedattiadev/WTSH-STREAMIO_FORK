@@ -67,13 +67,20 @@ module.exports = async (req, res) => {
         return;
     }
 
-    const { query, candidates } = req.body ?? {};
+    const { query, candidates, todayDate: clientTodayDate } = req.body ?? {};
     if (typeof query !== 'string' || !Array.isArray(candidates)) {
         res.status(400).json({ error: 'Expected { query: string, candidates: array }' });
         return;
     }
 
-    const todayDate = new Date().toISOString().slice(0, 10);
+    // Prefer the client's own local date (see answerGenerator.js's getLocalDateString) - this
+    // server has no reliable way to know the user's timezone otherwise, and its own UTC clock is
+    // wrong for a meaningful stretch of every day for anyone not in UTC. Falls back to server
+    // time only for a caller that doesn't send it (defense in depth, not the expected path).
+    const todayDate = /^\d{4}-\d{2}-\d{2}$/.test(clientTodayDate) ?
+        clientTodayDate
+        :
+        new Date().toISOString().slice(0, 10);
     const prompt = buildPrompt(query, candidates, todayDate);
 
     try {

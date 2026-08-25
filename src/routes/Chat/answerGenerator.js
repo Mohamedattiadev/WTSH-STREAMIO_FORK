@@ -67,11 +67,24 @@ const generateAnswerRuleBased = ({ parsedQuery, candidates }) => {
 // calendar-event storage needs the Supabase `calendar_events` table (Phase 4), which doesn't
 // exist until that's set up. Once it does, the Chat route can write it through the same path a
 // manual calendar entry would use; nothing else here needs to change.
+// Formats the *client's* local wall-clock date as YYYY-MM-DD (Date's getFullYear/Month/Date
+// accessors are local-time, unlike toISOString's UTC) - the server has no way to know the user's
+// timezone on its own, and computing "today" from its own clock is wrong for a meaningful part of
+// every day for anyone not in UTC (e.g. resolves to yesterday during the client's early-morning
+// hours in any timezone ahead of UTC), which broke "I'll watch X on Friday"-style resolution.
+const getLocalDateString = () => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 const generateAnswerWithLlm = async ({ query, candidates }) => {
     const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, candidates })
+        body: JSON.stringify({ query, candidates, todayDate: getLocalDateString() })
     });
 
     if (!response.ok) {

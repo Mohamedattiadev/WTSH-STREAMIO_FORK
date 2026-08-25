@@ -56,7 +56,12 @@ const STOPWORDS = new Set([
     'a', 'an', 'the', 'me', 'my', 'i', 'to', 'for', 'of', 'is', 'are', 'that', 'which',
     'find', 'show', 'give', 'recommend', 'suggest', 'suggestion', 'suggestions',
     'something', 'some', 'anything', 'please', 'can', 'you', 'watch', 'want', 'with',
-    'movie', 'movies', 'film', 'films', 'show', 'shows', 'series', 'like'
+    'movie', 'movies', 'film', 'films', 'show', 'shows', 'series', 'like',
+    // Scheduling-phrase glue words - this app's own "I'll watch X on Friday"/"I will watch X
+    // this Friday" pattern (see api/chat.js's scheduling extraction) otherwise leaves noise
+    // like "will"/"this"/"on"/day names sitting in freeText right next to the actual title.
+    "i'll", 'ill', 'will', 'this', 'on', 'next', 'tonight', 'tomorrow', 'gonna', 'going',
+    'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'
 ]);
 
 const RUNTIME_PATTERN = /\b(?:under|less than|shorter than|within|no more than|max(?:imum)?)\s+(\d+(?:\.\d+)?)\s*(hours?|hrs?|h|minutes?|mins?|m)\b/i;
@@ -268,8 +273,13 @@ const retrieveCandidates = (parsed, items, referenceItem = null, limit = 20) => 
     const scored = runtimeFiltered.map((item, index) => {
         const itemGenres = extractGenres(item);
         const overlap = itemGenres.filter((g) => effectiveGenres.includes(g.toLowerCase()));
+        // Bidirectional on the name: freeText is often a noisy multi-word leftover (e.g. "will
+        // uzumaki this friday" once "watch"/"i" are stripped as stopwords but "will"/"this"/
+        // "friday" aren't), so a short real title is a *substring of the query*, not the other
+        // way around. Checking only query-includes-name would never match "Uzumaki" there.
+        const nameLower = typeof item.name === 'string' ? item.name.toLowerCase() : '';
         const textHit = parsed.freeText.length > 0 && (
-            (typeof item.name === 'string' && item.name.toLowerCase().includes(parsed.freeText)) ||
+            (nameLower.length > 0 && (nameLower.includes(parsed.freeText) || (nameLower.length >= 3 && parsed.freeText.includes(nameLower)))) ||
             (typeof item.description === 'string' && item.description.toLowerCase().includes(parsed.freeText))
         );
         const score = overlap.length * 10 + (textHit ? 5 : 0);
