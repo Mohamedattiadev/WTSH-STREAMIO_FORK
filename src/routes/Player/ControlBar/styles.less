@@ -67,6 +67,24 @@
             }
         }
 
+        .speed-chip {
+            width: auto;
+            padding: 0 0.75rem;
+            border: 0.06rem solid rgba(255, 255, 255, 0.16);
+
+            .speed-chip-label {
+                font-family: var(--font-mono);
+                font-size: 0.78rem;
+                font-weight: 700;
+                color: var(--primary-foreground-color);
+                white-space: nowrap;
+            }
+
+            &:global(.disabled) .speed-chip-label {
+                opacity: 0.4;
+            }
+        }
+
         .episodes-button {
             flex: none;
             display: flex;

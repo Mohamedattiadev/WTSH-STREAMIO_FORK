@@ -1,0 +1,107 @@
+// Copyright (C) 2017-2026 Smart code 203358507
+
+@import (reference) '~stremio/common/screen-sizes.less';
+
+.center-controls-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2.5rem;
+    z-index: 0;
+
+    .play-button {
+        flex: none;
+        width: 4.5rem;
+        height: 4.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--ember), var(--ember-2));
+        box-shadow: 0 0.5rem 1.5rem rgba(255, 95, 54, 0.35);
+        transition: transform 150ms ease;
+
+        &:hover:not(:global(.disabled)) {
+            transform: scale(1.05);
+        }
+
+        &:global(.disabled) {
+            opacity: 0.5;
+        }
+
+        .play-icon {
+            width: 2rem;
+            height: 2rem;
+            color: #20100a;
+        }
+    }
+
+    .skip-button {
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+        width: 3.25rem;
+        height: 3.25rem;
+        border-radius: 50%;
+        background-color: rgba(10, 9, 10, 0.5);
+        backdrop-filter: blur(4px);
+        border: 0.06rem solid rgba(255, 255, 255, 0.16);
+        transition: background-color 150ms ease, transform 150ms ease;
+
+        &:hover {
+            background-color: rgba(10, 9, 10, 0.7);
+            transform: scale(1.05);
+        }
+
+        .skip-icon {
+            width: 1.35rem;
+            height: 1.35rem;
+            color: var(--primary-foreground-color);
+        }
+
+        .skip-label {
+            font-family: var(--font-mono);
+            font-size: 0.62rem;
+            font-weight: 600;
+            color: var(--primary-foreground-color);
+            opacity: 0.85;
+        }
+    }
+}
+
+@media only screen and (max-width: @minimum) {
+    .center-controls-container {
+        gap: 1.5rem;
+
+        .play-button {
+            width: 3.5rem;
+            height: 3.5rem;
+
+            .play-icon {
+                width: 1.6rem;
+                height: 1.6rem;
+            }
+        }
+
+        .skip-button {
+            width: 2.6rem;
+            height: 2.6rem;
+
+            .skip-icon {
+                width: 1.1rem;
+                height: 1.1rem;
+            }
+
+            .skip-label {
+                font-size: 0.55rem;
+            }
+        }
+    }
+}

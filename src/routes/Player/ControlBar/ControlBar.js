@@ -227,8 +227,8 @@ const ControlBar = React.forwardRef(({
                                 <Icon className={styles['icon']} name={'network'} />
                             </Button>
                     }
-                    <Button className={classnames(styles['control-bar-button'], { 'disabled': playbackSpeed === null })} tabIndex={-1} onMouseDown={onSpeedButtonMouseDown} onClick={onToggleSpeedMenu}>
-                        <Icon className={styles['icon']} name={'speed'} />
+                    <Button className={classnames(styles['control-bar-button'], styles['speed-chip'], { 'disabled': playbackSpeed === null })} title={t('PLAYER_SPEED')} tabIndex={-1} onMouseDown={onSpeedButtonMouseDown} onClick={onToggleSpeedMenu}>
+                        <span className={styles['speed-chip-label']}>{typeof playbackSpeed === 'number' ? `${playbackSpeed}x` : '1x'}</span>
                     </Button>
                     <Button className={classnames(styles['control-bar-button'], { 'disabled': castButtonDisabled })} tabIndex={-1} onMouseDown={onCastDevicesButtonMouseDown} onClick={onChromecastButtonClick}>
                         <Icon className={styles['icon']} name={'cast'} />

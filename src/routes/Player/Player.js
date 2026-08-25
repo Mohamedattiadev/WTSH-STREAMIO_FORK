@@ -18,6 +18,7 @@ const { default: Buffering } = require('./Buffering');
 const VolumeChangeIndicator = require('./VolumeChangeIndicator');
 const Error = require('./Error');
 const ControlBar = require('./ControlBar');
+const CenterControls = require('./CenterControls');
 const NextVideoPopup = require('./NextVideoPopup');
 const StatisticsMenu = require('./StatisticsMenu');
 const OptionsMenu = require('./OptionsMenu');
@@ -1036,6 +1037,15 @@ const Player = () => {
                     :
                     null
             }
+            <CenterControls
+                className={classnames(styles['center-controls-layer'])}
+                paused={video.state.paused}
+                seekTimeDuration={settings.seekTimeDuration}
+                onSeekPrev={onSeekPrev}
+                onSeekNext={onSeekNext}
+                onPlayRequested={onPlayRequested}
+                onPauseRequested={onPauseRequested}
+            />
             <ControlBar
                 ref={controlBarRef}
                 className={classnames(styles['layer'], styles['control-bar-layer'])}
