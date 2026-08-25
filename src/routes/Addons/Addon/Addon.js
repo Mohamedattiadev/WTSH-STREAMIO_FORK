@@ -150,6 +150,7 @@ const Addon = ({ className, id, name, version, logo, description, transportUrl, 
                 {
                     !behaviorHints.configurationRequired && behaviorHints.configurable ?
                         <Button className={styles['configure-button-container']} title={t('ADDON_CONFIGURE')} tabIndex={-1} onClick={configureButtonOnClick}>
+                            <Icon className={styles['icon']} name={'settings'} />
                             <div className={styles['label']}>{t('ADDON_CONFIGURE')}</div>
                         </Button>
                         :

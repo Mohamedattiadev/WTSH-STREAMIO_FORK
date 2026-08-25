@@ -29,6 +29,9 @@
 :import('~stremio/routes/Addons/Addon/styles.less') {
     addon-description: description-container;
     addon-name: name-container;
+    addon-configure-button: configure-button-container;
+    addon-button-label: label;
+    addon-button-icon: icon;
 }
 
 .addons-container {
@@ -299,6 +302,14 @@
                 // real, longer name has actual room instead of just enough to avoid literally
                 // collapsing to 0.
                 width: 28rem;
+                // Every card needs the exact same footprint regardless of how many lines its
+                // name/description wrap to (a 1-line name next to a 2-line name previously
+                // produced visibly uneven row heights) - fixed height + clipping the name to 2
+                // lines (matching the description's own clamp below) keeps every card identical
+                // while still showing real long names in full in the overwhelming majority of
+                // cases.
+                height: 8.5rem;
+                overflow: hidden;
 
                 // Squeezing Addon's row layout into a card this narrow means its name and
                 // version badge no longer have the wide-list room they normally can rely on -
@@ -311,15 +322,17 @@
                 .addon-name {
                     flex: 1 1 auto;
                     min-width: 7rem;
-                    // The shared row's base rule truncates with an ellipsis (fine at its normal
-                    // full-list width, where there's always room) - still cut real names like
-                    // "IndiaStreams" or "ArabCinemeta" down to ~9 characters even after the
-                    // width/min-width bumps above. Wrapping instead guarantees the full real
-                    // name is always visible here, at the cost of the row growing a touch taller
-                    // for a long name.
+                    // The shared row's base rule truncates to a single line with an ellipsis
+                    // (fine at its normal full-list width, where there's always room) - still
+                    // cut real names like "IndiaStreams" or "ArabCinemeta" down to ~9 characters
+                    // even after the width/min-width bumps above. Clamping to 2 lines instead
+                    // shows the full real name in almost every case, while keeping every card's
+                    // height identical (see the fixed height above) instead of growing per-name.
+                    display: -webkit-box;
+                    -webkit-box-orient: vertical;
+                    -webkit-line-clamp: 2;
                     white-space: normal;
-                    overflow: visible;
-                    text-overflow: clip;
+                    overflow: hidden;
                 }
 
                 .addon-description {
@@ -327,6 +340,26 @@
                     -webkit-box-orient: vertical;
                     -webkit-line-clamp: 2;
                     overflow: hidden;
+                }
+
+                // Matches the reference design: this card is too narrow for a labeled Configure
+                // pill next to Install/Share, and the gear icon alone already reads clearly here
+                // (Share is icon-only for the same reason - see share-button-container in
+                // Addon/styles.less). Scoped to the featured strip only, so the full-width addon
+                // lists elsewhere keep the labeled Configure button.
+                .addon-configure-button {
+                    width: 2.4rem;
+                    padding: 0;
+
+                    .addon-button-label {
+                        display: none;
+                    }
+
+                    .addon-button-icon {
+                        width: 1rem;
+                        height: 1rem;
+                        color: var(--primary-foreground-color);
+                    }
                 }
             }
         }
