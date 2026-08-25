@@ -205,7 +205,7 @@ const MetaItem = React.memo(({ className, type, name, poster, posterShape, poste
             }
             {
                 trailerModalOpen ?
-                    <TrailerModal name={name} trailerStreams={trailerStreams} links={links} onCloseRequest={closeTrailerModal} />
+                    <TrailerModal name={name} trailerStreams={trailerStreams} links={links} poster={poster} deepLinks={deepLinks} onCloseRequest={closeTrailerModal} />
                     :
                     null
             }

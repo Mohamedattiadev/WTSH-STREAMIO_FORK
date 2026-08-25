@@ -2,22 +2,22 @@
 
 const React = require('react');
 const PropTypes = require('prop-types');
+const { default: Icon } = require('stremio/components/Icon');
+const { default: Button } = require('stremio/components/Button');
+const { default: Image } = require('stremio/components/Image');
 const ModalDialog = require('stremio/components/ModalDialog');
 const styles = require('./styles');
 
-// A real, playing-video trailer popup (matching the design mockup's trailer modal card - video on
-// top, title/genre-tags/description below, a library action) instead of navigating away to the
-// full Player route. Cinemeta's trailerStreams always carry a real YouTube video id directly
-// (confirmed live against the actual API response, not assumed) - a plain YouTube embed is the
-// honest, real implementation here, not a placeholder.
-//
-// The mockup's own version is a static preview thumbnail (a play-ring icon over a poster, with a
-// separate "Watch Now" button that hands off to the full Player) since it has no real video to
-// embed. We already have a real playable trailer, so it autoplays directly here instead of adding
-// a fake extra click-through step - genres/description/library toggle only render when the caller
-// actually has that data (MetaItem's card-hover trailer only knows name/links; MetaPreview's panel
-// button has the full real detail set).
-const TrailerModal = ({ name, trailerStreams, links, description, inLibrary, toggleInLibrary, onCloseRequest }) => {
+// Matches the mockup's own trailer-modal design (a static click-to-play thumbnail - poster/
+// backdrop, a center play ring, a "Play Trailer" caption over it - with title/genre-tags/
+// description and a Watch Now / Library / Not Now action row below) rather than autoplaying
+// immediately. Clicking the play ring swaps in the real YouTube embed - Cinemeta's
+// trailerStreams always carry a real video id directly (confirmed live against the actual API
+// response, not assumed), so this is still real playable video once started, just with the
+// mockup's own click-to-start affordance in front of it instead of surprising the user with
+// instant autoplay.
+const TrailerModal = ({ name, trailerStreams, links, description, runtime, poster, background, deepLinks, inLibrary, toggleInLibrary, onCloseRequest }) => {
+    const [playing, setPlaying] = React.useState(false);
     const ytId = Array.isArray(trailerStreams) && trailerStreams.length > 0 && typeof trailerStreams[0].ytId === 'string' ?
         trailerStreams[0].ytId
         :
@@ -31,36 +31,63 @@ const TrailerModal = ({ name, trailerStreams, links, description, inLibrary, tog
             :
             [];
     }, [links]);
-    const buttons = React.useMemo(() => {
-        return typeof toggleInLibrary === 'function' ? [
-            {
-                label: inLibrary ? 'In Library' : 'Add to Library',
-                icon: inLibrary ? 'checkmark' : 'add',
-                props: { onClick: toggleInLibrary }
-            }
-        ] : null;
-    }, [inLibrary, toggleInLibrary]);
+    // Same real deep-link priority MetaPreview's own "Show"/"Resume" button already uses -
+    // a saved playback position first, otherwise wherever the real stream/episode picker lives.
+    const showHref = React.useMemo(() => {
+        return deepLinks ?
+            typeof deepLinks.player === 'string' ?
+                deepLinks.player
+                :
+                typeof deepLinks.metaDetailsStreams === 'string' ?
+                    deepLinks.metaDetailsStreams
+                    :
+                    typeof deepLinks.metaDetailsVideos === 'string' ?
+                        deepLinks.metaDetailsVideos
+                        :
+                        null
+            :
+            null;
+    }, [deepLinks]);
+    const onPlayClick = React.useCallback(() => {
+        setPlaying(true);
+    }, []);
 
     if (ytId === null) {
         return null;
     }
 
     return (
-        <ModalDialog className={styles['trailer-modal']} buttons={buttons} onCloseRequest={onCloseRequest}>
+        <ModalDialog className={styles['trailer-modal']} onCloseRequest={onCloseRequest}>
             <div className={styles['video-container']}>
-                <iframe
-                    className={styles['video']}
-                    // controls=0/modestbranding=1/rel=0/iv_load_policy=3/disablekb=1 strip
-                    // YouTube's own scrubber, CC/settings buttons, and "More videos"/logo
-                    // overlay - the mockup's trailer preview never shows any of that, and
-                    // with those controls left on they visibly clash with the app's own
-                    // close button and card chrome.
-                    src={`https://www.youtube.com/embed/${ytId}?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1`}
-                    title={typeof name === 'string' ? name : 'Trailer'}
-                    frameBorder={'0'}
-                    allow={'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'}
-                    allowFullScreen
-                />
+                {
+                    playing ?
+                        <iframe
+                            className={styles['video']}
+                            // controls=0/modestbranding=1/rel=0/iv_load_policy=3/disablekb=1 strip
+                            // YouTube's own scrubber, CC/settings buttons, and "More videos"/logo
+                            // overlay - they visibly clash with the app's own close button and
+                            // card chrome.
+                            src={`https://www.youtube.com/embed/${ytId}?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1`}
+                            title={typeof name === 'string' ? name : 'Trailer'}
+                            frameBorder={'0'}
+                            allow={'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'}
+                            allowFullScreen
+                        />
+                        :
+                        <Button className={styles['thumbnail']} onClick={onPlayClick}>
+                            {
+                                typeof (poster ?? background) === 'string' ?
+                                    <Image className={styles['thumbnail-image']} src={poster ?? background} alt={' '} />
+                                    :
+                                    null
+                            }
+                            <div className={styles['thumbnail-scrim']} />
+                            <div className={styles['play-ring']}>
+                                <Icon className={styles['play-icon']} name={'play'} />
+                            </div>
+                            <div className={styles['play-caption']}>{'Play Trailer'}</div>
+                        </Button>
+                }
             </div>
             <div className={styles['info-container']}>
                 {
@@ -70,11 +97,17 @@ const TrailerModal = ({ name, trailerStreams, links, description, inLibrary, tog
                         null
                 }
                 {
-                    genres.length > 0 ?
+                    genres.length > 0 || typeof runtime === 'string' ?
                         <div className={styles['tag-row']}>
                             {genres.map((genre) => (
                                 <span key={genre} className={styles['tag']}>{genre}</span>
                             ))}
+                            {
+                                typeof runtime === 'string' && runtime.length > 0 ?
+                                    <span className={styles['tag']}>{runtime}</span>
+                                    :
+                                    null
+                            }
                         </div>
                         :
                         null
@@ -85,6 +118,29 @@ const TrailerModal = ({ name, trailerStreams, links, description, inLibrary, tog
                         :
                         null
                 }
+                <div className={styles['actions-row']}>
+                    {
+                        typeof showHref === 'string' ?
+                            <Button className={styles['watch-now-button']} href={showHref}>
+                                <Icon className={styles['icon']} name={'play'} />
+                                <div className={styles['label']}>{'Watch Now'}</div>
+                            </Button>
+                            :
+                            null
+                    }
+                    {
+                        typeof toggleInLibrary === 'function' ?
+                            <Button className={styles['ghost-button']} onClick={toggleInLibrary}>
+                                <Icon className={styles['icon']} name={inLibrary ? 'checkmark' : 'add'} />
+                                <div className={styles['label']}>{inLibrary ? 'In Library' : 'Library'}</div>
+                            </Button>
+                            :
+                            null
+                    }
+                    <Button className={styles['ghost-button']} onClick={onCloseRequest}>
+                        <div className={styles['label']}>{'Not Now'}</div>
+                    </Button>
+                </div>
             </div>
         </ModalDialog>
     );
@@ -95,6 +151,14 @@ TrailerModal.propTypes = {
     trailerStreams: PropTypes.array,
     links: PropTypes.array,
     description: PropTypes.string,
+    runtime: PropTypes.string,
+    poster: PropTypes.string,
+    background: PropTypes.string,
+    deepLinks: PropTypes.shape({
+        player: PropTypes.string,
+        metaDetailsVideos: PropTypes.string,
+        metaDetailsStreams: PropTypes.string,
+    }),
     inLibrary: PropTypes.bool,
     toggleInLibrary: PropTypes.func,
     onCloseRequest: PropTypes.func

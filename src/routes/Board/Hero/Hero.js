@@ -130,7 +130,17 @@ const HeroSlide = React.memo(({ item, resumable, active }) => {
             </div>
             {
                 trailerModalOpen ?
-                    <TrailerModal name={item.name} trailerStreams={item.trailerStreams} links={item.links} onCloseRequest={closeTrailerModal} />
+                    <TrailerModal
+                        name={item.name}
+                        trailerStreams={item.trailerStreams}
+                        links={item.links}
+                        description={item.description}
+                        runtime={item.runtime}
+                        poster={item.poster}
+                        background={item.background}
+                        deepLinks={item.deepLinks}
+                        onCloseRequest={closeTrailerModal}
+                    />
                     :
                     null
             }

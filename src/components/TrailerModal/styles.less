@@ -14,16 +14,12 @@
     modal-dialog-container: modal-dialog-container;
     close-button-container: close-button-container;
     body-container: body-container;
-    buttons-container: buttons-container;
 }
 
 .trailer-modal {
     .modal-dialog-container {
         // Wider than the mockup's own literal reference (28rem) per explicit request - the
         // user wants this wider than our prior 30rem, not matched to the mockup's number.
-        // A 16:9 video gets taller as this widens, so the info-container padding and
-        // description clamp below were trimmed further to compensate and keep this fitting
-        // without an internal scroll on real windowed (non-fullscreen) browser heights.
         width: 35rem;
         max-width: 90%;
         padding: 0;
@@ -36,30 +32,24 @@
     .close-button-container {
         background-color: rgba(10, 9, 10, 0.55);
         backdrop-filter: blur(4px);
+        z-index: 2;
 
         &:hover {
             background-color: rgba(10, 9, 10, 0.8);
         }
     }
 
-    // ModalDialog's own base rules for these two (padding: 2rem 0 on body-container, margin:
-    // 2rem 0 on buttons-container's :last-child) are nested 4 classes deep
+    // ModalDialog's own base rule here (padding: 2rem 0) is nested 4 classes deep
     // (.modal-container .modal-dialog-container .modal-dialog-content .body-container) - a
     // plain `.trailer-modal .body-container` override loses that specificity fight silently
-    // (verified live: the override was being applied but overridden right back), which is
-    // exactly what left a ~2rem dead gap between the description and the Library button.
-    // !important sidesteps the specificity war rather than trying to out-nest it.
+    // (verified live: the override was being applied but overridden right back). !important
+    // sidesteps the specificity war rather than trying to out-nest it.
     .body-container {
         padding: 0 !important;
 
         &:last-child {
             margin-bottom: 0 !important;
         }
-    }
-
-    .buttons-container {
-        padding: 0 1.25rem 1.25rem !important;
-        margin: 0 !important;
     }
 }
 
@@ -79,17 +69,96 @@
     }
 }
 
+// The mockup's own click-to-play thumbnail state (matches .trailer-modal-video there) - shown
+// until the user actually asks for the video, instead of autoplaying the instant this opens.
+.thumbnail {
+    all: unset;
+    box-sizing: border-box;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    overflow: hidden;
+
+    .thumbnail-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .thumbnail-scrim {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(0deg, rgba(12, 10, 12, 0.85) 0%, rgba(12, 10, 12, 0.1) 55%, rgba(12, 10, 12, 0.35) 100%);
+    }
+
+    .play-ring, .play-caption {
+        position: relative;
+        z-index: 1;
+    }
+
+    .play-ring {
+        flex: none;
+        width: 4rem;
+        height: 4rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(10, 9, 10, 0.55);
+        border: 0.09rem solid rgba(255, 255, 255, 0.35);
+        transition: background-color 0.15s ease-out, border-color 0.15s ease-out, transform 0.15s ease-out;
+
+        .play-icon {
+            width: 1.7rem;
+            height: 1.7rem;
+            color: var(--primary-foreground-color);
+            transition: color 0.15s ease-out;
+        }
+    }
+
+    .play-caption {
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: var(--primary-foreground-color);
+    }
+
+    &:hover {
+        .play-ring {
+            background-color: var(--primary-accent-color);
+            border-color: transparent;
+            transform: scale(1.06);
+
+            .play-icon {
+                color: #20100a;
+            }
+        }
+    }
+}
+
 .info-container {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.9rem 1.25rem 1.1rem;
+    gap: 0.6rem;
+    padding: 1.1rem 1.25rem 1.25rem;
 }
 
 .title {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     color: var(--primary-foreground-color);
 }
 
@@ -110,13 +179,61 @@
 
 .description {
     margin: 0;
-    font-size: 0.83rem;
+    font-size: 0.85rem;
     line-height: 1.55;
     color: var(--muted-foreground-color);
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
+}
+
+.actions-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 0.2rem;
+
+    .watch-now-button, .ghost-button {
+        flex: none;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        height: 2.5rem;
+        padding: 0 1rem;
+        border-radius: 0.65rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        white-space: nowrap;
+
+        .icon {
+            flex: none;
+            width: 1rem;
+            height: 1rem;
+        }
+    }
+
+    .watch-now-button {
+        background-color: var(--primary-accent-color);
+        color: #20100a;
+
+        &:hover {
+            opacity: 0.85;
+        }
+    }
+
+    .ghost-button {
+        background-color: transparent;
+        border: 0.06rem solid rgba(255, 255, 255, 0.16);
+        color: var(--primary-foreground-color);
+
+        &:hover {
+            background-color: rgba(255, 255, 255, 0.06);
+        }
+    }
 }
 
 @media only screen and (max-width: @minimum) {
