@@ -101,4 +101,81 @@
             }
         }
     }
+
+    .setup-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 0.06rem solid var(--overlay-color);
+    }
+
+    .setup-hint {
+        font-size: 0.85rem;
+        color: var(--primary-foreground-color);
+        opacity: 0.6;
+    }
+
+    .command-box {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        height: 2.4rem;
+        padding: 0 0.3rem;
+        border-radius: 1.2rem;
+        background-color: var(--overlay-color);
+        overflow: hidden;
+
+        .platform-badge {
+            flex: none;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--primary-accent-color);
+            background-color: transparent;
+            border: none;
+            border-radius: 1rem;
+            cursor: pointer;
+            white-space: nowrap;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+
+        .command-text {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            white-space: pre;
+            text-overflow: ellipsis;
+            font-family: var(--font-mono, monospace);
+            font-size: 0.8rem;
+            color: var(--primary-foreground-color);
+        }
+
+        .copy-button {
+            flex: none;
+            width: 1.8rem;
+            height: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 100%;
+            background-color: var(--surface-elevated-color, rgba(255, 255, 255, 0.08));
+
+            &:hover {
+                outline: var(--focus-outline-size) solid var(--primary-foreground-color);
+            }
+
+            .icon {
+                flex: none;
+                width: 0.9rem;
+                height: 0.9rem;
+                margin: 0;
+                color: var(--primary-foreground-color);
+            }
+        }
+    }
 }

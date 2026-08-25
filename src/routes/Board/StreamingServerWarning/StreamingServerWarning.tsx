@@ -9,26 +9,8 @@ import { useCore } from 'stremio/core';
 import useProfile from 'stremio/common/useProfile';
 import { withCoreSuspender } from 'stremio/common/CoreSuspender';
 import useToast from 'stremio/common/Toast/useToast';
+import { SETUP_COMMANDS, PLATFORM_LABEL, detectPlatform, type Platform } from 'stremio/common/streamingServerSetupCommand';
 import styles from './StreamingServerWarning.less';
-
-const SETUP_COMMANDS = {
-    unix: 'curl -fsSL https://raw.githubusercontent.com/Mohamedattiadev/stremio-web/stremio-server-setup/scripts/stremio-server-setup/install.sh | bash',
-    windows: 'irm https://raw.githubusercontent.com/Mohamedattiadev/stremio-web/stremio-server-setup/scripts/stremio-server-setup/install.ps1 | iex',
-};
-
-type Platform = keyof typeof SETUP_COMMANDS;
-
-const PLATFORM_LABEL: Record<Platform, string> = {
-    unix: 'macOS / Linux',
-    windows: 'Windows',
-};
-
-const detectPlatform = (): Platform => {
-    if (typeof navigator !== 'undefined' && /win/i.test(navigator.userAgent)) {
-        return 'windows';
-    }
-    return 'unix';
-};
 
 type Props = {
     className?: string;
