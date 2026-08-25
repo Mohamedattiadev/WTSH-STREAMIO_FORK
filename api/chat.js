@@ -61,13 +61,16 @@ module.exports = async (req, res) => {
         return;
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const { query, candidates, todayDate: clientTodayDate, apiKey: userApiKey } = req.body ?? {};
+    // A user's own key from Settings (see src/common/useGeminiApiKey.js) takes priority over
+    // this server's shared key - lets Chat work with no server-side GEMINI_API_KEY configured
+    // at all, e.g. running this dev server locally with no Vercel env vars set.
+    const apiKey = typeof userApiKey === 'string' && userApiKey.length > 0 ? userApiKey : process.env.GEMINI_API_KEY;
     if (typeof apiKey !== 'string' || apiKey.length === 0) {
         res.status(503).json({ error: 'GEMINI_API_KEY is not configured on the server' });
         return;
     }
 
-    const { query, candidates, todayDate: clientTodayDate } = req.body ?? {};
     if (typeof query !== 'string' || !Array.isArray(candidates)) {
         res.status(400).json({ error: 'Expected { query: string, candidates: array }' });
         return;

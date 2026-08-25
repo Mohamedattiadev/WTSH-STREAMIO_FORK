@@ -80,11 +80,19 @@ const getLocalDateString = () => {
     return `${year}-${month}-${day}`;
 };
 
-const generateAnswerWithLlm = async ({ query, candidates }) => {
+const generateAnswerWithLlm = async ({ query, candidates, apiKey }) => {
     const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, candidates, todayDate: getLocalDateString() })
+        body: JSON.stringify({
+            query,
+            candidates,
+            todayDate: getLocalDateString(),
+            // A user-supplied key from Settings (see useGeminiApiKey.js) - the server prefers
+            // this over its own GEMINI_API_KEY env var when present, so Chat can work on a
+            // self-hosted dev server with no server-side key configured at all.
+            ...(typeof apiKey === 'string' && apiKey.length > 0 ? { apiKey } : {})
+        })
     });
 
     if (!response.ok) {
@@ -109,10 +117,10 @@ const isLlmConfigured = () => true;
  * falling back to the rule-based generator on any failure.
  * @returns {Promise<{ text: string, items: object[], scheduling?: { title: string, date: string } | null }>}
  */
-const generateAnswer = async ({ query, parsedQuery, candidates }) => {
+const generateAnswer = async ({ query, parsedQuery, candidates, apiKey }) => {
     if (isLlmConfigured()) {
         try {
-            return await generateAnswerWithLlm({ query, parsedQuery, candidates });
+            return await generateAnswerWithLlm({ query, parsedQuery, candidates, apiKey });
         } catch (error) {
             console.error('generateAnswerWithLlm failed, falling back to rule-based answer', error);
         }

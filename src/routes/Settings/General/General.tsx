@@ -6,6 +6,7 @@ import { usePlatform, useToast, useDiscord } from 'stremio/common';
 import { Section, Option, Link } from '../components';
 import User from './User';
 import EmberAccount from './EmberAccount';
+import GeminiApiKey from './GeminiApiKey';
 import useDataExport from './useDataExport';
 import styles from './General.less';
 
@@ -103,6 +104,8 @@ const General = forwardRef<HTMLDivElement, Props>(({ profile }: Props, ref) => {
         </Section>
 
         <EmberAccount />
+
+        <GeminiApiKey />
 
         <Section>
             {

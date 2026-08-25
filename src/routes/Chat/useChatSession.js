@@ -4,6 +4,7 @@ const React = require('react');
 const useSearch = require('stremio/routes/Search/useSearch');
 const useSupabaseAuth = require('stremio/common/Supabase/useSupabaseAuth');
 const useCalendarReminders = require('stremio/common/Supabase/useCalendarReminders');
+const useGeminiApiKey = require('stremio/common/useGeminiApiKey');
 const { getSupabaseClient } = require('stremio/common/Supabase/supabaseClient');
 const { parseQuery, extractGenres, resolveReferenceItem, retrieveCandidates } = require('./retrieval');
 const { generateAnswer } = require('./answerGenerator');
@@ -26,6 +27,7 @@ const NO_ADDONS_TEXT = 'You don\'t have any addons installed that support search
 const useChatSession = () => {
     const { user } = useSupabaseAuth();
     const { addReminder } = useCalendarReminders(user);
+    const { apiKey: geminiApiKey } = useGeminiApiKey();
     const [messages, setMessages] = React.useState([]);
     const [inputValue, setInputValue] = React.useState('');
     const [pendingQuery, setPendingQuery] = React.useState(null);
@@ -134,7 +136,7 @@ const useChatSession = () => {
             const answer = noAddons ?
                 { text: NO_ADDONS_TEXT, items: [] }
                 :
-                await generateAnswer({ query: pendingQuery.originalQuery, parsedQuery: pendingQuery.parsed, candidates });
+                await generateAnswer({ query: pendingQuery.originalQuery, parsedQuery: pendingQuery.parsed, candidates, apiKey: geminiApiKey });
 
             if (cancelled) {
                 return;
