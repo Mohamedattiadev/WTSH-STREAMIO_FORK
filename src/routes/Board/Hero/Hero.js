@@ -30,7 +30,7 @@ const extractYear = (releaseInfo) => {
     return match ? match[0] : null;
 };
 
-const HeroSlide = React.memo(({ item, resumable, active }) => {
+const HeroSlide = React.memo(({ item, resumable, active, onTrailerModalOpenChange }) => {
     const [trailerModalOpen, openTrailerModal, closeTrailerModal] = useBinaryState(false);
     const playerHref = resumable && item.deepLinks && typeof item.deepLinks.player === 'string' ? item.deepLinks.player : null;
     const detailsHref = React.useMemo(() => getMetaDetailsHref(item.deepLinks), [item.deepLinks]);
@@ -39,6 +39,15 @@ const HeroSlide = React.memo(({ item, resumable, active }) => {
         event.preventDefault();
         openTrailerModal();
     }, [openTrailerModal]);
+    // The Hero's own backdrop keeps autoplaying/crossfading behind the modal's translucent,
+    // blurred backdrop while a trailer is open - reads as a moving shadow behind the trailer
+    // card. Reporting open/close up to Hero lets it pause the carousel for the duration, same as
+    // it already does on hover/focus.
+    React.useEffect(() => {
+        if (typeof onTrailerModalOpenChange === 'function') {
+            onTrailerModalOpenChange(trailerModalOpen);
+        }
+    }, [trailerModalOpen, onTrailerModalOpenChange]);
     const renderBackdropFallback = React.useCallback(() => null, []);
     const renderTitleFallback = React.useCallback(() => (
         <div className={styles['title']}>{item.name}</div>
@@ -170,11 +179,16 @@ HeroSlide.propTypes = {
     }).isRequired,
     resumable: PropTypes.bool,
     active: PropTypes.bool,
+    onTrailerModalOpenChange: PropTypes.func,
 };
 
 const Hero = ({ items, onActiveItemChange }) => {
     const [index, setIndex] = React.useState(0);
     const [paused, setPaused] = React.useState(false);
+    const [trailerModalOpen, setTrailerModalOpen] = React.useState(false);
+    const onTrailerModalOpenChange = React.useCallback((open) => {
+        setTrailerModalOpen(open);
+    }, []);
 
     React.useEffect(() => {
         if (index >= items.length) {
@@ -205,7 +219,7 @@ const Hero = ({ items, onActiveItemChange }) => {
     }, [goTo, index]);
 
     React.useEffect(() => {
-        if (paused || items.length <= 1) {
+        if (paused || trailerModalOpen || items.length <= 1) {
             return undefined;
         }
 
@@ -213,7 +227,7 @@ const Hero = ({ items, onActiveItemChange }) => {
             goTo(index + 1);
         }, AUTOPLAY_INTERVAL_MS);
         return () => clearTimeout(timeoutId);
-    }, [index, paused, items.length, goTo]);
+    }, [index, paused, trailerModalOpen, items.length, goTo]);
 
     const onMouseEnter = React.useCallback(() => setPaused(true), []);
     const onMouseLeave = React.useCallback(() => setPaused(false), []);
@@ -251,7 +265,7 @@ const Hero = ({ items, onActiveItemChange }) => {
             onKeyDown={onKeyDown}
         >
             {items.map(({ item, resumable }, itemIndex) => (
-                <HeroSlide key={item.id ?? itemIndex} item={item} resumable={resumable} active={itemIndex === index} />
+                <HeroSlide key={item.id ?? itemIndex} item={item} resumable={resumable} active={itemIndex === index} onTrailerModalOpenChange={onTrailerModalOpenChange} />
             ))}
             {
                 items.length > 1 ?

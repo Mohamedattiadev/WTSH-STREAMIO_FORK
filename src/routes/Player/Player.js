@@ -30,6 +30,7 @@ const SpeedMenu = require('./SpeedMenu');
 const { default: SideDrawerButton } = require('./SideDrawerButton');
 const { default: SideDrawer } = require('./SideDrawer');
 const SearchPanel = require('./SearchPanel');
+const SourcesMenu = require('./SourcesMenu');
 const ChatPanel = require('stremio/routes/Chat/ChatPanel');
 const useMetaDetails = require('stremio/routes/MetaDetails/useMetaDetails');
 const usePlayer = require('./usePlayer');
@@ -115,6 +116,7 @@ const Player = () => {
     const [statisticsMenuOpen, openStatisticsMenu, closeStatisticsMenu, toggleStatisticsMenu] = useBinaryState(false);
     const [castDevicesMenuOpen, , closeCastDevicesMenu, toggleCastDevicesMenu] = useBinaryState(false);
     const [streamingServerMenuOpen, , closeStreamingServerMenu, toggleStreamingServerMenu] = useBinaryState(false);
+    const [sourcesMenuOpen, , closeSourcesMenu, toggleSourcesMenu] = useBinaryState(false);
     const [nextVideoPopupOpen, openNextVideoPopup, closeNextVideoPopup] = useBinaryState(false);
     // Opens automatically once real data is ready (see the effect below) rather than starting
     // true - this is the one real info panel for the title (compact MetaPreview inside
@@ -136,8 +138,8 @@ const Player = () => {
     const [chatPanelOpen, , closeChatPanel, toggleChatPanel] = useBinaryState(false);
 
     const menusOpen = React.useMemo(() => {
-        return optionsMenuOpen || subtitlesMenuOpen || audioMenuOpen || speedMenuOpen || statisticsMenuOpen || castDevicesMenuOpen || streamingServerMenuOpen || sideDrawerOpen || searchPanelOpen || chatPanelOpen || nextVideoPopupOpen;
-    }, [optionsMenuOpen, subtitlesMenuOpen, audioMenuOpen, speedMenuOpen, statisticsMenuOpen, castDevicesMenuOpen, streamingServerMenuOpen, sideDrawerOpen, searchPanelOpen, chatPanelOpen, nextVideoPopupOpen]);
+        return optionsMenuOpen || subtitlesMenuOpen || audioMenuOpen || speedMenuOpen || statisticsMenuOpen || castDevicesMenuOpen || streamingServerMenuOpen || sourcesMenuOpen || sideDrawerOpen || searchPanelOpen || chatPanelOpen || nextVideoPopupOpen;
+    }, [optionsMenuOpen, subtitlesMenuOpen, audioMenuOpen, speedMenuOpen, statisticsMenuOpen, castDevicesMenuOpen, streamingServerMenuOpen, sourcesMenuOpen, sideDrawerOpen, searchPanelOpen, chatPanelOpen, nextVideoPopupOpen]);
 
     const closeMenus = React.useCallback(() => {
         closeOptionsMenu();
@@ -147,6 +149,7 @@ const Player = () => {
         closeStatisticsMenu();
         closeCastDevicesMenu();
         closeStreamingServerMenu();
+        closeSourcesMenu();
         closeSideDrawer();
         closeSearchPanel();
         closeChatPanel();
@@ -264,14 +267,25 @@ const Player = () => {
 
     // Auto-fallback to a different stream/source when the one actually playing fails outright
     // (video.events' 'error' with .critical - the same real signal Error.js already renders
-    // from below, not a fabricated "not working" detector). Only fetches the full cross-addon
-    // streams list (the same useMetaDetails hook MetaDetails' own StreamsList already uses)
-    // lazily, after a real failure - not eagerly on every player mount, which would mean a
-    // second full addon fetch on every successful playback too.
+    // from below, not a fabricated "not working" detector), and the same cross-addon streams
+    // list backs a manual "Switch Source" menu (SourcesMenu) for when a stream plays badly
+    // without ever firing that hard failure. Only fetches the full list (the same useMetaDetails
+    // hook MetaDetails' own StreamsList already uses) lazily, on an actual failure or when the
+    // user opens the menu - not eagerly on every player mount, which would mean a second full
+    // addon fetch on every successful playback too.
     const streamFallbackUrlParams = React.useMemo(() => {
-        return error !== null ? { type, id, videoId } : {};
-    }, [error, type, id, videoId]);
+        return error !== null || sourcesMenuOpen ? { type, id, videoId } : {};
+    }, [error, sourcesMenuOpen, type, id, videoId]);
     const streamFallbackMetaDetails = useMetaDetails(streamFallbackUrlParams);
+    const sourcesLoading = streamFallbackMetaDetails.streams.some((streams) => streams.content.type === 'Loading');
+    const allStreams = React.useMemo(() => {
+        return streamFallbackMetaDetails.streams
+            .filter((streams) => streams.content.type === 'Ready')
+            .flatMap((streams) => streams.content.content.map((stream) => ({ ...stream, addonName: streams.addon.manifest.name })));
+    }, [streamFallbackMetaDetails.streams]);
+    const onSourceSelected = React.useCallback(() => {
+        closeSourcesMenu();
+    }, []);
     const triedStreamPlayerLinks = React.useRef(new Set());
     React.useEffect(() => {
         triedStreamPlayerLinks.current = new Set();
@@ -286,14 +300,10 @@ const Player = () => {
             triedStreamPlayerLinks.current.add(failedStreamLink);
         }
 
-        const stillLoading = streamFallbackMetaDetails.streams.some((streams) => streams.content.type === 'Loading');
-        if (stillLoading) {
+        if (sourcesLoading) {
             return;
         }
 
-        const allStreams = streamFallbackMetaDetails.streams
-            .filter((streams) => streams.content.type === 'Ready')
-            .flatMap((streams) => streams.content.content);
         const nextStream = allStreams.find((stream) => {
             const link = stream.deepLinks?.player;
             return typeof link === 'string' && !triedStreamPlayerLinks.current.has(link);
@@ -308,7 +318,7 @@ const Player = () => {
             });
             navigate(toPath(nextStream.deepLinks.player), { replace: true });
         }
-    }, [error, streamFallbackMetaDetails.streams]);
+    }, [error, sourcesLoading, allStreams]);
 
     const VIDEO_SCALES = ['contain', 'cover', 'fill'];
     const VIDEO_SCALE_LABELS = { contain: t('PLAYER_SCALE_FIT'), cover: t('PLAYER_SCALE_CROP'), fill: t('PLAYER_SCALE_STRETCH') };
@@ -527,6 +537,9 @@ const Player = () => {
         }
         if (!event.nativeEvent.streamingServerMenuClosePrevented) {
             closeStreamingServerMenu();
+        }
+        if (!event.nativeEvent.sourcesMenuClosePrevented) {
+            closeSourcesMenu();
         }
 
         closeSideDrawer();
@@ -1209,6 +1222,7 @@ const Player = () => {
                 shellCastSupported={shellCastSupported}
                 onToggleCastDevicesMenu={toggleCastDevicesMenu}
                 onToggleStreamingServerMenu={toggleStreamingServerMenu}
+                onToggleSourcesMenu={toggleSourcesMenu}
                 onToggleSubtitlesMenu={toggleSubtitlesMenu}
                 onToggleAudioMenu={toggleAudioMenu}
                 onToggleSpeedMenu={toggleSpeedMenu}
@@ -1261,6 +1275,16 @@ const Player = () => {
                     selectedUrl={profile.settings.streamingServerUrl}
                     status={streamingServer.settings?.type ?? null}
                     onUrlSelected={onStreamingServerUrlSelected}
+                />
+            </Transition>
+            <Transition when={sourcesMenuOpen} name={'fade'}>
+                <SourcesMenu
+                    className={classnames(styles['layer'], styles['menu-layer'])}
+                    streams={allStreams}
+                    loading={sourcesLoading}
+                    videoId={videoId}
+                    selectedStreamLink={player.selected?.stream?.deepLinks?.player}
+                    onStreamSelected={onSourceSelected}
                 />
             </Transition>
             <Transition when={sideDrawerOpen} name={'slide-left'}>

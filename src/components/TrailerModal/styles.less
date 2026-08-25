@@ -19,8 +19,10 @@
 .trailer-modal {
     .modal-dialog-container {
         // Wider than the mockup's own literal reference (28rem) per explicit request - the
-        // user wants this wider than our prior 30rem, not matched to the mockup's number.
-        width: 35rem;
+        // user wants this wider than our prior 30rem, not matched to the mockup's number. Bumped
+        // again (35rem -> 41rem) per a later explicit request for a bigger card - the video's
+        // own 16:9 aspect ratio (padding-top: 56.25% below) scales its height along with this.
+        width: 41rem;
         max-width: 90%;
         padding: 0;
         overflow: hidden;

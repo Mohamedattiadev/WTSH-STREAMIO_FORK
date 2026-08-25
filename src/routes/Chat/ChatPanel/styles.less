@@ -292,7 +292,13 @@
     }
 
     &.compact {
-        height: 100dvh;
+        // The base .chat-panel rule above sets height: 100% - harmless in its other context (a
+        // plain flow child that should fill its parent), but combined with the top/bottom this
+        // gets positioned with in Player (.side-drawer-layer in Player/styles.less), height and
+        // bottom together over-constrain the box the exact same way a fixed 100dvh did (and the
+        // same way SideDrawer's did) - the browser keeps top + height and silently drops bottom,
+        // running the panel past the control bar. auto here lets top/bottom alone determine it.
+        height: auto;
         width: 40rem;
         max-width: 90vw;
         padding-top: calc(@padding + var(--safe-area-inset-top));
