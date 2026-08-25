@@ -18,6 +18,11 @@ const styles = require('./styles');
 
 const ProtectedRoutes = withCoreSuspender(Routes);
 const NAVIGATE_TABS_ROUTES = ['/', '/discover', '/library', '/calendar', '/addons', '/settings'];
+// Real RTL-script languages this app already ships translations for (see
+// stremio-translations/{ar-AR,he-IL,fa-IR}.json) - profile.settings.interfaceLanguage has been
+// observed in both the hyphenated (ar-AR) and bare ISO 639-2 (ara) forms depending on when/how
+// it was set, so both are matched defensively rather than assuming one.
+const RTL_LANGUAGE_CODES = ['ar-AR', 'ara', 'he-IL', 'heb', 'fa-IR', 'fas'];
 
 const App = () => {
     const core = useCore();
@@ -132,6 +137,8 @@ const App = () => {
     React.useEffect(() => {
         if (typeof profile.settings?.interfaceLanguage === 'string') {
             i18n.changeLanguage(profile.settings.interfaceLanguage);
+            document.documentElement.dir = RTL_LANGUAGE_CODES.includes(profile.settings.interfaceLanguage) ? 'rtl' : 'ltr';
+            document.documentElement.lang = profile.settings.interfaceLanguage.split('-')[0];
         }
 
         if (typeof profile.settings?.gamepadSupport === 'boolean') {

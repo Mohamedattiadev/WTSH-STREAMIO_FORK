@@ -12,6 +12,7 @@ const { useHorizontalNavGamepadNavigation } = require('stremio/services/GamepadN
 const SearchBar = require('./SearchBar');
 const NavMenu = require('./NavMenu');
 const NotificationsMenu = require('./NotificationsMenu');
+const { default: LanguageMenu } = require('./LanguageMenu');
 const styles = require('./styles');
 const { t } = require('i18next');
 
@@ -120,6 +121,12 @@ const HorizontalNavBar = React.memo(({ className, route, query, title, backButto
                         <Button className={styles['button-container']} title={fullscreen ? t('EXIT_FULLSCREEN') : t('ENTER_FULLSCREEN')} tabIndex={-1} onClick={fullscreen ? exitFullscreen : requestFullscreen}>
                             <Icon className={styles['icon']} name={fullscreen ? 'minimize' : 'maximize'} />
                         </Button>
+                        :
+                        null
+                }
+                {
+                    navMenu ?
+                        <LanguageMenu />
                         :
                         null
                 }
