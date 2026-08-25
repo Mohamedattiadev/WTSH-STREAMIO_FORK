@@ -293,18 +293,33 @@
 
             .featured-hub-addon {
                 flex: none;
-                width: 24rem;
+                // Was 24rem - real addon names (e.g. "IndiaStreams") were still only getting a
+                // few characters before the min-width floor below kicked in, truncating to
+                // "Indi…". Widened the card and gave the name a much more generous floor so a
+                // real, longer name has actual room instead of just enough to avoid literally
+                // collapsing to 0.
+                width: 28rem;
 
-                // Squeezing Addon's row layout into a 24rem card means its name and version
-                // badge no longer have the wide-list room they normally can rely on - the name
-                // label has no flex/min-width of its own (harmless there, real elsewhere - see
-                // Addon/styles.less), so under this narrower width it was collapsing to 0 and
-                // showing no name text at all. Scoped here rather than changed on the shared
-                // component, since the wide-list layout doesn't need it and giving the name
-                // flex:1 there would shove every row's version badge to the far right.
+                // Squeezing Addon's row layout into a card this narrow means its name and
+                // version badge no longer have the wide-list room they normally can rely on -
+                // the name label has no flex/min-width of its own (harmless there, real
+                // elsewhere - see Addon/styles.less), so under this narrower width it was
+                // collapsing to 0 and showing no name text at all. Scoped here rather than
+                // changed on the shared component, since the wide-list layout doesn't need it
+                // and giving the name flex:1 there would shove every row's version badge to the
+                // far right.
                 .addon-name {
                     flex: 1 1 auto;
-                    min-width: 3rem;
+                    min-width: 7rem;
+                    // The shared row's base rule truncates with an ellipsis (fine at its normal
+                    // full-list width, where there's always room) - still cut real names like
+                    // "IndiaStreams" or "ArabCinemeta" down to ~9 characters even after the
+                    // width/min-width bumps above. Wrapping instead guarantees the full real
+                    // name is always visible here, at the cost of the row growing a touch taller
+                    // for a long name.
+                    white-space: normal;
+                    overflow: visible;
+                    text-overflow: clip;
                 }
 
                 .addon-description {
