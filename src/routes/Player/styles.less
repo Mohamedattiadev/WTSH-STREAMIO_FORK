@@ -27,39 +27,16 @@ html:not(.active-slider-within) {
 }
 
 // Player used to be the sole thing on screen (a router "view: 4" stacked overlay covering the
-// whole app) - it's now an embedded route like any other, sharing MainNavBars' rail/topbar, with
-// a real info panel below the video. This is that page's scroll container; the video itself
-// (.player-container below) stays a fixed-height box at the top, not full-page height.
-.player-page-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-}
-
+// whole app) - it's now an embedded route like any other, sharing MainNavBars' rail/topbar. The
+// title/genres/cast/description info lives in the existing SideDrawer (opened by default - see
+// Player.js), overlaid on the video like a real player's info panel, not stacked below it - so
+// this fills the rest of the content column's real height instead of a fixed aspect-ratio box.
 .player-container {
     position: relative;
     z-index: 0;
-    flex: none;
     width: 100%;
-    // Matches the mockup's own .player-stage exactly (16/7.2, not a plain 16:9) - shorter than
-    // standard widescreen so the info panel below has real presence on screen instead of
-    // requiring a scroll just to see any of it. Was implicitly 100% of a viewport-covering
-    // ancestor before, which no longer exists now that this isn't a stacked full-viewport
-    // overlay.
-    aspect-ratio: 16 / 7.2;
+    height: 100%;
     background-color: @background-color;
-
-    // The native Fullscreen API stretches whatever element requestFullscreen() was called on
-    // to fill the screen - overriding the aspect-ratio box here so a real (video-only, see
-    // Player.js's fullscreenTarget) fullscreen request isn't constrained to the embedded box's
-    // height.
-    &:fullscreen {
-        width: 100vw;
-        height: 100vh;
-        aspect-ratio: auto;
-    }
 
     .layer {
         position: absolute;
@@ -179,10 +156,23 @@ html:not(.active-slider-within) {
         }
 
         &.side-drawer-layer {
+            // Was `bottom: 0` immediately overridden by a second conflicting `bottom: initial`
+            // right after it - net effect was an unconstrained (auto) height, which happened
+            // to still reach the bottom edge only because SideDrawer.tsx sets its own height
+            // to 100dvh (real viewport height - see that file) rather than filling this layer.
+            // Anchoring this layer itself top-to-bottom lets SideDrawer.less use a real 100%
+            // instead, so it's actually scoped to the embedded player instead of the browser
+            // viewport.
+            //
+            // top starts below the mini-topbar (nav-bar-layer) rather than at 0 - the drawer's
+            // own z-index (1, in SideDrawer.less) sits above nav-bar-layer's, so at top:0 it
+            // silently covered the back/fullscreen buttons in that top-right corner and
+            // intercepted their clicks entirely once open-by-default made the overlap
+            // unavoidable instead of a brief manual-toggle state.
+            top: var(--horizontal-nav-bar-size);
             bottom: 0;
             right: 0;
             left: initial;
-            bottom: initial;
         }
     }
 }

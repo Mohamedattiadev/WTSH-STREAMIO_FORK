@@ -13,7 +13,7 @@ const { useServices, useGamepad } = require('stremio/services');
 const { useContentGamepadNavigation } = require('stremio/services/GamepadNavigation');
 const { useSettings, useProfile, useFullscreen, useBinaryState, useToast, useStreamingServer, useModelState, withCoreSuspender, usePlatform, onShortcut, getKeyboardShortcutKey, getKeyboardShortcutKeys, useDiscord, EMPTY_DISCORD_TIMESTAMPS, getPlaybackDiscordActivity } = require('stremio/common');
 const { default: toPath } = require('stremio-router/toPath');
-const { HorizontalNavBar, MainNavBars, MetaPreview, Transition, ContextMenu } = require('stremio/components');
+const { HorizontalNavBar, MainNavBars, Transition, ContextMenu } = require('stremio/components');
 const { default: Buffering } = require('./Buffering');
 const VolumeChangeIndicator = require('./VolumeChangeIndicator');
 const Error = require('./Error');
@@ -116,7 +116,22 @@ const Player = () => {
     const [castDevicesMenuOpen, , closeCastDevicesMenu, toggleCastDevicesMenu] = useBinaryState(false);
     const [streamingServerMenuOpen, , closeStreamingServerMenu, toggleStreamingServerMenu] = useBinaryState(false);
     const [nextVideoPopupOpen, openNextVideoPopup, closeNextVideoPopup] = useBinaryState(false);
-    const [sideDrawerOpen, , closeSideDrawer, toggleSideDrawer] = useBinaryState(false);
+    // Opens automatically once real data is ready (see the effect below) rather than starting
+    // true - this is the one real info panel for the title (compact MetaPreview inside
+    // SideDrawer.tsx), so it needs to be visible without a click rather than living behind a
+    // menu the user has to go find. A separate always-on panel below the video was tried first
+    // and dropped - it duplicated this exact content instead of reusing it. Can't just default
+    // the raw state to true though: SideDrawer.tsx reads props.metaItem.videos with no
+    // undefined guard, and player.metaItem is still null for the first render or two while the
+    // real data loads - opening it before then crashed the route.
+    const [sideDrawerOpen, openSideDrawer, closeSideDrawer, toggleSideDrawer] = useBinaryState(false);
+    const autoOpenedSideDrawerRef = React.useRef(false);
+    React.useEffect(() => {
+        if (!autoOpenedSideDrawerRef.current && player.metaItem?.type === 'Ready') {
+            autoOpenedSideDrawerRef.current = true;
+            openSideDrawer();
+        }
+    }, [player.metaItem, openSideDrawer]);
     const [searchPanelOpen, , closeSearchPanel, toggleSearchPanel] = useBinaryState(false);
     const [chatPanelOpen, , closeChatPanel, toggleChatPanel] = useBinaryState(false);
 
@@ -1066,7 +1081,6 @@ const Player = () => {
 
     return (
         <MainNavBars route={'player'}>
-        <div className={styles['player-page-container']}>
         <div ref={playerRef} className={classnames(styles['player-container'], { [styles['overlayHidden']]: overlayHidden })}
             onMouseDown={onContainerMouseDown}
             onMouseMove={onContainerMouseMove}
@@ -1301,26 +1315,6 @@ const Player = () => {
                     selectedExtraSubtitlesTrackId={selectedExtraSubtitleTrackId}
                 />
             </Transition>
-        </div>
-        {
-            player.metaItem?.type === 'Ready' ?
-                <MetaPreview
-                    className={classnames(styles['player-info-container'], 'animation-fade-in')}
-                    name={player.metaItem.content.name}
-                    logo={player.metaItem.content.logo}
-                    poster={player.metaItem.content.poster}
-                    runtime={player.metaItem.content.runtime}
-                    releaseInfo={player.metaItem.content.releaseInfo}
-                    released={player.metaItem.content.released}
-                    description={player.metaItem.content.description}
-                    links={player.metaItem.content.links}
-                />
-                :
-                player.metaItem?.type === 'Loading' ?
-                    <MetaPreview.Placeholder className={styles['player-info-container']} />
-                    :
-                    null
-        }
         </div>
         </MainNavBars>
     );

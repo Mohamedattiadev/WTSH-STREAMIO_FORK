@@ -2,28 +2,38 @@
 
 @import (reference) '~stremio/common/screen-sizes.less';
 
+// Was a 12.5rem x 7.5rem ellipse with a left-aligned icon - technically a circle-shaped
+// container stretched non-uniformly into an oval, which read as a large, mostly-empty dark
+// blob once repositioned fully inside the video (previously mostly clipped off the edge, so
+// the odd shape rarely showed). A small edge tab - flush against the right side, rounded only
+// on its outer corners - reads as an actual control instead of a stray shape.
 .side-drawer-button {
-    height: 12.5rem;
-    width: 7.5rem;
+    height: 5rem;
+    width: 2.25rem;
     display: flex;
     align-items: center;
-    justify-content: start;
-    padding-left: 0.5rem;
-    border-radius: 50%;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    justify-content: center;
+    border-radius: 0.75rem 0 0 0.75rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
     background-color: var(--modal-background-color);
+    border: 0.06rem solid rgba(255, 255, 255, 0.1);
+    border-right: none;
     -webkit-tap-highlight-color: transparent;
     cursor: pointer;
     opacity: 1;
-    will-change: opacity;
-    transition: opacity 0.3s ease-in-out, border-radius 0.3s ease-in-out;
+    will-change: opacity, background-color;
+    transition: opacity 0.3s ease-in-out, background-color 0.15s ease-out;
+
+    &:hover {
+        background-color: var(--surface-elevated-color);
+    }
 
     .icon {
         position: relative;
-        width: 2.5rem;
-        height: 2.5rem;
+        width: 1.1rem;
+        height: 1.1rem;
         color: var(--primary-foreground-color);
-        opacity: 0.6;
+        opacity: 0.7;
         transition: 0.3s opacity ease-in-out;
     }
 
@@ -36,12 +46,12 @@
 
 @media screen and (max-width: @xsmall) {
     .side-drawer-button {
-        height: 8rem;
-        width: 4.5rem;
+        height: 4rem;
+        width: 2rem;
 
         .icon {
-            width: 2rem;
-            height: 2rem;
+            width: 1rem;
+            height: 1rem;
         }
     }
 }

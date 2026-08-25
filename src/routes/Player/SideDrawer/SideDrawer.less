@@ -19,7 +19,11 @@
     flex-direction: column;
     padding: @padding;
     padding-top: calc(@padding + var(--safe-area-inset-top));
-    height: 100dvh;
+    // Was 100dvh (the real browser viewport height) - harmless while Player always filled the
+    // viewport itself, but this drawer now lives inside an embedded, shorter player container
+    // (see .side-drawer-layer in Player/styles.less, which this fills via 100%), so 100dvh
+    // overflowed well past the actual video box.
+    height: 100%;
     max-width: 35rem;
     overflow-y: auto;
     position: relative;
@@ -43,7 +47,13 @@
     }
 
     .close-button {
-        display: none;
+        // Was display:none outside phone-portrait, relying on the SideDrawerButton edge tab
+        // (now hidden behind this drawer when open - see SideDrawerButton.less) as the only
+        // way to close it on desktop. Now that this drawer opens by default, it needs its own
+        // always-visible close affordance regardless of viewport.
+        display: flex;
+        align-items: center;
+        justify-content: center;
         position: absolute;
         top: calc(1.3rem + var(--safe-area-inset-top));
         right: 1.3rem;
@@ -108,10 +118,6 @@
 @media @phone-portrait {
     .side-drawer {
         max-width: 100dvw;
-
-        .close-button {
-            display: block;
-        }
     }
 }
 
