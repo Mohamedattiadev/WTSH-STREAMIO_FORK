@@ -6,7 +6,7 @@ const useTranslate = require('stremio/common/useTranslate');
 const { default: Icon } = require('stremio/components/Icon');
 const { useCore } = require('stremio/core');
 const { withCoreSuspender } = require('stremio/common');
-const { Button, Image, MainNavBars, MetaItem } = require('stremio/components');
+const { Button, Image, MainNavBars, MetaItem, MetaPreview } = require('stremio/components');
 const useSearch = require('./useSearch');
 const useRemoteAddons = require('stremio/routes/Addons/useRemoteAddons');
 const { COMMUNITY_ADDON_CATALOG } = require('stremio/routes/Addons/CONSTANTS');
@@ -105,9 +105,74 @@ const Search = () => {
     const failedSourceCount = React.useMemo(() => {
         return search.catalogs.filter((catalog) => catalog.content?.type === 'Err' && catalog.content.content !== 'EmptyContent').length;
     }, [search.catalogs]);
+
+    const [selectedMetaItemIndex, setSelectedMetaItemIndex] = React.useState(0);
+    const selectedMetaItem = results[selectedMetaItemIndex] ?? null;
+    const metaPreviewRef = React.useRef();
+
+    React.useEffect(() => {
+        setSelectedMetaItemIndex(0);
+    }, [query]);
+
+    const addToLibrary = React.useCallback(() => {
+        if (selectedMetaItem === null) {
+            return;
+        }
+
+        core.transport.dispatch({
+            action: 'Ctx',
+            args: {
+                action: 'AddToLibrary',
+                args: selectedMetaItem
+            }
+        });
+    }, [selectedMetaItem]);
+    const removeFromLibrary = React.useCallback(() => {
+        if (selectedMetaItem === null) {
+            return;
+        }
+
+        core.transport.dispatch({
+            action: 'Ctx',
+            args: {
+                action: 'RemoveFromLibrary',
+                args: selectedMetaItem.id
+            }
+        });
+    }, [selectedMetaItem]);
+    const toggleWatched = React.useCallback(() => {
+        if (selectedMetaItem === null) {
+            return;
+        }
+
+        core.transport.dispatch({
+            action: 'Ctx',
+            args: {
+                action: 'MetaItemMarkAsWatched',
+                args: {
+                    meta_item: selectedMetaItem,
+                    is_watched: !selectedMetaItem.watched,
+                }
+            }
+        });
+    }, [selectedMetaItem]);
+    const metaItemsOnFocusCapture = React.useCallback((event) => {
+        if (event.target.dataset.index !== null && !isNaN(event.target.dataset.index)) {
+            setSelectedMetaItemIndex(parseInt(event.target.dataset.index, 10));
+        }
+    }, []);
+    const metaItemOnClick = React.useCallback((event) => {
+        const visible = metaPreviewRef.current && window.getComputedStyle(metaPreviewRef.current).display !== 'none';
+        if (event.currentTarget.dataset.index !== selectedMetaItemIndex.toString() && visible) {
+            event.preventDefault();
+            event.currentTarget.focus();
+        }
+    }, [selectedMetaItemIndex]);
+
     return (
         <MainNavBars className={styles['search-container']} route={'search'} query={query}>
             <div className={styles['search-content']}>
+                <div className={styles['results-container']} onFocusCapture={metaItemsOnFocusCapture}>
                 {
                     query === null ?
                         <div className={classnames(styles['search-hints-wrapper'])}>
@@ -155,9 +220,10 @@ const Search = () => {
                                             null
                                     }
                                     <div className={classnames(styles['search-results-grid'], 'animation-fade-in')}>
-                                        {results.map((item) => (
+                                        {results.map((item, index) => (
                                             <MetaItem
                                                 key={`${item.sourceLabel}-${item.type}-${item.id}`}
+                                                className={classnames({ 'selected': selectedMetaItemIndex === index })}
                                                 type={item.type}
                                                 name={item.name}
                                                 poster={item.poster}
@@ -166,6 +232,9 @@ const Search = () => {
                                                 trailerStreams={item.trailerStreams}
                                                 releaseInfo={item.releaseInfo}
                                                 badgeLabel={item.sourceLabel}
+                                                watched={item.watched}
+                                                data-index={index}
+                                                onClick={metaItemOnClick}
                                             />
                                         ))}
                                         {suggestedAddons.map((addon) => (
@@ -203,6 +272,33 @@ const Search = () => {
                                         />
                                         <div className={styles['message-label']}>No results found for &quot;{query}&quot;</div>
                                     </div>
+                }
+                </div>
+                {
+                    selectedMetaItem !== null ?
+                        <MetaPreview
+                            className={styles['meta-preview-container']}
+                            compact={true}
+                            ref={metaPreviewRef}
+                            name={selectedMetaItem.name}
+                            logo={selectedMetaItem.logo}
+                            background={selectedMetaItem.poster}
+                            runtime={selectedMetaItem.runtime}
+                            releaseInfo={selectedMetaItem.releaseInfo}
+                            released={selectedMetaItem.released}
+                            description={selectedMetaItem.description}
+                            links={selectedMetaItem.links}
+                            deepLinks={selectedMetaItem.deepLinks}
+                            trailerStreams={selectedMetaItem.trailerStreams}
+                            inLibrary={selectedMetaItem.inLibrary}
+                            toggleInLibrary={selectedMetaItem.inLibrary ? removeFromLibrary : addToLibrary}
+                            watched={selectedMetaItem.watched}
+                            toggleWatched={toggleWatched}
+                            metaId={selectedMetaItem.id}
+                            like={selectedMetaItem.like}
+                        />
+                        :
+                        null
                 }
             </div>
         </MainNavBars>
