@@ -297,7 +297,7 @@ const Intro = () => {
             <div className={styles['heading-container']}>
                 <div className={styles['logo-container']}>
                     <Logo className={styles['logo']} />
-                    <span className={styles['logo-wordmark']}>WTS</span>
+                    <span className={styles['logo-wordmark']}>WTSH</span>
                 </div>
                 <div className={styles['title-container']}>
                     {t('WEBSITE_SLOGAN_NEW_NEW')}

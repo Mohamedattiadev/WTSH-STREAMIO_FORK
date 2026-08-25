@@ -9,7 +9,7 @@ const ChatPanel = require('stremio/routes/Chat/ChatPanel');
 const useBinaryState = require('stremio/common/useBinaryState');
 const styles = require('./styles');
 
-// Floating launcher for the "Ask WTS" chat, available from every real content route (not
+// Floating launcher for the "Ask WTSH" chat, available from every real content route (not
 // rendered on the Chat route itself, where the full panel is already on screen, or Player,
 // which has its own in-player chat entry point via ControlBar). Opens the same ChatPanel /
 // useChatSession used by the full Chat route, just in `compact` popup mode - one chat session,
@@ -33,7 +33,7 @@ const ChatFab = ({ className }) => {
                         null
                 }
             </div>
-            <button type={'button'} className={styles['fab-button']} title={'Ask WTS'} onClick={toggle}>
+            <button type={'button'} className={styles['fab-button']} title={'Ask WTSH'} onClick={toggle}>
                 <ChatIcon className={styles['icon']} outline={!open} />
                 <div className={styles['fab-dot']} />
             </button>

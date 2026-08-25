@@ -46,7 +46,7 @@ const ChatPanel = ({ className, compact, closeChatPanel, onExpand }) => {
         <div className={classnames(className, styles['chat-panel'], { [styles['compact']]: compact })}>
             <div className={styles['header']}>
                 <ChatIcon className={styles['header-icon']} />
-                <div className={styles['header-title']}>Ask WTS</div>
+                <div className={styles['header-title']}>Ask WTSH</div>
                 <div className={styles['header-actions']}>
                     {
                         typeof onExpand === 'function' ?

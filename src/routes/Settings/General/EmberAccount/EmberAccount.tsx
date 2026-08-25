@@ -7,7 +7,7 @@ import styles from './EmberAccount.less';
 // A separate account system from this app's own Stremio login above (User/General.tsx), which
 // keeps handling addon/library sync exactly as before. This one is only for the features the
 // Ember Rail redesign added that Stremio's own backend has no concept of: calendar reminders
-// and Ask WTS chat history, persisted via Supabase so they survive across sessions/devices.
+// and Ask WTSH chat history, persisted via Supabase so they survive across sessions/devices.
 const EmberAccount = () => {
     const { configured, user, loading, signUp, signIn, signOut } = useSupabaseAuth();
     const { reminders, removeReminder } = useCalendarReminders(user);

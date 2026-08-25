@@ -242,7 +242,7 @@ const ControlBar = React.forwardRef(({
                     <Button className={styles['control-bar-button']} title={'Search'} tabIndex={-1} onMouseDown={onSearchButtonMouseDown} onClick={onToggleSearchPanel}>
                         <Icon className={styles['icon']} name={'search'} />
                     </Button>
-                    <Button className={styles['control-bar-button']} title={'Ask WTS'} tabIndex={-1} onMouseDown={onChatButtonMouseDown} onClick={onToggleChatPanel}>
+                    <Button className={styles['control-bar-button']} title={'Ask WTSH'} tabIndex={-1} onMouseDown={onChatButtonMouseDown} onClick={onToggleChatPanel}>
                         <ChatIcon className={styles['icon']} outline />
                     </Button>
                     <Button className={classnames(styles['control-bar-button'], { 'disabled': videoScale === null })} title={videoScaleLabel} tabIndex={-1} onClick={onVideoScaleChanged}>

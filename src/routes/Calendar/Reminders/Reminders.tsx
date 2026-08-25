@@ -37,7 +37,7 @@ const Reminders = () => {
             <div className={styles['body']}>
                 {
                     reminders.length === 0 ?
-                        <div className={styles['empty']}>No reminders yet - ask "Ask WTS" to schedule something, like "I'll watch [title] on Friday".</div>
+                        <div className={styles['empty']}>No reminders yet - ask "Ask WTSH" to schedule something, like "I'll watch [title] on Friday".</div>
                         :
                         reminders.map(({ id, title, poster_ref: poster, scheduled_date: scheduledDate, source }) => {
                             const dateLabel = new Date(`${scheduledDate}T00:00:00`).toLocaleString(undefined, {

@@ -6,7 +6,7 @@ type Props = {
     className?: string,
 };
 
-// The WTS brand mark: an ember-gradient play triangle, matching the design mockup exactly
+// The WTSH brand mark: an ember-gradient play triangle, matching the design mockup exactly
 // (design/ember-rail-mockup.html's .rail-mark svg). Inline SVG instead of a raster asset so it
 // stays crisp at any size and needs no separate light/dark/retina exports.
 const Logo = memo(({ className }: Props) => {

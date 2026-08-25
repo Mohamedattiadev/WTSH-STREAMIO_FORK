@@ -85,7 +85,7 @@ const VerticalNavBar = React.memo(React.forwardRef(({ className, selected, tabs 
                 <div className={styles['rail-mark']}>
                     <Logo className={styles['rail-mark-logo']} />
                 </div>
-                <span className={styles['rail-wordmark']}>WTS</span>
+                <span className={styles['rail-wordmark']}>WTSH</span>
             </div>
             <div ref={navRef} className={styles['rail-nav']}>
                 <div ref={indicatorRef} className={styles['rail-indicator']} />
