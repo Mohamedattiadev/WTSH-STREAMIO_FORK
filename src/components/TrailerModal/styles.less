@@ -2,26 +2,40 @@
 
 @import (reference) '~stremio/common/screen-sizes.less';
 
-:import('~stremio/components/ModalDialog/styles.less') {
-    modal-dialog-container: modal-dialog-container;
-    title-container: title-container;
-    body-container: body-container;
-}
-
 .trailer-modal {
     .modal-dialog-container {
-        width: 50rem;
+        width: 36rem;
         max-width: 90%;
-        padding: 0 1.5rem;
+        padding: 0;
+        overflow: hidden;
     }
 
-    .title-container {
-        font-family: var(--font-display);
-        font-weight: 600;
+    // Sits right on top of the video, matching the mockup's dark floating close button -
+    // ModalDialog's own default (meant for a plain-background dialog) would otherwise blend
+    // into a bright frame of the video underneath it.
+    .close-button-container {
+        background-color: rgba(10, 9, 10, 0.55);
+        backdrop-filter: blur(4px);
+
+        &:hover {
+            background-color: rgba(10, 9, 10, 0.8);
+        }
     }
 
     .body-container {
-        padding: 0 0 1.5rem;
+        padding: 0;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    .buttons-container {
+        padding: 0 1.25rem 1.25rem;
+
+        &:last-child {
+            margin: 0;
+        }
     }
 }
 
@@ -29,8 +43,6 @@
     position: relative;
     width: 100%;
     padding-top: 56.25%;
-    border-radius: 0.75rem;
-    overflow: hidden;
     background-color: var(--surface-panel-2);
 
     .video {
@@ -41,6 +53,42 @@
         height: 100%;
         border: none;
     }
+}
+
+.info-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1.1rem 1.25rem 1.35rem;
+}
+
+.title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--primary-foreground-color);
+}
+
+.tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.tag {
+    padding: 0.2rem 0.6rem;
+    border-radius: 1rem;
+    background-color: var(--overlay-color);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--muted-foreground-color);
+}
+
+.description {
+    margin: 0;
+    font-size: 0.83rem;
+    line-height: 1.55;
+    color: var(--muted-foreground-color);
 }
 
 @media only screen and (max-width: @minimum) {

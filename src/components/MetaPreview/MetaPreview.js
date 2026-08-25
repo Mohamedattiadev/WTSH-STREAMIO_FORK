@@ -278,7 +278,15 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
             </div>
             {
                 trailerModalOpen ?
-                    <TrailerModal name={name} trailerStreams={trailerStreams} onCloseRequest={closeTrailerModal} />
+                    <TrailerModal
+                        name={name}
+                        trailerStreams={trailerStreams}
+                        links={links}
+                        description={description}
+                        inLibrary={inLibrary}
+                        toggleInLibrary={toggleInLibrary}
+                        onCloseRequest={closeTrailerModal}
+                    />
                     :
                     null
             }
