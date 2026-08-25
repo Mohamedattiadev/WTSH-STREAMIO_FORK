@@ -37,7 +37,14 @@
         box-sizing: border-box;
         position: absolute;
         top: 50%;
-        right: -0.85rem;
+        // Was right: -0.85rem, intentionally poking half outside the rail to float over the
+        // content next to it (matching the mockup) - but .vertical-nav-bar-container also sets
+        // overflow-x: hidden (needed to suppress a horizontal scrollbar from the icon column's
+        // own overflow-y: auto), which silently clipped that overflowing half away. Confirmed
+        // live: only a sliver of the button was ever actually rendering. Keeping it fully
+        // inside the rail's own bounds is a real, reliable fix rather than fighting the
+        // clipping with a container restructure for one button.
+        right: 0.45rem;
         transform: translateY(-50%);
         flex: none;
         width: 1.8rem;
