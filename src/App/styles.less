@@ -315,6 +315,20 @@ html {
     }
 }
 
+// Mirrors "go back"/"previous"/"next" chevrons under RTL, so they still point toward where the
+// action actually goes now that the whole layout reads right-to-left (a Prev button pointing
+// left is correct in LTR - in RTL, "previous" is the right-hand direction). See Icon.tsx's
+// data-icon-name attribute. Deliberately opt-in to just these two icon names, not every icon
+// this component ever renders - most icons here aren't directional at all (play, settings, ...),
+// and :not(.rail-toggle-icon) excludes the one directional icon that already composes its own
+// rotate(180deg) for expand/collapse (see VerticalNavBar/styles.less, which handles its own RTL
+// case directly instead, since combining a mirror with that rotation needs both transforms
+// composed together, not one silently overriding the other).
+:global(html[dir='rtl']) svg[data-icon-name='chevron-back']:not(.rail-toggle-icon),
+:global(html[dir='rtl']) svg[data-icon-name='chevron-forward']:not(.rail-toggle-icon) {
+    transform: scaleX(-1);
+}
+
 @media only screen and (min-width: @xxlarge) {
     html {
         font-size: 18px;

@@ -90,6 +90,25 @@
         transform: rotate(180deg);
     }
 
+    // The rail itself mirrors to the right edge under dir="rtl" (plain flexbox row reversal -
+    // see App.js), so this button's own meaning flips too: collapsed now needs to point toward
+    // the content on its *left* (not the App-wide chevron-forward RTL mirror in App/styles.less,
+    // deliberately excluded there - see its own comment - since this icon composes its own
+    // rotation for expand/collapse, which a plain scaleX(-1) can't just layer on top of. A
+    // symmetric chevron rotated 180deg and then mirrored lands back pointing the same way it
+    // started (the two operations don't compose the way they would for an asymmetric shape), so
+    // the correct fix is picking the *opposite* of each LTR state's transform directly: RTL
+    // collapsed points left (mirrored), RTL expanded points right (natural, unrotated).
+    :global(html[dir='rtl']) & {
+        .rail-toggle-icon {
+            transform: scaleX(-1);
+        }
+
+        &:global(.expanded) .rail-toggle-icon {
+            transform: none;
+        }
+    }
+
     .rail-mark-row {
         flex: none;
         display: flex;

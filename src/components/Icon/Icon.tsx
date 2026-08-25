@@ -25,10 +25,16 @@ const Icon = forwardRef<SVGSVGElement, Props>(({ name, className }, ref) => {
     const baseName = name.endsWith(OUTLINE_SUFFIX) ? name.slice(0, -OUTLINE_SUFFIX.length) : name;
     const LucideIcon = ICON_MAP[baseName];
     if (!LucideIcon) {
-        return <StremioIcon ref={ref} className={className} name={name} />;
+        return <StremioIcon ref={ref} className={className} name={name} data-icon-name={baseName} />;
     }
 
-    return <LucideIcon ref={ref} className={className} strokeWidth={2} absoluteStrokeWidth={false} />;
+    // data-icon-name lets a handful of directional icons (chevron-back, for real "go back"
+    // navigation) mirror under dir="rtl" via one shared CSS rule (see App/styles.less) instead
+    // of hand-editing every call site - most icons here are non-directional (play, settings,
+    // etc.) or already carry their own local rotation logic (e.g. the rail-toggle's own
+    // expand/collapse rotate(180deg)), so this is deliberately opt-in per icon name, not a
+    // blanket mirror of every icon this component renders.
+    return <LucideIcon ref={ref} className={className} strokeWidth={2} absoluteStrokeWidth={false} data-icon-name={baseName} />;
 });
 
 Icon.displayName = 'Icon';
