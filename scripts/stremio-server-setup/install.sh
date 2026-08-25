@@ -122,15 +122,17 @@ else
         TMPTGZ="$(mktemp -t cloudflared).tgz"
         curl -fsSL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz" -o "$TMPTGZ" || die "Could not download cloudflared"
         TMPDIR_CF="$(mktemp -d)"
-        tar -xzf "$TMPTGZ" -C "$TMPDIR_CF"
-        $SUDO mv "$TMPDIR_CF/cloudflared" /usr/local/bin/cloudflared
+        tar -xzf "$TMPTGZ" -C "$TMPDIR_CF" || die "Could not extract cloudflared"
+        [ -s "$TMPDIR_CF/cloudflared" ] || die "Downloaded cloudflared is empty (check disk space with 'df -h')"
+        $SUDO mv "$TMPDIR_CF/cloudflared" /usr/local/bin/cloudflared || die "Could not install cloudflared to /usr/local/bin (check disk space with 'df -h')"
         chmod +x /usr/local/bin/cloudflared
     else
         curl -fsSL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${ARCH}" -o /tmp/cloudflared || die "Could not download cloudflared"
+        [ -s /tmp/cloudflared ] || die "Downloaded cloudflared is empty (check disk space with 'df -h')"
         chmod +x /tmp/cloudflared
-        $SUDO mv /tmp/cloudflared /usr/local/bin/cloudflared
+        $SUDO mv /tmp/cloudflared /usr/local/bin/cloudflared || die "Could not install cloudflared to /usr/local/bin (check disk space with 'df -h')"
     fi
-    have_cmd cloudflared || die "cloudflared install failed"
+    /usr/local/bin/cloudflared --version >/dev/null 2>&1 || die "cloudflared did not install correctly (check disk space with 'df -h')"
     ok "cloudflared installed"
 fi
 
