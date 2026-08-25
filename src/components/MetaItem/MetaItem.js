@@ -4,13 +4,12 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const classnames = require('classnames');
 const { useTranslation } = require('react-i18next');
-const { useNavigate } = require('react-router');
 const filterInvalidDOMProps = require('filter-invalid-dom-props').default;
-const { default: toPath } = require('stremio-router/toPath');
 const { default: Icon } = require('stremio/components/Icon');
 const { default: Button } = require('stremio/components/Button');
 const { default: Image } = require('stremio/components/Image');
 const Multiselect = require('stremio/components/Multiselect');
+const TrailerModal = require('stremio/components/TrailerModal');
 const useBinaryState = require('stremio/common/useBinaryState');
 const { default: getMetaDetailsHref } = require('stremio/common/getMetaDetailsHref');
 const { ICON_FOR_TYPE } = require('stremio/common/CONSTANTS');
@@ -18,8 +17,8 @@ const styles = require('./styles');
 
 const MetaItem = React.memo(({ className, type, name, poster, posterShape, posterChangeCursor, progress, newVideos, options, deepLinks, trailerStreams, releaseInfo, href: customHref, dataset, optionOnSelect, onDismissClick, onPlayClick, watched, badgeLabel, ...props }) => {
     const { t } = useTranslation();
-    const navigate = useNavigate();
     const [menuOpen, onMenuOpen, onMenuClose] = useBinaryState(false);
+    const [trailerModalOpen, openTrailerModal, closeTrailerModal] = useBinaryState(false);
     const subtitle = React.useMemo(() => {
         const typeLabel = typeof type === 'string' && type.length > 0 ? type.charAt(0).toUpperCase() + type.slice(1) : null;
         if (typeLabel === null) {
@@ -40,9 +39,9 @@ const MetaItem = React.memo(({ className, type, name, poster, posterShape, poste
         event.preventDefault();
         event.stopPropagation();
         if (typeof trailerHref === 'string') {
-            navigate(toPath(trailerHref));
+            openTrailerModal();
         }
-    }, [navigate, trailerHref]);
+    }, [trailerHref, openTrailerModal]);
     const href = React.useMemo(() => {
         return typeof customHref === 'string' ? customHref : getMetaDetailsHref(deepLinks);
     }, [customHref, deepLinks]);
@@ -204,6 +203,12 @@ const MetaItem = React.memo(({ className, type, name, poster, posterShape, poste
                                 null
                         }
                     </div>
+                    :
+                    null
+            }
+            {
+                trailerModalOpen ?
+                    <TrailerModal name={name} trailerStreams={trailerStreams} onCloseRequest={closeTrailerModal} />
                     :
                     null
             }

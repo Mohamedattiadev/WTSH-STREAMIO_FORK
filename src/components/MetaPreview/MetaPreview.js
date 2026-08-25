@@ -11,6 +11,7 @@ const { default: Image } = require('stremio/components/Image');
 const { default: ActionsGroup } = require('stremio/components/ActionsGroup');
 const ModalDialog = require('stremio/components/ModalDialog');
 const SharePrompt = require('stremio/components/SharePrompt');
+const TrailerModal = require('stremio/components/TrailerModal');
 const CONSTANTS = require('stremio/common/CONSTANTS');
 const routesRegexp = require('stremio/common/routesRegexp');
 const useBinaryState = require('stremio/common/useBinaryState');
@@ -29,6 +30,7 @@ const ALLOWED_LINK_REDIRECTS = [
 const MetaPreview = React.forwardRef(({ className, compact, name, logo, background, runtime, releaseInfo, released, description, deepLinks, links, trailerStreams, inLibrary, toggleInLibrary, watched, toggleWatched, ratingInfo }, ref) => {
     const { t } = useTranslation();
     const [shareModalOpen, openShareModal, closeShareModal] = useBinaryState(false);
+    const [trailerModalOpen, openTrailerModal, closeTrailerModal] = useBinaryState(false);
     const linksGroups = React.useMemo(() => {
         return Array.isArray(links) ?
             links
@@ -215,7 +217,7 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
                             icon={'trailer'}
                             label={t('TRAILER')}
                             tabIndex={0}
-                            href={trailerHref}
+                            onClick={openTrailerModal}
                             tooltip={compact}
                         />
                         :
@@ -274,6 +276,12 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
                         null
                 }
             </div>
+            {
+                trailerModalOpen ?
+                    <TrailerModal name={name} trailerStreams={trailerStreams} onCloseRequest={closeTrailerModal} />
+                    :
+                    null
+            }
         </div>
     );
 });
