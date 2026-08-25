@@ -11,6 +11,12 @@
 
     .heading, .content {
         flex: 1 1 50%;
+        // Without this, a flex item's minimum width defaults to its content's own intrinsic
+        // minimum (the dropdown's own min-width:8.5rem, or a longer label like "Streaming HTTPS
+        // endpoint:" refusing to wrap) - flex-shrink can't shrink below that floor, so a long
+        // enough label/control pushes the whole row past the card's padding instead of wrapping
+        // or shrinking to fit.
+        min-width: 0;
         position: relative;
         display: flex;
         flex-direction: row;
