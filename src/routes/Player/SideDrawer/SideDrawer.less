@@ -102,6 +102,16 @@
         min-height: 0;
         overflow-y: auto;
 
+        // For a movie (no seriesInfo, so .series-content never renders at all) that 45% cap
+        // has nothing to share space with - it just clipped the genre/cast pills mid-height
+        // (confirmed live: they showed as faint sliced-off outlines) and left the other 55%
+        // of the drawer sitting empty for the rest of its height. Let this fill the drawer's
+        // real available height instead when there's no series content competing for it.
+        &.info-full {
+            flex: 1;
+            max-height: none;
+        }
+
         .side-drawer-meta-preview {
             .description-container {
                 display: -webkit-box;
