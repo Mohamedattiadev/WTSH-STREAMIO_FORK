@@ -2,9 +2,29 @@
 
 @import (reference) '~stremio/common/screen-sizes.less';
 
+// CSS Modules hashes class names per file, so a plain nested selector like
+// `.trailer-modal .modal-dialog-container` written here would compile against a class this
+// file's OWN module generates for the literal name "modal-dialog-container" - a different
+// hash than the one ModalDialog/styles.less actually put on the real DOM element, so it would
+// never match. This `:import()` (the same mechanism MetaItem/styles.less and
+// EventModal/styles.less already use for the same reason) pulls in the real compiled class
+// names so the overrides below actually apply - confirmed live: without this, every rule in
+// this file targeting ModalDialog's own elements was silently a no-op.
+:import('~stremio/components/ModalDialog/styles.less') {
+    modal-dialog-container: modal-dialog-container;
+    close-button-container: close-button-container;
+    body-container: body-container;
+    buttons-container: buttons-container;
+}
+
 .trailer-modal {
     .modal-dialog-container {
-        width: 36rem;
+        // Narrower than the mockup's own reference width - a 16:9 video at the old 36rem
+        // pushed total modal height (video + title/tags/description) past shorter browser
+        // windows' 80% max-height, forcing an internal scroll just to see the description
+        // and library button. 30rem plus the description clamp below comfortably fits
+        // without scrolling on real windowed (non-fullscreen) browser heights.
+        width: 30rem;
         max-width: 90%;
         padding: 0;
         overflow: hidden;
@@ -93,6 +113,10 @@
     font-size: 0.83rem;
     line-height: 1.55;
     color: var(--muted-foreground-color);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
 }
 
 @media only screen and (max-width: @minimum) {
