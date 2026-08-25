@@ -90,7 +90,7 @@ const SideDrawer = memo(forwardRef<HTMLDivElement, Props>(({ seriesInfo, classNa
             <div className={styles['close-button']} onClick={closeSideDrawer}>
                 <Icon className={styles['icon']} name={'chevron-forward'} />
             </div>
-            <div className={classNames(styles['info'], { [styles['info-full']]: !seriesInfo })}>
+            <div className={styles['info']}>
                 <MetaPreview
                     className={styles['side-drawer-meta-preview']}
                     compact={true}

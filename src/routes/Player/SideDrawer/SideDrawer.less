@@ -88,29 +88,16 @@
         }
     }
 
+    // .info and .series-content/.videos each used to cap their own height and scroll
+    // independently (a percentage split between "info" and "episode list" competing for the
+    // drawer's own bounded height) - confirmed live this read as two separate, confusing
+    // scrollbars (one for the description/genres area, another lower down for episodes) instead
+    // of one natural scroll from the title down through the episode list. Neither has its own
+    // height cap or overflow anymore; both just flow in normal document order and the single
+    // overflow-y:auto on .side-drawer itself (above) is the only scroll container now.
     .info {
-        // Was flex:0 1 auto (the flex shorthand default) with no cap, so its own natural content
-        // height (title, runtime, up to 4 clamped lines of description, the calendar button) ate
-        // almost all of .side-drawer's bounded height before .series-content's flex:2 ever got a
-        // turn - confirmed live: a series' episode list was left with only a sliver, functionally
-        // unscrollable since there was nothing meaningful to scroll to. Capping this guarantees
-        // .series-content a real, usable share of the drawer regardless of how much info content
-        // there is; .info keeps its own overflow-y:auto below for whatever that cap clips.
         flex: none;
-        max-height: 45%;
         padding: @padding;
-        min-height: 0;
-        overflow-y: auto;
-
-        // For a movie (no seriesInfo, so .series-content never renders at all) that 45% cap
-        // has nothing to share space with - it just clipped the genre/cast pills mid-height
-        // (confirmed live: they showed as faint sliced-off outlines) and left the other 55%
-        // of the drawer sitting empty for the rest of its height. Let this fill the drawer's
-        // real available height instead when there's no series content competing for it.
-        &.info-full {
-            flex: 1;
-            max-height: none;
-        }
 
         .side-drawer-meta-preview {
             .description-container {
@@ -127,16 +114,9 @@
     }
 
     .series-content {
-        flex: 2;
+        flex: none;
         display: flex;
         flex-direction: column;
-        min-height: 0;
-
-        .videos {
-            flex: 1;
-            min-height: 0;
-            overflow-y: auto;
-        }
     }
 }
 
@@ -149,10 +129,6 @@
 @media @phone-landscape {
     .side-drawer {
         max-width: 50dvw;
-
-        .info {
-            max-height: 40dvh;
-        }
 
         .dropdown.open {
             max-height: calc(3rem * 4);
