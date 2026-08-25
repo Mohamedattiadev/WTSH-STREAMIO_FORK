@@ -5,7 +5,10 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    max-width: 35rem;
+    // Was max-width: 35rem, leaving a large dead gap on the right of the Streaming card at any
+    // real desktop width - the card's own wrapper (Section.less) already caps how wide this can
+    // get, so this only needs to fill 100% of whatever that allows instead of capping itself
+    // again, narrower still.
     margin-bottom: 2rem;
 
     .header {
