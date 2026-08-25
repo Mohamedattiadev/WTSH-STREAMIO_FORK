@@ -14,7 +14,12 @@ const useChatSession = require('../useChatSession');
 const useSupabaseAuth = require('stremio/common/Supabase/useSupabaseAuth');
 const styles = require('./styles');
 
-const ChatPanel = ({ className, compact, popup, closeChatPanel, onExpand }) => {
+// forwardRef: Player.js's compact usage renders this inside <Transition>, which clones its
+// child with a ref to drive the slide-in/out animation (attaches a 'transitionend' listener,
+// flips the active class on the next frame). A plain function component silently drops that ref
+// (React only warns, doesn't error) - leaving the animation's `active` state permanently false
+// and the panel stuck at its off-screen "enter" position regardless of the real open/close state.
+const ChatPanel = React.forwardRef(({ className, compact, popup, closeChatPanel, onExpand }, ref) => {
     const { t } = useTranslation();
     const { messages, inputValue, setInputValue, sendMessage, isPending, pendingPhase } = useChatSession();
     const { user: supabaseUser } = useSupabaseAuth();
@@ -45,7 +50,7 @@ const ChatPanel = ({ className, compact, popup, closeChatPanel, onExpand }) => {
     }, [sendMessage]);
 
     return (
-        <div className={classnames(className, styles['chat-panel'], { [styles['compact']]: compact, [styles['popup']]: popup })}>
+        <div ref={ref} className={classnames(className, styles['chat-panel'], { [styles['compact']]: compact, [styles['popup']]: popup })}>
             <div className={styles['header']}>
                 {
                     popup ?
@@ -170,7 +175,9 @@ const ChatPanel = ({ className, compact, popup, closeChatPanel, onExpand }) => {
             }
         </div>
     );
-};
+});
+
+ChatPanel.displayName = 'ChatPanel';
 
 ChatPanel.propTypes = {
     className: PropTypes.string,

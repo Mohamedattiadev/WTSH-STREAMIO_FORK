@@ -8,7 +8,12 @@ const { Button, MetaItem, TextInput } = require('stremio/components');
 const useSearch = require('stremio/routes/Search/useSearch');
 const styles = require('./styles');
 
-const SearchPanel = ({ className, closeSearchPanel }) => {
+// forwardRef: Player.js renders this inside <Transition>, which clones its child with a ref to
+// drive the slide-in/out animation (attaches a 'transitionend' listener, flips the active class
+// on the next frame). A plain function component silently drops that ref - React never calls it
+// (only a warning, no error) - leaving the animation's `active` state permanently false and the
+// panel stuck at its off-screen "enter" position regardless of the real open/close state.
+const SearchPanel = React.forwardRef(({ className, closeSearchPanel }, ref) => {
     const [inputValue, setInputValue] = React.useState('');
     const queryParams = React.useMemo(() => {
         const params = new URLSearchParams();
@@ -29,7 +34,7 @@ const SearchPanel = ({ className, closeSearchPanel }) => {
         setInputValue(event.currentTarget.value);
     }, []);
     return (
-        <div className={classnames(className, styles['search-panel'])}>
+        <div ref={ref} className={classnames(className, styles['search-panel'])}>
             <div className={styles['header']}>
                 <Icon className={styles['search-icon']} name={'search'} />
                 <TextInput
@@ -57,7 +62,9 @@ const SearchPanel = ({ className, closeSearchPanel }) => {
             </div>
         </div>
     );
-};
+});
+
+SearchPanel.displayName = 'SearchPanel';
 
 SearchPanel.propTypes = {
     className: PropTypes.string,
