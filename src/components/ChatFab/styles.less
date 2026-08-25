@@ -92,3 +92,11 @@
         }
     }
 }
+
+// Below @minimum, VerticalNavBar switches to a bottom tab bar (~3.3rem tall, plus the device's
+// own safe-area inset) - the fab needs to clear it, not just shrink like the @xsmall step above.
+@media only screen and (max-width: @minimum) {
+    .chat-fab-container {
+        bottom: calc(3.5rem + var(--safe-area-inset-bottom) + 1rem);
+    }
+}
