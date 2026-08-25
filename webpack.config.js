@@ -260,7 +260,7 @@ module.exports = (env, argv) => ({
                 req.on('end', async () => {
                     try {
                         req.body = body.length > 0 ? JSON.parse(body) : {};
-                    } catch (error) {
+                    } catch (_error) {
                         res.status(400).json({ error: 'Invalid JSON body' });
                         return;
                     }

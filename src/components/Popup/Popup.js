@@ -125,7 +125,12 @@ const Popup = ({ open, direction, renderLabel, renderMenu, dataset, onCloseReque
         if (!portal) {
             return;
         }
-        if (open && labelRef.current && menuRef.current) {
+        if (!open || !labelRef.current || !menuRef.current) {
+            setPortalCoords(null);
+            return;
+        }
+
+        const updatePosition = () => {
             const labelRect = labelRef.current.getBoundingClientRect();
             const menuRect = menuRef.current.getBoundingClientRect();
             const [wantVertical, wantHorizontal] = (direction || '').split('-');
@@ -141,9 +146,23 @@ const Popup = ({ open, direction, renderLabel, renderMenu, dataset, onCloseReque
             top = Math.min(Math.max(PORTAL_MARGIN, top), window.innerHeight - menuRect.height - PORTAL_MARGIN);
             left = Math.min(Math.max(PORTAL_MARGIN, left), window.innerWidth - menuRect.width - PORTAL_MARGIN);
             setPortalCoords({ top, left });
-        } else {
-            setPortalCoords(null);
+        };
+
+        updatePosition();
+        // NavMenu's content (email address, several rows of links) isn't necessarily laid out
+        // to its final size on this first pass the way LanguageMenu's short, static list always
+        // is - confirmed live, its menu measured 0-width here once, computing a `left` that put
+        // the whole panel off the right edge of the screen and never correcting itself since
+        // this effect only ever ran once per open. A ResizeObserver re-measures whenever the
+        // menu's real size actually settles, regardless of what causes the delay.
+        if (typeof ResizeObserver === 'undefined') {
+            return;
         }
+        const resizeObserver = new ResizeObserver(updatePosition);
+        resizeObserver.observe(menuRef.current);
+        return () => {
+            resizeObserver.disconnect();
+        };
     }, [open, portal, direction]);
     const menu = open ?
         <FocusLock

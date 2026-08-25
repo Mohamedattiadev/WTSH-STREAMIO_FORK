@@ -27,10 +27,10 @@ const URLsManager = () => {
         navigator.clipboard.writeText(command);
         toast.show({
             type: 'success',
-            title: 'Command copied — paste it in a terminal',
+            title: t('COMMAND_COPIED'),
             timeout: 2500,
         });
-    }, [command]);
+    }, [command, t, toast]);
 
     const onAdd = () => {
         setAddMode(true);
@@ -75,13 +75,13 @@ const URLsManager = () => {
             </div>
             <div className={styles['setup-row']}>
                 <div className={styles['setup-hint']}>
-                    No server running? This installs one and gives you a URL to add above.
+                    {t('STREAMING_SERVER_SETUP_HINT')}
                 </div>
                 <div className={styles['command-box']}>
                     <button
                         type={'button'}
                         className={styles['platform-badge']}
-                        title={'Click to switch OS'}
+                        title={t('SWITCH_OS')}
                         onClick={onTogglePlatform}
                     >
                         {PLATFORM_LABEL[platform]}
@@ -89,7 +89,7 @@ const URLsManager = () => {
                     <code className={styles['command-text']} title={command}>{command}</code>
                     <Button
                         className={styles['copy-button']}
-                        title={'Copy command'}
+                        title={t('COPY_COMMAND')}
                         onClick={onCopyCommand}
                         tabIndex={-1}
                     >
