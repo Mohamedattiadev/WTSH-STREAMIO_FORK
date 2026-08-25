@@ -17,17 +17,22 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 1rem;
-    padding: 0.5rem 1rem;
-    margin-bottom: 0.5rem;
-    border-radius: var(--border-radius);
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.6rem;
+    border: 0.06rem solid var(--overlay-color);
+    border-radius: 0.85rem;
+    background-color: rgba(255, 255, 255, 0.02);
+    transition: border-color 0.15s ease-out, background-color 0.15s ease-out;
 
     &:hover, &:focus {
-        background-color: var(--overlay-color);
+        border-color: var(--primary-accent-color-soft);
+        background-color: var(--surface-elevated-color);
     }
 
     &:hover, &:focus, &:global(.selected) {
         .icon {
             opacity: 1;
+            background-color: var(--primary-accent-color);
         }
     }
 
@@ -35,33 +40,49 @@
         flex: none;
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.6rem;
 
         .thumbnail {
             display: block;
-            height: 5rem;
-            width: 8rem;
+            height: 4rem;
+            width: 6.5rem;
+            border-radius: 0.5rem;
             object-fit: cover;
             object-position: center;
-            opacity: 0.9;
         }
 
         .placeholder-icon {
             display: block;
-            height: 5rem;
-            width: 8rem;
+            height: 4rem;
+            width: 6.5rem;
             padding: 1rem;
+            border-radius: 0.5rem;
             color: var(--primary-foreground-color);
             background-color: var(--overlay-color);
             opacity: 0.25;
         }
 
+        .addon-name-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 2rem;
+            padding: 0 0.7rem;
+            border-radius: 0.5rem;
+            background: linear-gradient(135deg, var(--ember), var(--ember-2));
+        }
+
         .addon-name {
-            width: 7rem;
-            font-size: 1.1rem;
-            text-align: left;
-            white-space: pre-wrap;
-            color: var(--primary-foreground-color);
+            width: auto;
+            max-width: 6rem;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.78rem;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #20100a;
         }
 
         .progress-bar-container {
@@ -98,18 +119,21 @@
         white-space: pre;
         overflow-y: visible;
         text-overflow: ellipsis;
-        color: var(--primary-foreground-color);
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: var(--muted-foreground-color);
     }
-    
+
     .icon {
         flex: none;
-        width: 3rem;
-        height: 3rem;
+        width: 2.75rem;
+        height: 2.75rem;
         padding: 0.7rem;
         border-radius: 50%;
-        opacity: 0;
+        opacity: 0.7;
         color: var(--secondary-foreground-color);
-        background-color: var(--primary-accent-color);
+        background-color: rgba(255, 255, 255, 0.08);
+        transition: opacity 0.15s ease-out, background-color 0.15s ease-out;
     }
 
     .menu-icon {
