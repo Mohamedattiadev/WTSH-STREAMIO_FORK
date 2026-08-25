@@ -138,14 +138,25 @@ fi
 
 # ---------- 5. run the streaming server container ----------
 step "Starting the Stremio Streaming Server"
+NEEDS_RECREATE=0
 if $DOCKER inspect stremio-server >/dev/null 2>&1; then
-    $DOCKER start stremio-server >/dev/null 2>&1 || true
-    ok "Container already existed — made sure it's running"
+    if $DOCKER inspect stremio-server --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -q '^NO_CORS=.\+'; then
+        $DOCKER start stremio-server >/dev/null 2>&1 || true
+        ok "Container already existed — made sure it's running"
+    else
+        warn "Existing container has CORS enabled (would show 'Error' in the app) — recreating it with NO_CORS=1"
+        NEEDS_RECREATE=1
+    fi
 else
+    NEEDS_RECREATE=1
+fi
+
+if [ "$NEEDS_RECREATE" = "1" ]; then
+    $DOCKER rm -f stremio-server >/dev/null 2>&1 || true
     $DOCKER run -d --name stremio-server --restart unless-stopped \
         -p 11470:11470 -p 12470:12470 \
         -e NO_CORS=1 \
-        -v "$DATA_DIR/server:/root/.stremio-server" \
+        -v stremio-server-data:/root/.stremio-server \
         stremio/server:latest >/dev/null || die "Could not start the streaming server container"
     ok "Container created and running"
 fi
