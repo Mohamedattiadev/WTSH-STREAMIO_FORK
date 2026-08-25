@@ -13,7 +13,7 @@ const { useServices, useGamepad } = require('stremio/services');
 const { useContentGamepadNavigation } = require('stremio/services/GamepadNavigation');
 const { useSettings, useProfile, useFullscreen, useBinaryState, useToast, useStreamingServer, useModelState, withCoreSuspender, usePlatform, onShortcut, getKeyboardShortcutKey, getKeyboardShortcutKeys, useDiscord, EMPTY_DISCORD_TIMESTAMPS, getPlaybackDiscordActivity } = require('stremio/common');
 const { default: toPath } = require('stremio-router/toPath');
-const { HorizontalNavBar, Transition, ContextMenu } = require('stremio/components');
+const { HorizontalNavBar, MainNavBars, MetaPreview, Transition, ContextMenu } = require('stremio/components');
 const { default: Buffering } = require('./Buffering');
 const VolumeChangeIndicator = require('./VolumeChangeIndicator');
 const Error = require('./Error');
@@ -46,7 +46,12 @@ const { default: useMediaSession } = require('./useMediaSession');
 const findTrackByLang = (tracks, lang) => tracks.find((track) => track.lang === lang || langs.where('1', track.lang)?.[2] === lang);
 const findTrackById = (tracks, id) => tracks.find((track) => track.id === id);
 
-const GAMEPAD_HANDLER_ID = 'player';
+// Distinct from the 'player' id MainNavBars registers its own useContentGamepadNavigation
+// under for this route (keyed off the route name) - now that Player renders inside MainNavBars
+// instead of as a standalone fullscreen overlay, both hooks are mounted at once, and sharing
+// the exact same id would make the second one to register silently overwrite the first's
+// gamepad.on('analog'/'buttonA', ...) handlers instead of both coexisting.
+const GAMEPAD_HANDLER_ID = 'player-video';
 
 const CAST_DEVICES_REFRESH_INTERVAL = 5000;
 
@@ -483,7 +488,7 @@ const Player = () => {
     const onVideoDoubleClick = React.useCallback(() => {
         onPlayRequestedDebounced.cancel();
         onPauseRequestedDebounced.cancel();
-        toggleFullscreen();
+        toggleFullscreen(playerRef.current);
     }, [toggleFullscreen]);
 
     const onContainerMouseDown = React.useCallback((event) => {
@@ -1060,6 +1065,8 @@ const Player = () => {
     }, []);
 
     return (
+        <MainNavBars route={'player'}>
+        <div className={styles['player-page-container']}>
         <div ref={playerRef} className={classnames(styles['player-container'], { [styles['overlayHidden']]: overlayHidden })}
             onMouseDown={onContainerMouseDown}
             onMouseMove={onContainerMouseMove}
@@ -1130,6 +1137,7 @@ const Player = () => {
                 title={player.title !== null ? player.title : ''}
                 backButton={true}
                 fullscreenButton={true}
+                fullscreenTarget={playerRef.current}
                 hdrInfo={video.state.hdrInfo}
                 onMouseMove={onBarMouseMove}
                 onMouseOver={onBarMouseMove}
@@ -1294,11 +1302,34 @@ const Player = () => {
                 />
             </Transition>
         </div>
+        {
+            player.metaItem?.type === 'Ready' ?
+                <MetaPreview
+                    className={classnames(styles['player-info-container'], 'animation-fade-in')}
+                    name={player.metaItem.content.name}
+                    logo={player.metaItem.content.logo}
+                    poster={player.metaItem.content.poster}
+                    runtime={player.metaItem.content.runtime}
+                    releaseInfo={player.metaItem.content.releaseInfo}
+                    released={player.metaItem.content.released}
+                    description={player.metaItem.content.description}
+                    links={player.metaItem.content.links}
+                />
+                :
+                player.metaItem?.type === 'Loading' ?
+                    <MetaPreview.Placeholder className={styles['player-info-container']} />
+                    :
+                    null
+        }
+        </div>
+        </MainNavBars>
     );
 };
 
 const PlayerFallback = () => (
-    <div className={classnames(styles['player-container'])} />
+    <MainNavBars route={'player'}>
+        <div className={classnames(styles['player-container'])} />
+    </MainNavBars>
 );
 
 module.exports = withCoreSuspender(Player, PlayerFallback);

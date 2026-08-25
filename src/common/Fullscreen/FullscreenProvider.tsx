@@ -25,7 +25,7 @@ const FullscreenProvider = ({ children }: Props) => {
 
     const [fullscreen, setFullscreen] = useState<boolean>(() => {
         if (typeof document === 'undefined') return false;
-        return document.fullscreenElement === document.documentElement;
+        return document.fullscreenElement !== null;
     });
 
     const setVideoElement = useCallback((el: HTMLVideoElement | null) => {
@@ -35,12 +35,12 @@ const FullscreenProvider = ({ children }: Props) => {
 
     const supported = shell.active || document.fullscreenEnabled === true || (hasVideoElement && hasWebkitFullscreen);
 
-    const requestFullscreen = useCallback(async () => {
+    const requestFullscreen = useCallback(async (target?: HTMLElement) => {
         if (shell.active) {
             shell.send('win-set-visibility', { fullscreen: true });
         } else if (document.fullscreenEnabled) {
             try {
-                await document.documentElement.requestFullscreen();
+                await (target ?? document.documentElement).requestFullscreen();
             } catch (err) {
                 console.error('Error enabling fullscreen', err);
             }
@@ -52,15 +52,15 @@ const FullscreenProvider = ({ children }: Props) => {
     const exitFullscreen = useCallback(() => {
         if (shell.active) {
             shell.send('win-set-visibility', { fullscreen: false });
-        } else if (document.fullscreenElement === document.documentElement) {
+        } else if (document.fullscreenElement !== null) {
             document.exitFullscreen();
         } else if (videoElementRef.current && (videoElementRef.current as any).webkitDisplayingFullscreen) {
             (videoElementRef.current as any).webkitExitFullscreen();
         }
     }, [shell]);
 
-    const toggleFullscreen = useCallback(() => {
-        fullscreen ? exitFullscreen() : requestFullscreen();
+    const toggleFullscreen = useCallback((target?: HTMLElement) => {
+        fullscreen ? exitFullscreen() : requestFullscreen(target);
     }, [fullscreen, exitFullscreen, requestFullscreen]);
 
     onShortcut('fullscreen', toggleFullscreen, [toggleFullscreen]);
@@ -73,7 +73,7 @@ const FullscreenProvider = ({ children }: Props) => {
         };
 
         const onFullscreenChange = () => {
-            setFullscreen(document.fullscreenElement === document.documentElement);
+            setFullscreen(document.fullscreenElement !== null);
         };
 
         const onWebkitFullscreenChange = () => {

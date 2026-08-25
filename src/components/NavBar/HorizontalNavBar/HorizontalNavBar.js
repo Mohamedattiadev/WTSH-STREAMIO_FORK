@@ -16,7 +16,7 @@ const { default: LanguageMenu } = require('./LanguageMenu');
 const styles = require('./styles');
 const { t } = require('i18next');
 
-const HorizontalNavBar = React.memo(({ className, route, query, title, backButton, searchBar, fullscreenButton, navMenu, originPath, hdrInfo, ...props }) => {
+const HorizontalNavBar = React.memo(({ className, route, query, title, backButton, searchBar, fullscreenButton, fullscreenTarget, navMenu, originPath, hdrInfo, ...props }) => {
     const navigate = useNavigate();
     const profile = useProfile();
     const backButtonOnClick = React.useCallback(() => {
@@ -27,6 +27,12 @@ const HorizontalNavBar = React.memo(({ className, route, query, title, backButto
         }
     }, [originPath, navigate]);
     const [fullscreen, requestFullscreen, exitFullscreen, , supported] = useFullscreen();
+    // fullscreenTarget (e.g. the Player route's own video+controls container) fullscreens just
+    // that element instead of the whole app - undefined defaults to whole-document fullscreen,
+    // the existing behavior every other route's topbar button keeps.
+    const onFullscreenButtonClick = React.useCallback(() => {
+        fullscreen ? exitFullscreen() : requestFullscreen(fullscreenTarget);
+    }, [fullscreen, exitFullscreen, requestFullscreen, fullscreenTarget]);
     // Email is the only real identity field stremio-core exposes (no display name) - the
     // local-part before "@" is used as a readable name, and its first two letters as the
     // avatar's initials. Both derive from the user's own real email, nothing invented.
@@ -118,7 +124,7 @@ const HorizontalNavBar = React.memo(({ className, route, query, title, backButto
                 }
                 {
                     supported && fullscreenButton ?
-                        <Button className={styles['button-container']} title={fullscreen ? t('EXIT_FULLSCREEN') : t('ENTER_FULLSCREEN')} tabIndex={-1} onClick={fullscreen ? exitFullscreen : requestFullscreen}>
+                        <Button className={styles['button-container']} title={fullscreen ? t('EXIT_FULLSCREEN') : t('ENTER_FULLSCREEN')} tabIndex={-1} onClick={onFullscreenButtonClick}>
                             <Icon className={styles['icon']} name={fullscreen ? 'minimize' : 'maximize'} />
                         </Button>
                         :
@@ -151,6 +157,7 @@ HorizontalNavBar.propTypes = {
     backButton: PropTypes.bool,
     searchBar: PropTypes.bool,
     fullscreenButton: PropTypes.bool,
+    fullscreenTarget: PropTypes.instanceOf(typeof HTMLElement !== 'undefined' ? HTMLElement : Object),
     navMenu: PropTypes.bool,
     originPath: PropTypes.string,
     hdrInfo: PropTypes.shape({

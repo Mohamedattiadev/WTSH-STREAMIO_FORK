@@ -30,7 +30,11 @@ const MainNavBars = memo(({ className, route, query, children }: Props) => {
     const contentRef = React.useRef(null);
 
     const navRoute = route === 'continue_watching' ? 'library' : (route ?? '');
-    useContentGamepadNavigation(contentRef, navRoute);
+    // Player already runs its own useContentGamepadNavigation scoped to just its video/controls
+    // (a different id, 'player-video' - see Player.js) - this generic one covers the whole
+    // content column including the info panel below the video, and having both active at once
+    // for the same route caused competing focus jumps on every analog-stick event.
+    useContentGamepadNavigation(contentRef, navRoute, route !== 'player');
     useVerticalNavGamepadNavigation(navRef, navRoute);
 
     return (

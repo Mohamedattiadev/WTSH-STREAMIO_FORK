@@ -60,8 +60,13 @@ export default [
         element: <routes.Settings />,
     },
     {
+        // Was view: 4 (a stacked overlay above every other route, the entire mechanism behind
+        // the old fullscreen takeover) - now view: 1, same depth as every other content route,
+        // so it renders as a normal route swap inside the shared MainNavBars shell instead of
+        // painting over the whole app. See Player.js for the embedded-vs-fullscreen split this
+        // enables.
         path: '/player/:stream/:streamTransportUrl?/:metaTransportUrl?/:type?/:id?/:videoId?',
-        view: 4,
+        view: 1,
         element: <routes.Player />,
     },
     {

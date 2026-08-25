@@ -26,12 +26,38 @@ html:not(.active-slider-within) {
     }
 }
 
+// Player used to be the sole thing on screen (a router "view: 4" stacked overlay covering the
+// whole app) - it's now an embedded route like any other, sharing MainNavBars' rail/topbar, with
+// a real info panel below the video. This is that page's scroll container; the video itself
+// (.player-container below) stays a fixed-height box at the top, not full-page height.
+.player-page-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+}
+
 .player-container {
     position: relative;
     z-index: 0;
+    flex: none;
     width: 100%;
-    height: 100%;
+    // A 16:9 box sized to the embedded column's width, same idea as a YouTube/Netflix web
+    // embed - was implicitly 100% of a viewport-covering ancestor before, which no longer
+    // exists now that this isn't a stacked full-viewport overlay.
+    aspect-ratio: 16 / 9;
     background-color: @background-color;
+
+    // The native Fullscreen API stretches whatever element requestFullscreen() was called on
+    // to fill the screen - overriding the aspect-ratio box here so a real (video-only, see
+    // Player.js's fullscreenTarget) fullscreen request isn't constrained to the embedded box's
+    // height.
+    &:fullscreen {
+        width: 100vw;
+        height: 100vh;
+        aspect-ratio: auto;
+    }
 
     .layer {
         position: absolute;
@@ -47,8 +73,11 @@ html:not(.active-slider-within) {
 
         &.background-layer {
             .image {
-                width: 100vw;
-                height: 100vh;
+                // Was 100vw/100vh, relying on .player-container always equaling the full
+                // viewport (the old fullscreen-overlay behavior) - now that it's a bounded
+                // embedded box, this needs to fill its own layer instead.
+                width: 100%;
+                height: 100%;
                 object-fit: cover;
                 opacity: 0.6;
             }
@@ -89,9 +118,18 @@ html:not(.active-slider-within) {
         }
 
         &.side-drawer-button-layer {
-            position: fixed;
+            // Was position: fixed, relative to the viewport - harmless while .player-container
+            // always equaled the viewport (the old fullscreen-overlay behavior), but would float
+            // detached from the actual video box now that it's an embedded, bounded element.
+            // absolute anchors it back to .player-container, same as every other layer.
+            position: absolute;
             top: 50%;
-            right: -4rem;
+            // Was -4rem, poking outside .player-container's right edge - harmless while that
+            // container always equaled the full viewport (nothing further right to clip
+            // against), but now that it's a bounded embedded box, poking outside it risks
+            // getting clipped by the scrollable page column around it. 0 keeps it hugging the
+            // video's own inner edge instead.
+            right: 0;
             left: initial;
             transform: translateY(-50%);
         }
@@ -151,7 +189,7 @@ html:not(.active-slider-within) {
     .player-container {
         .layer {
             &.side-drawer-button-layer {
-                right: -2rem;
+                right: 0;
             }
         }
     }
@@ -166,4 +204,11 @@ html:not(.active-slider-within) {
             }
         }
     }
+}
+
+.player-info-container {
+    flex: none;
+    width: 100%;
+    max-width: 56rem;
+    padding: 1.5rem;
 }
