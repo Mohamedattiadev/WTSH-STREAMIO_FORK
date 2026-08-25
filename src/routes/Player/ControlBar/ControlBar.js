@@ -46,6 +46,7 @@ const ControlBar = React.forwardRef(({
     onToggleOptionsMenu,
     shellCastSupported,
     onToggleCastDevicesMenu,
+    onToggleStreamingServerMenu,
     videoScale,
     videoScaleLabel,
     onVideoScaleChanged,
@@ -83,6 +84,9 @@ const ControlBar = React.forwardRef(({
     }, []);
     const onCastDevicesButtonMouseDown = React.useCallback((event) => {
         event.nativeEvent.castDevicesMenuClosePrevented = true;
+    }, []);
+    const onStreamingServerButtonMouseDown = React.useCallback((event) => {
+        event.nativeEvent.streamingServerMenuClosePrevented = true;
     }, []);
     const seekSeconds = typeof seekTimeDuration === 'number' ? Math.round(seekTimeDuration / 1000) : null;
     const onSeekPrevButtonClick = React.useCallback((event) => {
@@ -233,6 +237,9 @@ const ControlBar = React.forwardRef(({
                     <Button className={classnames(styles['control-bar-button'], { 'disabled': castButtonDisabled })} tabIndex={-1} onMouseDown={onCastDevicesButtonMouseDown} onClick={onChromecastButtonClick}>
                         <Icon className={styles['icon']} name={'cast'} />
                     </Button>
+                    <Button className={styles['control-bar-button']} title={'Streaming Server'} tabIndex={-1} onMouseDown={onStreamingServerButtonMouseDown} onClick={onToggleStreamingServerMenu}>
+                        <Icon className={styles['icon']} name={'server'} />
+                    </Button>
                     <Button className={classnames(styles['control-bar-button'], { 'disabled': !Array.isArray(subtitlesTracks) || subtitlesTracks.length === 0 })} tabIndex={-1} onMouseDown={onSubtitlesButtonMouseDown} onClick={onToggleSubtitlesMenu}>
                         <Icon className={styles['icon']} name={'subtitles'} />
                     </Button>
@@ -294,6 +301,7 @@ ControlBar.propTypes = {
     onToggleOptionsMenu: PropTypes.func,
     shellCastSupported: PropTypes.bool,
     onToggleCastDevicesMenu: PropTypes.func,
+    onToggleStreamingServerMenu: PropTypes.func,
     onToggleStatisticsMenu: PropTypes.func,
     onMouseOver: PropTypes.func,
     onMouseMove: PropTypes.func,

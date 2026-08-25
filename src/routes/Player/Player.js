@@ -11,7 +11,7 @@ const { default: useRouteFocused } = require('stremio/common/useRouteFocused');
 const { useCore } = require('stremio/core');
 const { useServices, useGamepad } = require('stremio/services');
 const { useContentGamepadNavigation } = require('stremio/services/GamepadNavigation');
-const { useSettings, useProfile, useFullscreen, useBinaryState, useToast, useStreamingServer, withCoreSuspender, usePlatform, onShortcut, getKeyboardShortcutKey, getKeyboardShortcutKeys, useDiscord, EMPTY_DISCORD_TIMESTAMPS, getPlaybackDiscordActivity } = require('stremio/common');
+const { useSettings, useProfile, useFullscreen, useBinaryState, useToast, useStreamingServer, useModelState, withCoreSuspender, usePlatform, onShortcut, getKeyboardShortcutKey, getKeyboardShortcutKeys, useDiscord, EMPTY_DISCORD_TIMESTAMPS, getPlaybackDiscordActivity } = require('stremio/common');
 const { default: toPath } = require('stremio-router/toPath');
 const { HorizontalNavBar, Transition, ContextMenu } = require('stremio/components');
 const { default: Buffering } = require('./Buffering');
@@ -23,6 +23,7 @@ const NextVideoPopup = require('./NextVideoPopup');
 const StatisticsMenu = require('./StatisticsMenu');
 const OptionsMenu = require('./OptionsMenu');
 const { default: CastDevicesMenu } = require('./CastDevicesMenu');
+const { default: StreamingServerMenu } = require('./StreamingServerMenu');
 const SubtitlesMenu = require('./SubtitlesMenu');
 const { default: AudioMenu } = require('./AudioMenu');
 const SpeedMenu = require('./SpeedMenu');
@@ -68,6 +69,7 @@ const Player = () => {
         return queryParams.has('forceTranscoding');
     }, [queryParams]);
     const profile = useProfile();
+    const ctx = useModelState({ model: 'ctx' });
     const [player, videoParamsChanged, streamStateChanged, subtitlePreferenceChanged, timeChanged, seek, pausedChanged, ended, nextVideo] = usePlayer(urlParams);
     const [settings] = useSettings();
     const streamingServer = useStreamingServer();
@@ -106,14 +108,15 @@ const Player = () => {
     const [speedMenuOpen, , closeSpeedMenu, toggleSpeedMenu] = useBinaryState(false);
     const [statisticsMenuOpen, openStatisticsMenu, closeStatisticsMenu, toggleStatisticsMenu] = useBinaryState(false);
     const [castDevicesMenuOpen, , closeCastDevicesMenu, toggleCastDevicesMenu] = useBinaryState(false);
+    const [streamingServerMenuOpen, , closeStreamingServerMenu, toggleStreamingServerMenu] = useBinaryState(false);
     const [nextVideoPopupOpen, openNextVideoPopup, closeNextVideoPopup] = useBinaryState(false);
     const [sideDrawerOpen, , closeSideDrawer, toggleSideDrawer] = useBinaryState(false);
     const [searchPanelOpen, , closeSearchPanel, toggleSearchPanel] = useBinaryState(false);
     const [chatPanelOpen, , closeChatPanel, toggleChatPanel] = useBinaryState(false);
 
     const menusOpen = React.useMemo(() => {
-        return optionsMenuOpen || subtitlesMenuOpen || audioMenuOpen || speedMenuOpen || statisticsMenuOpen || castDevicesMenuOpen || sideDrawerOpen || searchPanelOpen || chatPanelOpen || nextVideoPopupOpen;
-    }, [optionsMenuOpen, subtitlesMenuOpen, audioMenuOpen, speedMenuOpen, statisticsMenuOpen, castDevicesMenuOpen, sideDrawerOpen, searchPanelOpen, chatPanelOpen, nextVideoPopupOpen]);
+        return optionsMenuOpen || subtitlesMenuOpen || audioMenuOpen || speedMenuOpen || statisticsMenuOpen || castDevicesMenuOpen || streamingServerMenuOpen || sideDrawerOpen || searchPanelOpen || chatPanelOpen || nextVideoPopupOpen;
+    }, [optionsMenuOpen, subtitlesMenuOpen, audioMenuOpen, speedMenuOpen, statisticsMenuOpen, castDevicesMenuOpen, streamingServerMenuOpen, sideDrawerOpen, searchPanelOpen, chatPanelOpen, nextVideoPopupOpen]);
 
     const closeMenus = React.useCallback(() => {
         closeOptionsMenu();
@@ -122,6 +125,7 @@ const Player = () => {
         closeSpeedMenu();
         closeStatisticsMenu();
         closeCastDevicesMenu();
+        closeStreamingServerMenu();
         closeSideDrawer();
         closeSearchPanel();
         closeChatPanel();
@@ -163,6 +167,56 @@ const Player = () => {
             };
         }
     }, [castDevicesMenuOpen, refreshCastDevices]);
+
+    const onStreamingServerUrlSelected = React.useCallback((url) => {
+        if (url !== profile.settings.streamingServerUrl) {
+            core.transport.dispatch({
+                action: 'Ctx',
+                args: {
+                    action: 'UpdateSettings',
+                    args: {
+                        ...profile.settings,
+                        streamingServerUrl: url,
+                    }
+                }
+            });
+        }
+        closeStreamingServerMenu();
+    }, [profile.settings]);
+
+    // Auto-fallback: if the active streaming server URL fails to connect (the real,
+    // observable "Err" status streamingServer.settings already exposes - see Settings'
+    // own URLsManager/Item.tsx), try the next configured URL instead of hanging forever.
+    // Only kicks in while actually trying to play something, and only tries each
+    // configured URL once per stream to avoid ping-ponging between two broken servers.
+    const triedStreamingServerUrls = React.useRef(new Set());
+    React.useEffect(() => {
+        triedStreamingServerUrls.current = new Set();
+    }, [player.selected?.stream]);
+    React.useEffect(() => {
+        if (player.selected?.stream && streamingServer.settings?.type === 'Err' && Array.isArray(ctx.streamingServerUrls) && ctx.streamingServerUrls.length > 1) {
+            triedStreamingServerUrls.current.add(profile.settings.streamingServerUrl);
+            const nextUrl = ctx.streamingServerUrls.find(({ url }) => !triedStreamingServerUrls.current.has(url));
+            if (nextUrl) {
+                toast.show({
+                    type: 'info',
+                    title: 'Switching streaming server',
+                    message: `"${profile.settings.streamingServerUrl}" isn't responding - trying "${nextUrl.url}" instead.`,
+                    timeout: 4000
+                });
+                core.transport.dispatch({
+                    action: 'Ctx',
+                    args: {
+                        action: 'UpdateSettings',
+                        args: {
+                            ...profile.settings,
+                            streamingServerUrl: nextUrl.url,
+                        }
+                    }
+                });
+            }
+        }
+    }, [player.selected?.stream, streamingServer.settings?.type, ctx.streamingServerUrls, profile.settings.streamingServerUrl]);
 
     const {
         streamSubtitles,
@@ -401,6 +455,9 @@ const Player = () => {
         }
         if (!event.nativeEvent.castDevicesMenuClosePrevented) {
             closeCastDevicesMenu();
+        }
+        if (!event.nativeEvent.streamingServerMenuClosePrevented) {
+            closeStreamingServerMenu();
         }
 
         closeSideDrawer();
@@ -1080,6 +1137,7 @@ const Player = () => {
                 onToggleOptionsMenu={toggleOptionsMenu}
                 shellCastSupported={shellCastSupported}
                 onToggleCastDevicesMenu={toggleCastDevicesMenu}
+                onToggleStreamingServerMenu={toggleStreamingServerMenu}
                 onToggleSubtitlesMenu={toggleSubtitlesMenu}
                 onToggleAudioMenu={toggleAudioMenu}
                 onToggleSpeedMenu={toggleSpeedMenu}
@@ -1123,6 +1181,15 @@ const Player = () => {
                     devices={castDevices}
                     loading={castDevicesLoading}
                     onDeviceSelected={onCastDeviceSelected}
+                />
+            </Transition>
+            <Transition when={streamingServerMenuOpen} name={'fade'}>
+                <StreamingServerMenu
+                    className={classnames(styles['layer'], styles['menu-layer'])}
+                    urls={ctx.streamingServerUrls}
+                    selectedUrl={profile.settings.streamingServerUrl}
+                    status={streamingServer.settings?.type ?? null}
+                    onUrlSelected={onStreamingServerUrlSelected}
                 />
             </Transition>
             <Transition when={sideDrawerOpen} name={'slide-left'}>

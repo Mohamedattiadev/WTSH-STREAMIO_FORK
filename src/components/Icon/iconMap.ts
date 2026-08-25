@@ -7,7 +7,7 @@ import {
     MoreVertical, Eye, HelpCircle, AlertTriangle, Magnet, Megaphone, Bell, Minus, RotateCcw, RotateCw, ArrowUp,
     RefreshCcw, Link2, Link2Off, User, FolderDown, AudioLines, ListVideo, Clapperboard,
     CloudDownload, Ratio, Contrast, SkipForward, Gamepad2, Volume1, Glasses, Play, Pause,
-    Maximize2, Minimize2, Globe, Star, Copy, Sparkles,
+    Maximize2, Minimize2, Globe, Star, Copy, Sparkles, Server,
     type LucideIcon
 } from 'lucide-react';
 
@@ -76,6 +76,7 @@ export const ICON_MAP: Record<string, LucideIcon> = {
     replay: RotateCcw,
     reset: RefreshCcw,
     search: Search,
+    server: Server,
     share: Share2,
     speed: Gauge,
     sparkles: Sparkles,
