@@ -11,21 +11,52 @@
 
     &.compact {
         .meta-info-container {
-            .logo, .logo-placeholder {
+            .logo {
                 width: 100%;
                 height: 6rem;
             }
 
+            // The compact side panel (Discover/Search/Library) is much narrower than the full
+            // detail page this component also renders for - the same 1.7rem title that reads
+            // fine full-width was overwhelming this panel, filling most of its visible height
+            // before any real info showed. Matches the mockup's own compact preview, where the
+            // title is a modest heading, not a hero treatment.
+            .logo-placeholder {
+                width: 100%;
+                height: auto;
+                margin-bottom: 1rem;
+                font-size: 1.2rem;
+            }
+
             .runtime-release-info-container {
                 justify-content: space-between;
+                margin-top: 0.5rem;
 
                 .runtime-label, .release-info-label {
-                    margin: 1rem 0.4rem;
+                    margin: 0 0.4rem 0 0;
+                    font-size: 0.95rem;
                 }
             }
 
             .description-container {
                 max-height: none;
+                margin-top: 0.75rem;
+                font-size: 0.9rem;
+                line-height: 1.6em;
+            }
+
+            .meta-links {
+                margin-top: 0.9rem;
+
+                .label-container {
+                    margin-bottom: 0.5rem;
+                    font-size: 0.8rem;
+                }
+
+                .link-container {
+                    padding: 0.3rem 0.9rem;
+                    font-size: 0.85rem;
+                }
             }
         }
 
