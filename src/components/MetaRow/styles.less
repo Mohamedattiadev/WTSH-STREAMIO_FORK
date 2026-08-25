@@ -77,6 +77,13 @@
         overflow: visible;
 
         .meta-item {
+            // Flex items default to min-width:auto, which respects intrinsic content size (e.g.
+            // an unwrappable title) - the same trap as CSS Grid's bare 1fr (really
+            // minmax(auto,1fr)), and just as capable of forcing one item wider than its equal
+            // flex-grow siblings. Confirmed live: one row had [208, 190, 190, 190, 190, 190, 190]
+            // despite every item having the identical flex-grow value.
+            min-width: 0;
+
             &.poster-shape-poster {
                 flex: calc(1 / var(--poster-shape-ratio));
             }
