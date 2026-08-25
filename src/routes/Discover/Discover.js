@@ -197,6 +197,7 @@ const Discover = () => {
                                                 posterShape={metaItem.posterShape}
                                                 playname={selectedMetaItemIndex === index}
                                                 deepLinks={metaItem.deepLinks}
+                                                links={metaItem.links}
                                                 trailerStreams={metaItem.trailerStreams}
                                                 releaseInfo={metaItem.releaseInfo}
                                                 watched={metaItem.watched}

@@ -12,13 +12,24 @@ const Multiselect = require('stremio/components/Multiselect');
 const TrailerModal = require('stremio/components/TrailerModal');
 const useBinaryState = require('stremio/common/useBinaryState');
 const { default: getMetaDetailsHref } = require('stremio/common/getMetaDetailsHref');
-const { ICON_FOR_TYPE } = require('stremio/common/CONSTANTS');
+const CONSTANTS = require('stremio/common/CONSTANTS');
+const { ICON_FOR_TYPE } = CONSTANTS;
 const styles = require('./styles');
 
-const MetaItem = React.memo(({ className, type, name, poster, posterShape, posterChangeCursor, progress, newVideos, options, deepLinks, trailerStreams, releaseInfo, href: customHref, dataset, optionOnSelect, onDismissClick, onPlayClick, watched, badgeLabel, ...props }) => {
+const MetaItem = React.memo(({ className, type, name, poster, posterShape, posterChangeCursor, progress, newVideos, options, deepLinks, links, trailerStreams, releaseInfo, href: customHref, dataset, optionOnSelect, onDismissClick, onPlayClick, watched, badgeLabel, ...props }) => {
     const { t } = useTranslation();
     const [menuOpen, onMenuOpen, onMenuClose] = useBinaryState(false);
     const [trailerModalOpen, openTrailerModal, closeTrailerModal] = useBinaryState(false);
+    // Same real IMDb-link convention MetaPreview reads its rating badge from (the link's
+    // `name` carries the rating value, e.g. "7.9") - no separate `imdbRating` field exists
+    // on MetaItemPreview, so this is the only real (non-fabricated) source for a card rating.
+    const rating = React.useMemo(() => {
+        const imdbLink = Array.isArray(links) ?
+            links.find((link) => link && link.category === CONSTANTS.IMDB_LINK_CATEGORY)
+            :
+            null;
+        return imdbLink && typeof imdbLink.name === 'string' && imdbLink.name.length > 0 ? imdbLink.name : null;
+    }, [links]);
     const subtitle = React.useMemo(() => {
         const typeLabel = typeof type === 'string' && type.length > 0 ? type.charAt(0).toUpperCase() + type.slice(1) : null;
         if (typeLabel === null) {
@@ -202,6 +213,15 @@ const MetaItem = React.memo(({ className, type, name, poster, posterShape, poste
                                 :
                                 null
                         }
+                        {
+                            rating !== null ?
+                                <div className={styles['card-rating']}>
+                                    <Icon className={styles['icon']} name={'star'} />
+                                    <span>{rating}</span>
+                                </div>
+                                :
+                                null
+                        }
                     </div>
                     :
                     null
@@ -234,6 +254,11 @@ MetaItem.propTypes = {
         metaDetailsStreams: PropTypes.string,
         player: PropTypes.string
     }),
+    links: PropTypes.arrayOf(PropTypes.shape({
+        name: PropTypes.string,
+        category: PropTypes.string,
+        url: PropTypes.string
+    })),
     trailerStreams: PropTypes.arrayOf(PropTypes.shape({
         deepLinks: PropTypes.shape({
             player: PropTypes.string

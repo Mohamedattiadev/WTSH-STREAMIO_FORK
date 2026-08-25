@@ -111,6 +111,7 @@ const ChatPanel = ({ className, compact, closeChatPanel, onExpand }) => {
                                                     poster={item.poster}
                                                     posterShape={item.posterShape}
                                                     deepLinks={item.deepLinks}
+                                                    links={item.links}
                                                     trailerStreams={item.trailerStreams}
                                                     releaseInfo={item.releaseInfo}
                                                     badgeLabel={item.matchReason}
