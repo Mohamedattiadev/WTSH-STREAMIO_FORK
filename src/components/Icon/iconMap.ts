@@ -7,7 +7,7 @@ import {
     MoreVertical, Eye, HelpCircle, AlertTriangle, Magnet, Megaphone, Bell, Minus, RotateCcw, RotateCw, ArrowUp,
     RefreshCcw, Link2, Link2Off, User, FolderDown, AudioLines, ListVideo, Clapperboard,
     CloudDownload, Ratio, Contrast, SkipForward, Gamepad2, Volume1, Glasses, Play, Pause,
-    Maximize2, Minimize2, Globe, Star,
+    Maximize2, Minimize2, Globe, Star, Copy,
     type LucideIcon
 } from 'lucide-react';
 
@@ -45,6 +45,7 @@ export const ICON_MAP: Record<string, LucideIcon> = {
     'chevron-forward': ChevronRight,
     close: X,
     'cloud-library': CloudDownload,
+    copy: Copy,
     download: Download,
     episodes: ListVideo,
     eye: Eye,

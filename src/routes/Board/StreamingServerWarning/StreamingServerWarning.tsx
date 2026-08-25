@@ -1,6 +1,6 @@
 // Copyright (C) 2017-2024 Smart code 203358507
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import classnames from 'classnames';
 import Icon from 'stremio/components/Icon';
@@ -8,7 +8,27 @@ import { Button } from 'stremio/components';
 import { useCore } from 'stremio/core';
 import useProfile from 'stremio/common/useProfile';
 import { withCoreSuspender } from 'stremio/common/CoreSuspender';
+import useToast from 'stremio/common/Toast/useToast';
 import styles from './StreamingServerWarning.less';
+
+const SETUP_COMMANDS = {
+    unix: 'curl -fsSL https://raw.githubusercontent.com/Mohamedattiadev/stremio-web/stremio-server-setup/scripts/stremio-server-setup/install.sh | bash',
+    windows: 'irm https://raw.githubusercontent.com/Mohamedattiadev/stremio-web/stremio-server-setup/scripts/stremio-server-setup/install.ps1 | iex',
+};
+
+type Platform = keyof typeof SETUP_COMMANDS;
+
+const PLATFORM_LABEL: Record<Platform, string> = {
+    unix: 'macOS / Linux',
+    windows: 'Windows',
+};
+
+const detectPlatform = (): Platform => {
+    if (typeof navigator !== 'undefined' && /win/i.test(navigator.userAgent)) {
+        return 'windows';
+    }
+    return 'unix';
+};
 
 type Props = {
     className?: string;
@@ -18,6 +38,22 @@ const StreamingServerWarning = ({ className }: Props) => {
     const { t } = useTranslation();
     const core = useCore();
     const profile = useProfile();
+    const toast = useToast();
+    const [platform, setPlatform] = useState<Platform>(detectPlatform);
+    const command = useMemo(() => SETUP_COMMANDS[platform], [platform]);
+
+    const onTogglePlatform = useCallback(() => {
+        setPlatform((prev) => prev === 'unix' ? 'windows' : 'unix');
+    }, []);
+
+    const onCopyCommand = useCallback(() => {
+        navigator.clipboard.writeText(command);
+        toast.show({
+            type: 'success',
+            title: 'Command copied — paste it in a terminal',
+            timeout: 2500,
+        });
+    }, [command]);
 
     const createDismissalDate = (months: number, years = 0): Date => {
         const dismissalDate = new Date();
@@ -55,46 +91,57 @@ const StreamingServerWarning = ({ className }: Props) => {
 
     return (
         <div className={classnames(className, styles['warning-container'])}>
-            <Icon className={styles['warning-icon']} name={'warning'} />
-            <div className={styles['warning-statement']}>
-                {t('SETTINGS_SERVER_UNAVAILABLE')}
-            </div>
-            <div className={styles['actions']}>
-                <a
-                    href='https://www.stremio.com/download-service'
-                    target='_blank'
-                    rel='noreferrer'
-                >
+            <div className={styles['top-row']}>
+                <Icon className={styles['warning-icon']} name={'warning'} />
+                <div className={styles['warning-statement']}>
+                    {t('SETTINGS_SERVER_UNAVAILABLE')}
+                </div>
+                <div className={styles['actions']}>
                     <Button
                         className={styles['action']}
-                        title={t('SERVICE_INSTALL')}
+                        title={t('WARNING_STREAMING_SERVER_LATER')}
+                        onClick={onLater}
                         tabIndex={-1}
                     >
                         <div className={styles['label']}>
-                            {t('SERVICE_INSTALL')}
+                            {t('WARNING_STREAMING_SERVER_LATER')}
                         </div>
                     </Button>
-                </a>
-                <Button
-                    className={styles['action']}
-                    title={t('WARNING_STREAMING_SERVER_LATER')}
-                    onClick={onLater}
-                    tabIndex={-1}
-                >
-                    <div className={styles['label']}>
-                        {t('WARNING_STREAMING_SERVER_LATER')}
-                    </div>
-                </Button>
-                <Button
-                    className={styles['action']}
-                    title={t('DONT_SHOW_AGAIN')}
-                    onClick={onDismiss}
-                    tabIndex={-1}
-                >
-                    <div className={styles['label']}>
-                        {t('DONT_SHOW_AGAIN')}
-                    </div>
-                </Button>
+                    <Button
+                        className={styles['action']}
+                        title={t('DONT_SHOW_AGAIN')}
+                        onClick={onDismiss}
+                        tabIndex={-1}
+                    >
+                        <div className={styles['label']}>
+                            {t('DONT_SHOW_AGAIN')}
+                        </div>
+                    </Button>
+                </div>
+            </div>
+            <div className={styles['setup-row']}>
+                <div className={styles['setup-hint']}>
+                    This is what makes playback work — Stremio does not stream video from our servers. This runs a small server on your own device that fetches and streams the video privately, just for you.
+                </div>
+                <div className={styles['command-box']}>
+                    <button
+                        type={'button'}
+                        className={styles['platform-badge']}
+                        title={'Click to switch OS'}
+                        onClick={onTogglePlatform}
+                    >
+                        {PLATFORM_LABEL[platform]}
+                    </button>
+                    <code className={styles['command-text']} title={command}>{command}</code>
+                    <Button
+                        className={styles['copy-button']}
+                        title={'Copy command'}
+                        onClick={onCopyCommand}
+                        tabIndex={-1}
+                    >
+                        <Icon className={styles['icon']} name={'copy'} />
+                    </Button>
+                </div>
             </div>
         </div>
     );
