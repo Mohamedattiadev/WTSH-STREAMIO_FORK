@@ -32,10 +32,10 @@ const StreamingServerWarning = ({ className }: Props) => {
         navigator.clipboard.writeText(command);
         toast.show({
             type: 'success',
-            title: 'Command copied — paste it in a terminal',
+            title: t('COMMAND_COPIED'),
             timeout: 2500,
         });
-    }, [command]);
+    }, [command, toast, t]);
 
     const createDismissalDate = (months: number, years = 0): Date => {
         const dismissalDate = new Date();
@@ -105,13 +105,13 @@ const StreamingServerWarning = ({ className }: Props) => {
             </div>
             <div className={styles['setup-row']}>
                 <div className={styles['setup-hint']}>
-                    This is what makes playback work — Stremio does not stream video from our servers. This runs a small server on your own device that fetches and streams the video privately, just for you.
+                    {t('STREAMING_SERVER_SETUP_HINT')}
                 </div>
                 <div className={styles['command-box']}>
                     <button
                         type={'button'}
                         className={styles['platform-badge']}
-                        title={'Click to switch OS'}
+                        title={t('SWITCH_OS')}
                         onClick={onTogglePlatform}
                     >
                         {PLATFORM_LABEL[platform]}
@@ -119,7 +119,7 @@ const StreamingServerWarning = ({ className }: Props) => {
                     <code className={styles['command-text']} title={command}>{command}</code>
                     <Button
                         className={styles['copy-button']}
-                        title={'Copy command'}
+                        title={t('COPY_COMMAND')}
                         onClick={onCopyCommand}
                         tabIndex={-1}
                     >

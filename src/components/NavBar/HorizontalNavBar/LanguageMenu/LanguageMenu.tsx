@@ -1,6 +1,7 @@
 // Copyright (C) 2017-2026 Smart code 203358507
 
 import React, { useCallback, useMemo, useState, MouseEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCore } from 'stremio/core';
 import useProfile from 'stremio/common/useProfile';
 import interfaceLanguages from 'stremio/common/interfaceLanguages.json';
@@ -28,6 +29,7 @@ const QUICK_LANGUAGES: LanguageOption[] = QUICK_LANGUAGE_CODES
     .filter((language): language is LanguageOption => language !== null);
 
 const LanguageMenu = () => {
+    const { t } = useTranslation();
     const core = useCore();
     const profile = useProfile();
     const [open, setOpen] = useState(false);
@@ -72,14 +74,14 @@ const LanguageMenu = () => {
     const renderLabel = useCallback(({ ref, className: labelClassName, children }: { ref: React.Ref<HTMLDivElement>, className: string, children: React.ReactNode }) => (
         <div
             ref={ref}
-            title={'Change language'}
+            title={t('LANGUAGE_MENU_TITLE')}
             className={`${styles['label']} ${labelClassName}`}
             onClick={onLabelClick}
         >
             <span className={styles['code']}>{currentLanguage.shortLabel}</span>
             {children}
         </div>
-    ), [onLabelClick, currentLanguage]);
+    ), [onLabelClick, currentLanguage, t]);
 
     const renderMenu = useCallback(() => (
         <div className={styles['menu']} onClick={onMenuClick}>

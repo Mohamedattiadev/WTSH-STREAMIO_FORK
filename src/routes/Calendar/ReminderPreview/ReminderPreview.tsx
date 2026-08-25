@@ -1,6 +1,7 @@
 // Copyright (C) 2017-2026 Smart code 203358507
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Image } from 'stremio/components';
 import Icon from 'stremio/components/Icon';
 import styles from './ReminderPreview.less';
@@ -18,6 +19,7 @@ type Props = {
 // re-fetch full MetaDetails from without fabricating one. This shows exactly the real fields
 // that exist instead of pretending to be a full preview panel.
 const ReminderPreview = ({ reminder, onCloseRequest, onRemove }: Props) => {
+    const { t } = useTranslation();
     const dateLabel = useMemo(() => {
         return new Date(`${reminder.scheduled_date}T00:00:00`).toLocaleString(undefined, {
             weekday: 'long',
@@ -29,7 +31,7 @@ const ReminderPreview = ({ reminder, onCloseRequest, onRemove }: Props) => {
 
     return (
         <div className={styles['reminder-preview']}>
-            <Button className={styles['close-button']} title={'Close'} onClick={onCloseRequest}>
+            <Button className={styles['close-button']} title={t('BUTTON_CLOSE')} onClick={onCloseRequest}>
                 <Icon className={styles['icon']} name={'close'} />
             </Button>
             {
@@ -45,13 +47,13 @@ const ReminderPreview = ({ reminder, onCloseRequest, onRemove }: Props) => {
                 <div className={styles['date']}>{dateLabel}</div>
                 {
                     reminder.source === 'chat' ?
-                        <div className={styles['source-badge']}>via chat</div>
+                        <div className={styles['source-badge']}>{t('CALENDAR_VIA_CHAT')}</div>
                         :
                         null
                 }
                 <Button className={styles['remove-button']} onClick={() => onRemove(reminder.id)}>
                     <Icon className={styles['icon']} name={'bin'} />
-                    <div className={styles['label']}>Remove reminder</div>
+                    <div className={styles['label']}>{t('REMINDER_PREVIEW_REMOVE')}</div>
                 </Button>
             </div>
         </div>

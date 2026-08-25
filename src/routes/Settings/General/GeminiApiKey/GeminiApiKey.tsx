@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Section, Option } from '../../components';
 import useGeminiApiKey from 'stremio/common/useGeminiApiKey';
 import styles from './GeminiApiKey.less';
@@ -10,6 +11,7 @@ import styles from './GeminiApiKey.less';
 // only and sent with each /api/chat request, where the server prefers it over its own env var
 // (see api/chat.js) - never sent anywhere else.
 const GeminiApiKey = () => {
+    const { t } = useTranslation();
     const { apiKey, setApiKey } = useGeminiApiKey();
     const [draft, setDraft] = useState(apiKey);
     const [saved, setSaved] = useState(false);
@@ -28,34 +30,28 @@ const GeminiApiKey = () => {
 
     return (
         <Section>
-            <Option className={styles['gemini-api-key']} icon={'sparkles'} label={'Ask WTSH (Gemini API Key)'}>
+            <Option className={styles['gemini-api-key']} icon={'sparkles'} label={t('GEMINI_LABEL')}>
                 <div className={styles['body']}>
                     <div className={styles['description']}>
-                        Optional - use your own free Gemini key for Chat instead of relying on the app&apos;s shared key.{' '}
+                        {t('GEMINI_DESCRIPTION')}{' '}
                         <a className={styles['link']} href={'https://aistudio.google.com/app/apikey'} target={'_blank'} rel={'noreferrer'}>
-                            Get a key
+                            {t('GEMINI_GET_KEY')}
                         </a>
                     </div>
                     <details className={styles['how-to']}>
-                        <summary>How do I get a key?</summary>
+                        <summary>{t('GEMINI_HOWTO_TOGGLE')}</summary>
                         <ol>
-                            <li>
-                                Open{' '}
-                                <a className={styles['link']} href={'https://aistudio.google.com/app/apikey'} target={'_blank'} rel={'noreferrer'}>
-                                    aistudio.google.com/app/apikey
-                                </a>{' '}
-                                and sign in with any Google account.
-                            </li>
-                            <li>Click <strong>Create API key</strong> (accept the default project if it asks you to pick one - any project works).</li>
-                            <li>Copy the key it generates.</li>
-                            <li>Paste it into the field below and click Save.</li>
+                            <li>{t('GEMINI_STEP_1')}</li>
+                            <li>{t('GEMINI_STEP_2')}</li>
+                            <li>{t('GEMINI_STEP_3')}</li>
+                            <li>{t('GEMINI_STEP_4')}</li>
                         </ol>
                     </details>
                     <form className={styles['form']} onSubmit={onSave}>
                         <input
                             className={styles['input']}
                             type={'password'}
-                            placeholder={'Gemini API key'}
+                            placeholder={t('GEMINI_PLACEHOLDER')}
                             value={draft}
                             autoComplete={'off'}
                             spellCheck={false}
@@ -63,12 +59,12 @@ const GeminiApiKey = () => {
                         />
                         <div className={styles['actions']}>
                             <button type={'submit'} className={styles['save-button']}>
-                                {saved ? 'Saved' : 'Save'}
+                                {saved ? t('GEMINI_SAVED') : t('GEMINI_SAVE')}
                             </button>
                             {
                                 apiKey.length > 0 ?
                                     <button type={'button'} className={styles['clear-button']} onClick={onClear}>
-                                        Remove
+                                        {t('GEMINI_REMOVE')}
                                     </button>
                                     :
                                     null

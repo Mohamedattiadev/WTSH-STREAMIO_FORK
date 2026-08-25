@@ -2,6 +2,7 @@
 
 import React, { useCallback, useState } from 'react';
 import classNames from 'classnames';
+import { useTranslation } from 'react-i18next';
 import Icon from 'stremio/components/Icon';
 import { Button, Image } from 'stremio/components';
 import useSupabaseAuth from 'stremio/common/Supabase/useSupabaseAuth';
@@ -33,6 +34,7 @@ type Props = {
 };
 
 const Reminders = ({ onSelect }: Props) => {
+    const { t } = useTranslation();
     const { user } = useSupabaseAuth();
     const { reminders, addReminder, removeReminder } = useCalendarReminders(user);
     const [formOpen, setFormOpen] = useState(false);
@@ -76,10 +78,10 @@ const Reminders = ({ onSelect }: Props) => {
     return (
         <div className={styles['reminders']}>
             <div className={styles['heading-row']}>
-                <div className={styles['heading']}>Your Reminders</div>
+                <div className={styles['heading']}>{t('CALENDAR_YOUR_REMINDERS')}</div>
                 {
                     user !== null ?
-                        <Button className={styles['add-button']} title={'Add reminder'} onClick={onToggleForm}>
+                        <Button className={styles['add-button']} title={t('CALENDAR_ADD_REMINDER')} onClick={onToggleForm}>
                             <Icon className={styles['icon']} name={formOpen ? 'close' : 'add'} />
                         </Button>
                         :
@@ -92,7 +94,7 @@ const Reminders = ({ onSelect }: Props) => {
                         <input
                             className={styles['add-input']}
                             type={'text'}
-                            placeholder={'Title'}
+                            placeholder={t('CALENDAR_TITLE_PLACEHOLDER')}
                             value={title}
                             autoFocus
                             onChange={(event) => setTitle(event.target.value)}
@@ -110,7 +112,7 @@ const Reminders = ({ onSelect }: Props) => {
                                 null
                         }
                         <button type={'submit'} className={styles['add-submit-button']} disabled={submitting}>
-                            Add
+                            {submitting ? t('CALENDAR_ADDING') : t('CALENDAR_ADD_BUTTON')}
                         </button>
                     </form>
                     :
@@ -119,10 +121,10 @@ const Reminders = ({ onSelect }: Props) => {
             <div className={styles['body']}>
                 {
                     user === null ?
-                        <div className={styles['empty']}>Sign in to &quot;Watch Reminders &amp; Chat Sync&quot; in Settings to get reminders here.</div>
+                        <div className={styles['empty']}>{t('CALENDAR_SIGNIN_HINT')}</div>
                         :
                         reminders.length === 0 ?
-                            <div className={styles['empty']}>No reminders yet - ask &quot;Ask WTSH&quot; to schedule something, like &quot;I&apos;ll watch [title] on Friday&quot;.</div>
+                            <div className={styles['empty']}>{t('CALENDAR_EMPTY_HINT')}</div>
                             :
                             reminders.map((reminder) => {
                                 const { id, title, poster_ref: poster, scheduled_date: scheduledDate, source } = reminder;
@@ -149,10 +151,10 @@ const Reminders = ({ onSelect }: Props) => {
                                             <div className={styles['name']}>{title}</div>
                                             <div className={styles['info']}>
                                                 {dateLabel}
-                                                {source === 'chat' ? <span className={styles['source-badge']}>via chat</span> : null}
+                                                {source === 'chat' ? <span className={styles['source-badge']}>{t('CALENDAR_VIA_CHAT')}</span> : null}
                                             </div>
                                         </div>
-                                        <Button className={styles['remove-button']} title={'Remove'} onClick={(event) => onRemoveClick(event, id)}>
+                                        <Button className={styles['remove-button']} title={t('CALENDAR_REMOVE')} onClick={(event) => onRemoveClick(event, id)}>
                                             <Icon className={classNames(styles['icon'], styles['remove-icon'])} name={'bin'} />
                                         </Button>
                                     </div>

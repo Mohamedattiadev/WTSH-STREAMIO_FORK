@@ -17,13 +17,28 @@ const { HashRouter } = require('react-router-dom');
 const i18n = require('i18next');
 const { initReactI18next } = require('react-i18next');
 const stremioTranslations = require('stremio-translations');
+const customTranslations = require('./common/customTranslations.json');
 const App = require('./App');
 const { default: WebUpdateScreen } = require('./App/WebUpdateScreen');
 const { CoreProvider } = require('./core');
 const { FileDropProvider, PlatformProvider } = require('./common');
 
+// Every string this redesign added (Chat, Calendar reminders, Add to Calendar, the streaming-
+// server picker, the Gemini API key card, the language menu itself, etc.) is genuinely new
+// content stremio-translations was never going to have - upstream only covers the original
+// Stremio UI. Layered on top of the real upstream resources per-locale rather than editing the
+// vendored package (which `pnpm install` would just overwrite). Only covers the 6 languages the
+// top-bar quick switcher offers for now - the ~40-language full picker in Settings still falls
+// back to English for these specific strings in any other language.
 const translations = Object.fromEntries(Object.entries(stremioTranslations()).map(([key, value]) => [key, {
-    translation: value
+    translation: {
+        ...value,
+        ...Object.fromEntries(
+            Object.entries(customTranslations)
+                .filter(([, byLocale]) => typeof byLocale[key] === 'string')
+                .map(([translationKey, byLocale]) => [translationKey, byLocale[key]])
+        )
+    }
 }]));
 
 i18n

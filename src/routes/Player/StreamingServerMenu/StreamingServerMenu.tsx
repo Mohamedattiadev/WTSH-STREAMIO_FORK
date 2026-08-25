@@ -32,13 +32,13 @@ const StreamingServerMenu = memo(forwardRef<HTMLDivElement, Props>(({ className,
         <div ref={ref} className={classNames(className, styles['streaming-server-menu'])} onMouseDown={onMouseDown}>
             <div className={styles['container']}>
                 <div className={styles['header']}>
-                    Streaming Server
+                    {t('STREAMING_SERVER_MENU_TITLE')}
                 </div>
                 <div className={styles['list']}>
                     {
                         urls.map(({ url }) => {
                             const selected = url === selectedUrl;
-                            const label = url === DEFAULT_STREAMING_SERVER_URL ? 'Local Server' : url;
+                            const label = url === DEFAULT_STREAMING_SERVER_URL ? t('STREAMING_SERVER_LOCAL') : url;
                             return (
                                 <Button
                                     key={url}

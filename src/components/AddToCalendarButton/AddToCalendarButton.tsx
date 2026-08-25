@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState, MouseEvent, FormEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import classNames from 'classnames';
 import Icon from 'stremio/components/Icon';
 import useSupabaseAuth from 'stremio/common/Supabase/useSupabaseAuth';
@@ -43,6 +44,7 @@ type Props = {
 // cards clip overflow on both .poster-container (for the poster's rounded corners) and
 // .poster-actions, which would silently clip an in-place popover down to a sliver.
 const AddToCalendarButton = ({ className, title, poster, size = 'lg' }: Props) => {
+    const { t } = useTranslation();
     const { user } = useSupabaseAuth();
     const { addReminder } = useCalendarReminders(user);
     const toast = useToast();
@@ -60,8 +62,8 @@ const AddToCalendarButton = ({ className, title, poster, size = 'lg' }: Props) =
         if (user === null) {
             toast.show({
                 type: 'info',
-                title: 'Sign in required',
-                message: 'Sign in to "Watch Reminders & Chat Sync" in Settings to add calendar reminders.',
+                title: t('ADD_TO_CALENDAR_SIGNIN_TITLE'),
+                message: t('ADD_TO_CALENDAR_SIGNIN_MSG'),
                 timeout: 4000
             });
             return;
@@ -78,7 +80,7 @@ const AddToCalendarButton = ({ className, title, poster, size = 'lg' }: Props) =
         }
         setDate(getLocalDateString());
         setOpen((wasOpen) => !wasOpen);
-    }, [user, toast]);
+    }, [user, toast, t]);
 
     useEffect(() => {
         if (!open) {
@@ -131,7 +133,7 @@ const AddToCalendarButton = ({ className, title, poster, size = 'lg' }: Props) =
         if (result.error) {
             toast.show({
                 type: 'error',
-                title: 'Error',
+                title: t('ERROR'),
                 message: result.error.message,
                 timeout: 4000
             });
@@ -140,18 +142,18 @@ const AddToCalendarButton = ({ className, title, poster, size = 'lg' }: Props) =
 
         toast.show({
             type: 'success',
-            title: 'Added to calendar',
-            message: `"${title}" was scheduled.`,
+            title: t('ADD_TO_CALENDAR_SUCCESS_TITLE'),
+            message: t('CALENDAR_ITEM_SCHEDULED', { title }),
             timeout: 3000
         });
         close();
-    }, [title, date, poster, submitting, addReminder, toast, close]);
+    }, [title, date, poster, submitting, addReminder, toast, close, t]);
 
     return (
         <React.Fragment>
             <div
                 ref={labelRef}
-                title={'Add to Calendar'}
+                title={t('ADD_TO_CALENDAR')}
                 className={classNames(className, styles['label'], styles[`size-${size}`], { [styles['active']]: open })}
                 onClick={onLabelClick}
             >
@@ -167,7 +169,7 @@ const AddToCalendarButton = ({ className, title, poster, size = 'lg' }: Props) =
                             onMouseDown={onMenuMouseDown}
                             onClick={onMenuClick}
                         >
-                            <div className={styles['heading']}>Add to Calendar</div>
+                            <div className={styles['heading']}>{t('ADD_TO_CALENDAR')}</div>
                             <input
                                 className={styles['date-input']}
                                 type={'date'}
@@ -177,7 +179,7 @@ const AddToCalendarButton = ({ className, title, poster, size = 'lg' }: Props) =
                                 onChange={(event) => setDate(event.target.value)}
                             />
                             <button type={'submit'} className={styles['submit-button']} disabled={submitting}>
-                                {submitting ? 'Adding…' : 'Add'}
+                                {submitting ? t('CALENDAR_ADDING') : t('CALENDAR_ADD_BUTTON')}
                             </button>
                         </form>,
                         document.body

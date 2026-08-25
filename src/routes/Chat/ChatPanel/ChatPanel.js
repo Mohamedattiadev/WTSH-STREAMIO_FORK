@@ -3,6 +3,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const classnames = require('classnames');
+const { useTranslation } = require('react-i18next');
 const { default: Icon } = require('stremio/components/Icon');
 const { default: Button } = require('stremio/components/Button');
 const ChatIcon = require('stremio/components/ChatIcon');
@@ -13,16 +14,17 @@ const useChatSession = require('../useChatSession');
 const useSupabaseAuth = require('stremio/common/Supabase/useSupabaseAuth');
 const styles = require('./styles');
 
-const SUGGESTIONS = [
-    'Something funny under 2 hours',
-    'Sci-fi movie like Interstellar',
-    'Best animated movies'
-];
-
 const ChatPanel = ({ className, compact, popup, closeChatPanel, onExpand }) => {
+    const { t } = useTranslation();
     const { messages, inputValue, setInputValue, sendMessage, isPending, pendingPhase } = useChatSession();
     const { user: supabaseUser } = useSupabaseAuth();
     const listRef = React.useRef(null);
+
+    const SUGGESTIONS = [
+        t('CHAT_SUGGESTION_FUNNY'),
+        t('CHAT_SUGGESTION_SCIFI'),
+        t('CHAT_SUGGESTION_ANIMATED')
+    ];
 
     React.useEffect(() => {
         if (listRef.current !== null) {
@@ -51,11 +53,11 @@ const ChatPanel = ({ className, compact, popup, closeChatPanel, onExpand }) => {
                         :
                         <ChatIcon className={styles['header-icon']} />
                 }
-                <div className={styles['header-title']}>Ask WTSH</div>
+                <div className={styles['header-title']}>{t('CHAT_TITLE')}</div>
                 <div className={styles['header-actions']}>
                     {
                         typeof onExpand === 'function' ?
-                            <Button className={styles['close-button']} title={'Open full chat'} onClick={onExpand}>
+                            <Button className={styles['close-button']} title={t('CHAT_OPEN_FULL')} onClick={onExpand}>
                                 <Icon className={styles['icon']} name={'maximize'} />
                             </Button>
                             :
@@ -63,7 +65,7 @@ const ChatPanel = ({ className, compact, popup, closeChatPanel, onExpand }) => {
                     }
                     {
                         typeof closeChatPanel === 'function' ?
-                            <Button className={styles['close-button']} title={'Close'} onClick={closeChatPanel}>
+                            <Button className={styles['close-button']} title={t('BUTTON_CLOSE')} onClick={closeChatPanel}>
                                 <Icon className={styles['icon']} name={'x'} />
                             </Button>
                             :
@@ -75,7 +77,7 @@ const ChatPanel = ({ className, compact, popup, closeChatPanel, onExpand }) => {
                 {
                     messages.length === 0 ?
                         <div className={styles['empty-state']}>
-                            <div className={styles['empty-title']}>Ask for a recommendation from your installed addons</div>
+                            <div className={styles['empty-title']}>{t('CHAT_EMPTY_TITLE')}</div>
                             <div className={styles['suggestions']}>
                                 {SUGGESTIONS.map((suggestion) => (
                                     <Button
@@ -100,9 +102,9 @@ const ChatPanel = ({ className, compact, popup, closeChatPanel, onExpand }) => {
                                                     <div className={styles['progress-label']}>
                                                         {
                                                             pendingPhase.totalCount > 0 ?
-                                                                `Searching your addons... (${pendingPhase.settledCount}/${pendingPhase.totalCount})`
+                                                                `${t('CHAT_SEARCHING_ADDONS')} (${pendingPhase.settledCount}/${pendingPhase.totalCount})`
                                                                 :
-                                                                'Searching your addons...'
+                                                                t('CHAT_SEARCHING_ADDONS')
                                                         }
                                                     </div>
                                                     :
@@ -149,12 +151,12 @@ const ChatPanel = ({ className, compact, popup, closeChatPanel, onExpand }) => {
                     value={inputValue}
                     onChange={onInputChange}
                     onSubmit={onSubmit}
-                    placeholder={'Ask for a recommendation...'}
+                    placeholder={t('CHAT_INPUT_PLACEHOLDER')}
                     disabled={isPending}
                 />
                 <Button
                     className={classnames(styles['send-button'], { 'disabled': isPending || inputValue.trim().length === 0 })}
-                    title={'Send'}
+                    title={t('CHAT_SEND')}
                     onClick={onSubmit}
                 >
                     <Icon className={styles['icon']} name={'arrow-up'} />
@@ -162,7 +164,7 @@ const ChatPanel = ({ className, compact, popup, closeChatPanel, onExpand }) => {
             </div>
             {
                 supabaseUser !== null ?
-                    <div className={styles['persist-note']}>Saved automatically - pick this conversation back up anytime from the chat icon.</div>
+                    <div className={styles['persist-note']}>{t('CHAT_PERSIST_NOTE')}</div>
                     :
                     null
             }
