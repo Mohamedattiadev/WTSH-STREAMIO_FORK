@@ -1037,15 +1037,20 @@ const Player = () => {
                     :
                     null
             }
-            <CenterControls
-                className={classnames(styles['center-controls-layer'])}
-                paused={video.state.paused}
-                seekTimeDuration={settings.seekTimeDuration}
-                onSeekPrev={onSeekPrev}
-                onSeekNext={onSeekNext}
-                onPlayRequested={onPlayRequested}
-                onPauseRequested={onPauseRequested}
-            />
+            {
+                !(video.state.buffering || !video.state.loaded) && error === null ?
+                    <CenterControls
+                        className={classnames(styles['center-controls-layer'])}
+                        paused={video.state.paused}
+                        seekTimeDuration={settings.seekTimeDuration}
+                        onSeekPrev={onSeekPrev}
+                        onSeekNext={onSeekNext}
+                        onPlayRequested={onPlayRequested}
+                        onPauseRequested={onPauseRequested}
+                    />
+                    :
+                    null
+            }
             <ControlBar
                 ref={controlBarRef}
                 className={classnames(styles['layer'], styles['control-bar-layer'])}
