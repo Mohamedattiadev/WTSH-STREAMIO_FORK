@@ -37,37 +37,38 @@
         box-sizing: border-box;
         position: absolute;
         top: 50%;
-        right: -0.8rem;
+        right: -0.85rem;
         transform: translateY(-50%);
         flex: none;
-        width: 1.6rem;
-        height: 1.6rem;
+        width: 1.8rem;
+        height: 1.8rem;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        background-color: var(--surface-panel-2);
-        border: 0.06rem solid var(--overlay-color);
-        // Not --muted-foreground-color (NavTabButton's resting icon color, for comparison) -
-        // that's legible against the rail's own background, but this button's small icon sits
-        // on its OWN darker circle stacked on top of the rail, and at only 0.85rem/2px-stroke
-        // the combination made it read as an empty dark circle at rest (confirmed via a
-        // high-DPI screenshot: the chevron was there, just too low-contrast to actually see).
-        color: rgba(245, 242, 236, 0.55);
+        // A previous pass tried a muted, mockup-matching rest color here (rgba(245,242,236,0.55)
+        // on var(--surface-panel-2)) and it was still unreadable in practice at this button's
+        // real size - the chevron all but disappeared. This trades literal mockup-color parity
+        // for an affordance a user can actually see: a lighter surface + solid, higher-contrast
+        // icon color at rest, not just on hover.
+        background-color: var(--surface-elevated-color);
+        border: 0.09rem solid rgba(255, 255, 255, 0.22);
+        color: var(--primary-foreground-color);
         cursor: pointer;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
         z-index: 3;
-        transition: color 0.15s ease-out, border-color 0.15s ease-out;
+        transition: color 0.15s ease-out, border-color 0.15s ease-out, background-color 0.15s ease-out;
 
         &:hover {
             color: var(--primary-accent-color);
-            border-color: rgba(255, 95, 54, 0.4);
+            border-color: rgba(255, 95, 54, 0.5);
+            background-color: var(--surface-panel-2);
         }
     }
 
     .rail-toggle-icon {
-        width: 0.85rem;
-        height: 0.85rem;
+        width: 1.05rem;
+        height: 1.05rem;
         transition: transform 0.28s ease;
     }
 

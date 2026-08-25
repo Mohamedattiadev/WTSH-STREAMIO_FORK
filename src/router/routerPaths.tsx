@@ -51,12 +51,12 @@ export default [
     },
     {
         path: '/addons/:type?/:transportUrl?/:catalogId?',
-        view: 3,
+        view: 1,
         element: <routes.Addons />,
     },
     {
         path: '/settings',
-        view: 3,
+        view: 1,
         element: <routes.Settings />,
     },
     {
@@ -66,7 +66,7 @@ export default [
     },
     {
         path: '/',
-        view: 0,
+        view: 1,
         element: <routes.Board />,
     },
     {
