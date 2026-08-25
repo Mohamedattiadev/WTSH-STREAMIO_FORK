@@ -31,11 +31,26 @@ const GeminiApiKey = () => {
             <Option className={styles['gemini-api-key']} icon={'sparkles'} label={'Ask WTSH (Gemini API Key)'}>
                 <div className={styles['body']}>
                     <div className={styles['description']}>
-                        Optional - use your own free Gemini key for Chat instead of relying on the app's shared key.{' '}
+                        Optional - use your own free Gemini key for Chat instead of relying on the app&apos;s shared key.{' '}
                         <a className={styles['link']} href={'https://aistudio.google.com/app/apikey'} target={'_blank'} rel={'noreferrer'}>
                             Get a key
                         </a>
                     </div>
+                    <details className={styles['how-to']}>
+                        <summary>How do I get a key?</summary>
+                        <ol>
+                            <li>
+                                Open{' '}
+                                <a className={styles['link']} href={'https://aistudio.google.com/app/apikey'} target={'_blank'} rel={'noreferrer'}>
+                                    aistudio.google.com/app/apikey
+                                </a>{' '}
+                                and sign in with any Google account.
+                            </li>
+                            <li>Click <strong>Create API key</strong> (accept the default project if it asks you to pick one - any project works).</li>
+                            <li>Copy the key it generates.</li>
+                            <li>Paste it into the field below and click Save.</li>
+                        </ol>
+                    </details>
                     <form className={styles['form']} onSubmit={onSave}>
                         <input
                             className={styles['input']}
