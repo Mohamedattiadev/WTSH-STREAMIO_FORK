@@ -10,6 +10,7 @@ const { default: Button } = require('stremio/components/Button');
 const { default: Image } = require('stremio/components/Image');
 const Multiselect = require('stremio/components/Multiselect');
 const TrailerModal = require('stremio/components/TrailerModal');
+const { default: AddToCalendarButton } = require('stremio/components/AddToCalendarButton');
 const useBinaryState = require('stremio/common/useBinaryState');
 const { default: getMetaDetailsHref } = require('stremio/common/getMetaDetailsHref');
 const CONSTANTS = require('stremio/common/CONSTANTS');
@@ -131,8 +132,18 @@ const MetaItem = React.memo(({ className, type, name, poster, posterShape, poste
                             null
                 }
                 {
-                    (onDismissClick || (Array.isArray(options) && options.length > 0)) ?
+                    onDismissClick || (Array.isArray(options) && options.length > 0) || (typeof name === 'string' && name.length > 0) ?
                         <div className={styles['poster-actions']}>
+                            {
+                                typeof name === 'string' && name.length > 0 ?
+                                    <AddToCalendarButton
+                                        size={'sm'}
+                                        title={name}
+                                        poster={poster}
+                                    />
+                                    :
+                                    null
+                            }
                             {
                                 onDismissClick ?
                                     <div title={t('LIBRARY_RESUME_DISMISS')} className={classnames(styles['action-btn'], styles['danger'])} onClick={dismissOnClick}>

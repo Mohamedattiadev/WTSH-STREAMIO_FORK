@@ -9,6 +9,7 @@ const { default: Icon } = require('stremio/components/Icon');
 const { default: Button } = require('stremio/components/Button');
 const { default: Image } = require('stremio/components/Image');
 const { default: ActionsGroup } = require('stremio/components/ActionsGroup');
+const { default: AddToCalendarButton } = require('stremio/components/AddToCalendarButton');
 const ModalDialog = require('stremio/components/ModalDialog');
 const SharePrompt = require('stremio/components/SharePrompt');
 const TrailerModal = require('stremio/components/TrailerModal');
@@ -27,7 +28,7 @@ const ALLOWED_LINK_REDIRECTS = [
     routesRegexp.metadetails.regexp
 ];
 
-const MetaPreview = React.forwardRef(({ className, compact, name, logo, background, runtime, releaseInfo, released, description, deepLinks, links, trailerStreams, inLibrary, toggleInLibrary, watched, toggleWatched, ratingInfo }, ref) => {
+const MetaPreview = React.forwardRef(({ className, compact, name, logo, background, poster, runtime, releaseInfo, released, description, deepLinks, links, trailerStreams, inLibrary, toggleInLibrary, watched, toggleWatched, ratingInfo }, ref) => {
     const { t } = useTranslation();
     const [shareModalOpen, openShareModal, closeShareModal] = useBinaryState(false);
     const [trailerModalOpen, openTrailerModal, closeTrailerModal] = useBinaryState(false);
@@ -258,6 +259,16 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
                         : null
                 }
                 {
+                    typeof name === 'string' && name.length > 0 ?
+                        <AddToCalendarButton
+                            className={styles['action-button']}
+                            title={name}
+                            poster={typeof poster === 'string' ? poster : background}
+                        />
+                        :
+                        null
+                }
+                {
                     !compact && ratingInfo !== null ?
                         <Ratings
                             ratingInfo={ratingInfo}
@@ -319,6 +330,7 @@ MetaPreview.propTypes = {
     name: PropTypes.string,
     logo: PropTypes.string,
     background: PropTypes.string,
+    poster: PropTypes.string,
     runtime: PropTypes.string,
     releaseInfo: PropTypes.string,
     released: PropTypes.instanceOf(Date),

@@ -96,6 +96,7 @@ const SideDrawer = memo(forwardRef<HTMLDivElement, Props>(({ seriesInfo, classNa
                     compact={true}
                     name={metaItem.name}
                     logo={metaItem.logo}
+                    poster={metaItem.poster}
                     runtime={metaItem.runtime}
                     releaseInfo={metaItem.releaseInfo}
                     released={metaItem.released}
