@@ -1,6 +1,12 @@
 .section {
     position: relative;
-    max-width: 38rem;
+    // The mockup's own equivalent (.settings-body) has no max-width at all - it just fills
+    // whatever space is left next to the fixed-width menu column. Going fully uncapped read
+    // badly on a real ultrawide monitor though (a lone "Log out" link or the account email
+    // row stretching across 2+ feet of screen), so this raises the cap generously instead of
+    // removing it outright - enough to close the dead-space gap at normal desktop widths
+    // while still keeping rows a readable length on very wide viewports.
+    max-width: 56rem;
     display: flex;
     flex-direction: column;
     align-items: start;
