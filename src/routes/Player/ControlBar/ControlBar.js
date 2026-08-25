@@ -57,6 +57,15 @@ const ControlBar = React.forwardRef(({
     const { chromecast } = useServices();
     const platform = usePlatform();
     const [chromecastServiceActive, setChromecastServiceActive] = React.useState(() => chromecast.active);
+    // Real download link straight from the current stream's own deep links (the same field
+    // OptionsMenu's buried "Download Video" option already used) - only ever shown when a
+    // real one exists, never fabricated for streams (most torrent streams) that don't offer it.
+    const downloadUrl = stream?.deepLinks?.externalPlayer?.download ?? null;
+    const onDownloadButtonClick = React.useCallback(() => {
+        if (typeof downloadUrl === 'string') {
+            platform.openExternal(downloadUrl);
+        }
+    }, [downloadUrl, platform]);
     const [buttonsMenuOpen, , , toggleButtonsMenu] = useBinaryState(false);
     const onSubtitlesButtonMouseDown = React.useCallback((event) => {
         event.nativeEvent.subtitlesMenuClosePrevented = true;
@@ -212,6 +221,14 @@ const ControlBar = React.forwardRef(({
                         : null
                 }
                 <div className={styles['spacing']} />
+                {
+                    typeof downloadUrl === 'string' ?
+                        <Button className={styles['control-bar-button']} title={t('CTX_DOWNLOAD_VIDEO')} tabIndex={-1} onClick={onDownloadButtonClick}>
+                            <Icon className={styles['icon']} name={'download'} />
+                        </Button>
+                        :
+                        null
+                }
                 {
                     metaItem?.content?.videos?.length > 0 ?
                         <Button className={styles['episodes-button']} title={'Episodes'} tabIndex={-1} onMouseDown={onVideosButtonMouseDown} onClick={onToggleSideDrawer}>
