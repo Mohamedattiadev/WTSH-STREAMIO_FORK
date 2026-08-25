@@ -339,8 +339,28 @@
                 .add-button-container {
                     z-index: 1;
                     position: fixed;
-                    right: 0;
-                    bottom: calc(3rem + var(--horizontal-nav-bar-size));
+                    // Left, not right, so it doesn't stack on top of ChatFab (also fixed,
+                    // bottom-right, on every route via MainNavBars).
+                    left: 1rem;
+                    bottom: calc(var(--vertical-nav-bar-size) + var(--safe-area-inset-bottom) + 1rem);
+                    // A full "+ Add addon" pill sitting fixed over a scrolling list inevitably
+                    // scrolls over card text underneath it - shrinking to an icon-only circle
+                    // (same treatment as ChatFab, which solves the identical problem) keeps it
+                    // reachable without permanently/mostly covering whatever card lands there.
+                    width: 3.2rem;
+                    height: 3.2rem;
+                    margin-right: 0;
+                    padding: 0;
+                    border-radius: 50%;
+                    box-shadow: 0 10px 26px -6px rgba(255, 61, 46, 0.45);
+
+                    .icon {
+                        margin-right: 0;
+                    }
+
+                    .add-button-label {
+                        display: none;
+                    }
                 }
 
                 .select-input-container {
