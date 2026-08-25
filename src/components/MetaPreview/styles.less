@@ -192,10 +192,14 @@
             height: 4rem;
             margin-bottom: 1rem;
 
+            // The base 4rem/4rem circle sizing is for the icon-only variant (Share, etc.) -
+            // a labeled pill inherited that same forced 4rem height regardless of its much
+            // shorter content, reading as an oversized, chunky button next to 0.85rem text.
             &:global(.wide) {
                 width: auto;
-                padding: 0 2rem;
-                border-radius: 4rem;
+                height: auto;
+                padding: 0.75rem 1.3rem;
+                border-radius: 3rem;
             }
 
             &:not(:last-child) {

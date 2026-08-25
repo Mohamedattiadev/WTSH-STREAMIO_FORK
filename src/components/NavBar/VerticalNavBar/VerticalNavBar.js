@@ -32,6 +32,7 @@ const VerticalNavBar = React.memo(React.forwardRef(({ className, selected, tabs 
     const [expanded, setExpanded] = React.useState(readRailExpanded);
     const navRef = React.useRef(null);
     const indicatorRef = React.useRef(null);
+    const positionedRef = React.useRef(false);
 
     const toggleExpandedOnClick = React.useCallback(() => {
         setExpanded((prevExpanded) => {
@@ -53,8 +54,22 @@ const VerticalNavBar = React.memo(React.forwardRef(({ className, selected, tabs 
         const items = navRef.current.querySelectorAll(`.${styles['nav-tab-button']}`);
         const activeItem = items[selectedIndex];
         if (activeItem) {
+            // Every top-level tab switch remounts this whole component (each tab route shares
+            // the same router view-slot as its siblings - see routerPaths.tsx), so the very
+            // first positioning on a fresh mount has no meaningful "previous" position to
+            // animate from - snapping the CSS transition off for just that first placement
+            // avoids a visible slide from a throwaway (0,0) starting point (confirmed live:
+            // without this, the indicator visibly slid in from the top on every tab switch).
+            if (!positionedRef.current) {
+                indicatorRef.current.style.transition = 'none';
+            }
             indicatorRef.current.style.opacity = '1';
             indicatorRef.current.style.transform = `translate(${activeItem.offsetLeft}px, ${activeItem.offsetTop}px)`;
+            if (!positionedRef.current) {
+                void indicatorRef.current.offsetHeight;
+                indicatorRef.current.style.transition = '';
+                positionedRef.current = true;
+            }
         } else {
             indicatorRef.current.style.opacity = '0';
         }
@@ -63,6 +78,25 @@ const VerticalNavBar = React.memo(React.forwardRef(({ className, selected, tabs 
     React.useLayoutEffect(() => {
         moveIndicator();
     }, [moveIndicator, expanded]);
+
+    // On a fresh mount (switching tabs re-mounts this whole component, since each top-level
+    // tab route occupies the same router view-slot as its siblings - see routerPaths.tsx) the
+    // very first offsetLeft/offsetTop read here can land before the row's final layout is
+    // settled, landing the indicator at (0,0) for a stretch before some unrelated later
+    // re-render happens to correct it - confirmed live, it measured ~200-300ms, long enough to
+    // read as the indicator "jumping" rather than just moving. A ResizeObserver on the nav
+    // itself re-measures the instant its real layout is ready, independent of any of that.
+    React.useEffect(() => {
+        if (!navRef.current || typeof ResizeObserver === 'undefined') {
+            return;
+        }
+
+        const resizeObserver = new ResizeObserver(moveIndicator);
+        resizeObserver.observe(navRef.current);
+        return () => {
+            resizeObserver.disconnect();
+        };
+    }, [moveIndicator]);
 
     React.useEffect(() => {
         window.addEventListener('resize', moveIndicator);
