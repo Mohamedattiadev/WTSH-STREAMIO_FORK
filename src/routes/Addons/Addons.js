@@ -152,12 +152,30 @@ const Addons = () => {
                 <div className={styles['tabs-container']}>
                     <Button className={classnames(styles['tab'], { [styles['selected']]: installedAddons.selected !== null })} title={t('ADDON_MY')} onClick={goToInstalledAddons}>
                         <div className={styles['label']}>{t('ADDON_MY')}</div>
+                        {
+                            installedAddons.selected !== null ?
+                                <div className={styles['tab-count']}>{installedAddons.catalog.length}</div>
+                                :
+                                null
+                        }
                     </Button>
                     <Button className={classnames(styles['tab'], { [styles['selected']]: isOfficialTab })} title={t('ADDON_OFFICIAL')} onClick={goToOfficialAddons}>
                         <div className={styles['label']}>{t('ADDON_OFFICIAL')}</div>
+                        {
+                            isOfficialTab && remoteAddons.catalog?.content?.type === 'Ready' ?
+                                <div className={styles['tab-count']}>{remoteAddons.catalog.content.content.length}</div>
+                                :
+                                null
+                        }
                     </Button>
                     <Button className={classnames(styles['tab'], { [styles['selected']]: isCommunityTab })} title={t('ADDON_COMMUNITY')} onClick={goToCommunityAddons}>
                         <div className={styles['label']}>{t('ADDON_COMMUNITY')}</div>
+                        {
+                            isCommunityTab && remoteAddons.catalog?.content?.type === 'Ready' ?
+                                <div className={styles['tab-count']}>{remoteAddons.catalog.content.content.length}</div>
+                                :
+                                null
+                        }
                     </Button>
                     <Button className={classnames(styles['tab'], { [styles['selected']]: regionalHubOpen })} title={'Regional'} onClick={goToRegionalHub}>
                         <div className={styles['label']}>{'Regional'}</div>
@@ -175,11 +193,6 @@ const Addons = () => {
                                     className={styles['select-input-container']}
                                 />
                             ))}
-                            <div className={styles['spacing']} />
-                            <Button className={styles['add-button-container']} title={t('ADD_ADDON')} onClick={openAddAddonModal}>
-                                <Icon className={styles['icon']} name={'add'} />
-                                <div className={styles['add-button-label']}>{t('ADD_ADDON')}</div>
-                            </Button>
                             <SearchBar
                                 className={styles['search-bar']}
                                 title={t('ADDON_SEARCH')}
@@ -188,6 +201,11 @@ const Addons = () => {
                             />
                             <Button className={styles['filter-button']} title={t('ALL_FILTERS')} onClick={openFiltersModal}>
                                 <Icon className={styles['filter-icon']} name={'filters'} />
+                                <div className={styles['filter-label']}>{t('ALL_FILTERS')}</div>
+                            </Button>
+                            <Button className={styles['add-button-container']} title={t('ADD_ADDON')} onClick={openAddAddonModal}>
+                                <Icon className={styles['icon']} name={'add'} />
+                                <div className={styles['add-button-label']}>{t('ADD_ADDON')}</div>
                             </Button>
                         </div>
                 }
@@ -218,6 +236,7 @@ const Addons = () => {
                                                         name={addon.manifest.name}
                                                         version={addon.manifest.version}
                                                         logo={addon.manifest.logo}
+                                                        transportUrl={addon.transportUrl}
                                                         description={addon.manifest.description}
                                                         types={addon.manifest.types}
                                                         behaviorHints={addon.manifest.behaviorHints}
@@ -258,6 +277,7 @@ const Addons = () => {
                                                             name={addon.manifest.name}
                                                             version={addon.manifest.version}
                                                             logo={addon.manifest.logo}
+                                                            transportUrl={addon.transportUrl}
                                                             description={addon.manifest.description}
                                                             types={addon.manifest.types}
                                                             behaviorHints={addon.manifest.behaviorHints}
