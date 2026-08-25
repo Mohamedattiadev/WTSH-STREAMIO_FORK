@@ -30,7 +30,13 @@
         }
 
         .action-buttons-container {
-            justify-content: space-between;
+            // space-between reads fine with exactly one row of buttons, but this row wraps
+            // once real content (a longer "Remove from Library" pill, the calendar button)
+            // pushes it past the panel's width - space-between then centers a lone wrapped
+            // button with a big gap before it, reading as a broken orphaned row. flex-start +
+            // an explicit gap wraps naturally from the left instead, regardless of row count.
+            justify-content: flex-start;
+            gap: 0.75rem;
 
             .action-button:not(:last-child), .group-container:not(:last-child) {
                 margin-right: 0;

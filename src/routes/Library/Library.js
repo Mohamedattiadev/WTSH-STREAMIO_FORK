@@ -11,6 +11,7 @@ const { useCore } = require('stremio/core');
 const { useProfile, useNotifications, useOnScrollToBottom, withCoreSuspender } = require('stremio/common');
 const { default: toPath } = require('stremio-router/toPath');
 const { DelayedRenderer, Chips, Image, MainNavBars, LibItem, MetaPreview, MultiselectMenu } = require('stremio/components');
+const useMetaDetails = require('stremio/routes/MetaDetails/useMetaDetails');
 const { default: Placeholder } = require('./Placeholder');
 const useLibrary = require('./useLibrary');
 const useSelectableInputs = require('./useSelectableInputs');
@@ -57,6 +58,20 @@ const Library = ({ model }) => {
     const [typeSelect, sortChips, hasNextPage] = useSelectableInputs(library);
     const [selectedLibItemIndex, setSelectedLibItemIndex] = React.useState(0);
     const selectedLibItem = library.catalog[selectedLibItemIndex] ?? null;
+    // LibraryItem (see core/types/LibraryItem.d.ts) is a deliberately thin model - no
+    // description/genres/cast/trailerStreams/links at all, unlike Discover/Search's full
+    // MetaItem - so the preview panel here never had a Trailer button or real summary to show,
+    // not a rendering bug. Same real-data gap Calendar's VideoPreview.tsx already solved for
+    // its own thin model: re-fetch the real full MetaDetails on demand, keyed off the item's
+    // own real type/id, and layer just the richer fields on top once it's loaded.
+    const enrichedMetaDetailsUrlParams = React.useMemo(() => {
+        return selectedLibItem !== null ? { type: selectedLibItem.type, id: selectedLibItem._id } : {};
+    }, [selectedLibItem]);
+    const enrichedMetaDetails = useMetaDetails(enrichedMetaDetailsUrlParams);
+    const enrichedLibItem = enrichedMetaDetails.metaItem !== null && enrichedMetaDetails.metaItem.content.type === 'Ready' ?
+        enrichedMetaDetails.metaItem.content.content
+        :
+        null;
     const scrollContainerRef = React.useRef(null);
     const metaPreviewRef = React.useRef(null);
     const onScrollToBottom = React.useCallback(() => {
@@ -160,7 +175,6 @@ const Library = ({ model }) => {
                                                         key={index}
                                                         className={classnames({ 'selected': selectedLibItemIndex === index })}
                                                         notifications={notifications}
-                                                        removable={model === 'library'}
                                                         detailsVideosFirst={model === 'library'}
                                                         data-index={index}
                                                         onClick={libItemOnClick}
@@ -177,21 +191,22 @@ const Library = ({ model }) => {
                                     compact={true}
                                     ref={metaPreviewRef}
                                     name={selectedLibItem.name}
-                                    logo={selectedLibItem.logo}
+                                    logo={enrichedLibItem?.logo ?? selectedLibItem.logo}
                                     background={selectedLibItem.poster}
-                                    runtime={selectedLibItem.runtime}
-                                    releaseInfo={selectedLibItem.releaseInfo}
-                                    released={selectedLibItem.released}
-                                    description={selectedLibItem.description}
-                                    links={selectedLibItem.links}
+                                    poster={selectedLibItem.poster}
+                                    runtime={enrichedLibItem?.runtime}
+                                    releaseInfo={enrichedLibItem?.releaseInfo}
+                                    released={enrichedLibItem?.released}
+                                    description={enrichedLibItem?.description}
+                                    links={enrichedLibItem?.links}
                                     deepLinks={selectedLibItem.deepLinks}
-                                    trailerStreams={selectedLibItem.trailerStreams}
+                                    trailerStreams={enrichedLibItem?.trailerStreams}
                                     inLibrary={true}
                                     toggleInLibrary={removeFromLibrary}
                                     watched={selectedLibItem.watched}
                                     toggleWatched={toggleWatched}
                                     metaId={selectedLibItem._id}
-                                    like={selectedLibItem.like}
+                                    like={enrichedLibItem?.like}
                                 />
                                 :
                                 null

@@ -8,7 +8,6 @@ const filterInvalidDOMProps = require('filter-invalid-dom-props').default;
 const { default: Icon } = require('stremio/components/Icon');
 const { default: Button } = require('stremio/components/Button');
 const { default: Image } = require('stremio/components/Image');
-const Multiselect = require('stremio/components/Multiselect');
 const TrailerModal = require('stremio/components/TrailerModal');
 const { default: AddToCalendarButton } = require('stremio/components/AddToCalendarButton');
 const useBinaryState = require('stremio/common/useBinaryState');
@@ -17,9 +16,8 @@ const CONSTANTS = require('stremio/common/CONSTANTS');
 const { ICON_FOR_TYPE } = CONSTANTS;
 const styles = require('./styles');
 
-const MetaItem = React.memo(({ className, type, name, poster, posterShape, posterChangeCursor, progress, newVideos, options, deepLinks, links, trailerStreams, releaseInfo, href: customHref, dataset, optionOnSelect, onDismissClick, onPlayClick, watched, badgeLabel, ...props }) => {
+const MetaItem = React.memo(({ className, type, name, poster, posterShape, posterChangeCursor, progress, newVideos, deepLinks, links, trailerStreams, releaseInfo, href: customHref, onDismissClick, onPlayClick, watched, badgeLabel, ...props }) => {
     const { t } = useTranslation();
-    const [menuOpen, onMenuOpen, onMenuClose] = useBinaryState(false);
     const [trailerModalOpen, openTrailerModal, closeTrailerModal] = useBinaryState(false);
     // Same real IMDb-link convention MetaPreview reads its rating badge from (the link's
     // `name` carries the rating value, e.g. "7.9") - no separate `imdbRating` field exists
@@ -64,9 +62,6 @@ const MetaItem = React.memo(({ className, type, name, poster, posterShape, poste
             props.onClick(event);
         }
     }, [props.onClick]);
-    const menuOnClick = React.useCallback((event) => {
-        event.nativeEvent.selectPrevented = true;
-    }, []);
     const dismissOnClick = React.useCallback((event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -77,28 +72,14 @@ const MetaItem = React.memo(({ className, type, name, poster, posterShape, poste
         event.stopPropagation();
         onPlayClick(event);
     }, [onPlayClick]);
-    const menuOnSelect = React.useCallback((event) => {
-        if (typeof optionOnSelect === 'function') {
-            optionOnSelect({
-                type: 'select-option',
-                value: event.value,
-                dataset: dataset,
-                reactEvent: event.reactEvent,
-                nativeEvent: event.nativeEvent
-            });
-        }
-    }, [dataset, optionOnSelect]);
     const renderPosterFallback = React.useCallback(() => (
         <Icon
             className={styles['placeholder-icon']}
             name={ICON_FOR_TYPE.has(type) ? ICON_FOR_TYPE.get(type) : ICON_FOR_TYPE.get('other')}
         />
     ), [type]);
-    const renderMenuLabelContent = React.useCallback(() => (
-        <Icon className={styles['icon']} name={'more-vertical'} />
-    ), []);
     return (
-        <Button title={name} href={href} {...filterInvalidDOMProps(props)} className={classnames(className, styles['meta-item-container'], styles['poster-shape-poster'], styles[`poster-shape-${posterShape}`], { 'active': menuOpen })} onClick={metaItemOnClick}>
+        <Button title={name} href={href} {...filterInvalidDOMProps(props)} className={classnames(className, styles['meta-item-container'], styles['poster-shape-poster'], styles[`poster-shape-${posterShape}`])} onClick={metaItemOnClick}>
             <div className={classnames(styles['poster-container'], { 'poster-change-cursor': posterChangeCursor })}>
                 {
                     typeof badgeLabel === 'string' && badgeLabel.length > 0 ?
@@ -132,7 +113,7 @@ const MetaItem = React.memo(({ className, type, name, poster, posterShape, poste
                             null
                 }
                 {
-                    onDismissClick || (Array.isArray(options) && options.length > 0) || (typeof name === 'string' && name.length > 0) ?
+                    onDismissClick || (typeof name === 'string' && name.length > 0) ?
                         <div className={styles['poster-actions']}>
                             {
                                 typeof name === 'string' && name.length > 0 ?
@@ -149,21 +130,6 @@ const MetaItem = React.memo(({ className, type, name, poster, posterShape, poste
                                     <div title={t('LIBRARY_RESUME_DISMISS')} className={classnames(styles['action-btn'], styles['danger'])} onClick={dismissOnClick}>
                                         <Icon className={styles['icon']} name={'close'} />
                                     </div>
-                                    :
-                                    null
-                            }
-                            {
-                                Array.isArray(options) && options.length > 0 ?
-                                    <Multiselect
-                                        className={styles['action-btn']}
-                                        renderLabelContent={renderMenuLabelContent}
-                                        options={options}
-                                        onOpen={onMenuOpen}
-                                        onClose={onMenuClose}
-                                        onSelect={menuOnSelect}
-                                        tabIndex={-1}
-                                        onClick={menuOnClick}
-                                    />
                                     :
                                     null
                             }
@@ -258,7 +224,6 @@ MetaItem.propTypes = {
     posterChangeCursor: PropTypes.bool,
     progress: PropTypes.number,
     newVideos: PropTypes.number,
-    options: PropTypes.array,
     href: PropTypes.string,
     deepLinks: PropTypes.shape({
         metaDetailsVideos: PropTypes.string,
@@ -276,8 +241,6 @@ MetaItem.propTypes = {
         })
     })),
     releaseInfo: PropTypes.string,
-    dataset: PropTypes.object,
-    optionOnSelect: PropTypes.func,
     onDismissClick: PropTypes.func,
     onPlayClick: PropTypes.func,
     onClick: PropTypes.func,
