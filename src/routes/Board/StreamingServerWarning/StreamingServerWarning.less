@@ -190,10 +190,14 @@
         // biggest contributor to the height this container used to be hard-clamped to
         // (Board/styles.less's own mobile rule forced height: 7rem here, far short of what
         // the full stacked content needed - confirmed live, it caused real overlap/clipping).
-        .top-row {
-            flex-wrap: nowrap;
-        }
-
+        // top-row's base rule already wraps (flex-wrap: wrap) - the actual bug here was that
+        // an earlier version of this rule set flex-wrap: nowrap while .actions below claims
+        // 100% width, which contradicted itself: nowrap crammed icon+statement+actions onto
+        // one line while actions still demanded full width, squeezing the statement text to
+        // nothing (confirmed live: the "Streaming server is not available." sentence vanished
+        // entirely). Letting it wrap means icon+statement share the first line (comfortably,
+        // since together they're well under 100%) and actions naturally drop to their own
+        // full-width second line.
         .warning-statement {
             font-size: 0.92rem;
         }
@@ -205,6 +209,11 @@
             .action {
                 flex: 1;
                 text-align: center;
+                padding: 0.6rem 0.5rem;
+
+                .label {
+                    font-size: 0.82rem;
+                }
             }
         }
 
