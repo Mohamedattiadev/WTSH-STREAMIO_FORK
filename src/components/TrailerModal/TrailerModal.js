@@ -50,7 +50,12 @@ const TrailerModal = ({ name, trailerStreams, links, description, inLibrary, tog
             <div className={styles['video-container']}>
                 <iframe
                     className={styles['video']}
-                    src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
+                    // controls=0/modestbranding=1/rel=0/iv_load_policy=3/disablekb=1 strip
+                    // YouTube's own scrubber, CC/settings buttons, and "More videos"/logo
+                    // overlay - the mockup's trailer preview never shows any of that, and
+                    // with those controls left on they visibly clash with the app's own
+                    // close button and card chrome.
+                    src={`https://www.youtube.com/embed/${ytId}?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1`}
                     title={typeof name === 'string' ? name : 'Trailer'}
                     frameBorder={'0'}
                     allow={'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'}
