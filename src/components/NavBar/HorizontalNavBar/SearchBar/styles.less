@@ -3,14 +3,48 @@
 @import (reference) '~@stremio/stremio-colors/less/stremio-colors.less';
 
 .search-bar-container {
-    --search-bar-size: 3.25rem;
+    // Mockup's #topSearch is a flat, borderless-except-underline field - no fill, no pill
+    // radius (confirmed directly against design/ember-rail-mockup.html, not guessed): height
+    // 2.75rem, border-bottom only, muted icon+text at rest brightening on hover/focus-within.
+    --search-bar-size: 2.75rem;
     display: flex;
     flex-direction: row;
+    align-items: center;
+    gap: 0.6rem;
     height: var(--search-bar-size);
-    border-radius: var(--search-bar-size);
-    background-color: var(--overlay-color);
+    padding: 0 0.25rem;
+    border-bottom: 0.06rem solid var(--overlay-color);
+    background-color: transparent;
+    color: var(--muted-foreground-color);
     position: relative;
     overflow: visible;
+    transition: border-color 0.15s ease, color 0.15s ease;
+
+    &:hover, &:focus-within {
+        border-color: rgba(255, 95, 54, 0.4);
+        color: var(--primary-foreground-color);
+    }
+
+    // Real submit/clear button, but positioned like the mockup's leading search glyph (a
+    // decorative icon in the mockup, a real functional button here - keeping it a real button
+    // rather than splitting the icon out preserves the existing click-to-submit/clear behavior).
+    .submit-button-container {
+        order: -1;
+        flex: none;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        height: var(--search-bar-size);
+
+        .icon {
+            flex: none;
+            width: 1.05rem;
+            height: 1.05rem;
+            color: inherit;
+            opacity: 1;
+        }
+    }
 
     .search-input {
         flex: 1;
@@ -18,34 +52,15 @@
         display: flex;
         flex-direction: row;
         align-items: center;
-        padding: 0 0.5rem 0 2rem;
+        font-size: 0.88rem;
         font-weight: 500;
-        color: var(--primary-foreground-color);
+        color: inherit;
         cursor: text;
 
         &::placeholder, .placeholder-label {
             max-height: 1.2em;
             opacity: 1;
-            color: var(--primary-foreground-color);
-            opacity: 0.6;
-        }
-    }
-
-    .submit-button-container {
-        flex: none;
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        height: var(--search-bar-size);
-        padding: 0 1.5rem;
-
-        .icon {
-            flex: none;
-            width: 1.7rem;
-            height: 1.7rem;
-            color: var(--primary-foreground-color);
-            opacity: 0.6;
+            color: inherit;
         }
     }
 
