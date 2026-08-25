@@ -89,6 +89,15 @@
     }
 
     .info {
+        // Was flex:0 1 auto (the flex shorthand default) with no cap, so its own natural content
+        // height (title, runtime, up to 4 clamped lines of description, the calendar button) ate
+        // almost all of .side-drawer's bounded height before .series-content's flex:2 ever got a
+        // turn - confirmed live: a series' episode list was left with only a sliver, functionally
+        // unscrollable since there was nothing meaningful to scroll to. Capping this guarantees
+        // .series-content a real, usable share of the drawer regardless of how much info content
+        // there is; .info keeps its own overflow-y:auto below for whatever that cap clips.
+        flex: none;
+        max-height: 45%;
         padding: @padding;
         min-height: 0;
         overflow-y: auto;
