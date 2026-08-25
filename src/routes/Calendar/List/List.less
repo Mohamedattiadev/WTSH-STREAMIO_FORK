@@ -10,9 +10,15 @@
     width: 20rem;
     padding: 0 1rem;
     overflow-y: auto;
-    
+
     @supports (scroll-padding-block-start: 0.15rem) {
         scroll-padding-block-start: 0.15rem;
+    }
+
+    .empty {
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: var(--muted-foreground-color);
     }
 }
 

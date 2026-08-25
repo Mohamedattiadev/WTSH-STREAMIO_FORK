@@ -25,16 +25,19 @@ const List = ({ items, selected, monthInfo, profile, onChange }: Props) => {
                         <ItemPlaceholder key={index} />
                     ))
                     :
-                    filteredItems.map((item) => (
-                        <Item
-                            key={item.date.day}
-                            {...item}
-                            selected={selected}
-                            monthInfo={monthInfo}
-                            profile={profile}
-                            onClick={onChange}
-                        />
-                    ))
+                    filteredItems.length === 0 ?
+                        <div className={styles['empty']}>No new episodes airing soon for the shows in your Library.</div>
+                        :
+                        filteredItems.map((item) => (
+                            <Item
+                                key={item.date.day}
+                                {...item}
+                                selected={selected}
+                                monthInfo={monthInfo}
+                                profile={profile}
+                                onClick={onChange}
+                            />
+                        ))
             }
         </div>
     );

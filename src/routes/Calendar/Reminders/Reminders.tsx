@@ -27,15 +27,14 @@ const Reminders = () => {
         removeReminder(id);
     }, [removeReminder]);
 
-    if (user === null) {
-        return null;
-    }
-
     return (
         <div className={styles['reminders']}>
             <div className={styles['heading']}>Your Reminders</div>
             <div className={styles['body']}>
                 {
+                    user === null ?
+                        <div className={styles['empty']}>Sign in to "Watch Reminders & Chat Sync" in Settings to get reminders here.</div>
+                        :
                     reminders.length === 0 ?
                         <div className={styles['empty']}>No reminders yet - ask "Ask WTSH" to schedule something, like "I'll watch [title] on Friday".</div>
                         :
