@@ -89,9 +89,21 @@ const Addons = () => {
                 .filter((id) => typeof id === 'string')
         );
     }, [installedAddons.catalog]);
-    const activeRemoteCatalogId = remoteAddons.selected !== null ? remoteAddons.selected.request.path.id : null;
-    const isOfficialTab = activeRemoteCatalogId === OFFICIAL_ADDON_CATALOG.catalogId;
-    const isCommunityTab = activeRemoteCatalogId === COMMUNITY_ADDON_CATALOG.catalogId;
+    // Derived straight from the URL/local UI state (never from installedAddons.selected or
+    // remoteAddons.selected) so exactly one tab is ever active by construction. Both of those
+    // model states only update once their async Load/Unload round-trips the core worker -
+    // deriving "My"'s highlight from installedAddons.selected in particular meant that right
+    // after switching to Official/Community, the URL (and the new tab's own highlight) had
+    // already changed while the old My-tab model state hadn't cleared yet, so both showed
+    // active for a frame. isOfficialTab/isCommunityTab now compare urlParams.catalogId directly
+    // against the same two constants goToOfficialAddons/goToCommunityAddons navigate to.
+    // Regional/Hub are local UI toggles, not routes (goToRegionalHub/goToHub never navigate) -
+    // without these two also excluding them, opening Regional/Hub while already on the
+    // Official/Community route left that catalog tab's own highlight on too, since urlParams
+    // itself never changes underneath it.
+    const isMyTab = typeof urlParams.transportUrl !== 'string' && !regionalHubOpen && !hubOpen;
+    const isOfficialTab = urlParams.catalogId === OFFICIAL_ADDON_CATALOG.catalogId && !regionalHubOpen && !hubOpen;
+    const isCommunityTab = urlParams.catalogId === COMMUNITY_ADDON_CATALOG.catalogId && !regionalHubOpen && !hubOpen;
     const [addonDetailsTransportUrl, setAddonDetailsTransportUrl] = useAddonDetailsTransportUrl(urlParams);
     const selectInputs = useSelectableInputs(installedAddons, remoteAddons);
     const [filtersModalOpen, openFiltersModal, closeFiltersModal] = useBinaryState(false);
@@ -188,7 +200,7 @@ const Addons = () => {
         <MainNavBars className={styles['addons-container']} route={'addons'}>
             <div className={styles['addons-content']}>
                 <div className={styles['tabs-container']}>
-                    <Button className={classnames(styles['tab'], { [styles['selected']]: installedAddons.selected !== null && !regionalHubOpen && !hubOpen })} title={t('ADDON_MY')} onClick={goToInstalledAddons}>
+                    <Button className={classnames(styles['tab'], { [styles['selected']]: isMyTab })} title={t('ADDON_MY')} onClick={goToInstalledAddons}>
                         <div className={styles['label']}>{t('ADDON_MY')}</div>
                         {
                             installedAddons.selected !== null ?
