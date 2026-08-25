@@ -20,6 +20,9 @@ const UpdateBanner = ({ className, visible, label, actionLabel, closeLabel, onAc
     <div className={className}>
         <Transition when={visible} name={'slide-up'}>
             <div className={styles['update-banner']} role={'status'}>
+                <div className={styles['icon-container']}>
+                    <Icon className={styles['banner-icon']} name={'reset'} />
+                </div>
                 <div className={styles['label']}>
                     {label}
                 </div>
