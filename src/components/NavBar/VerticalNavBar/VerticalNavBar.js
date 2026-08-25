@@ -54,7 +54,7 @@ const VerticalNavBar = React.memo(React.forwardRef(({ className, selected, tabs 
         const activeItem = items[selectedIndex];
         if (activeItem) {
             indicatorRef.current.style.opacity = '1';
-            indicatorRef.current.style.transform = `translateY(${activeItem.offsetTop}px)`;
+            indicatorRef.current.style.transform = `translate(${activeItem.offsetLeft}px, ${activeItem.offsetTop}px)`;
         } else {
             indicatorRef.current.style.opacity = '0';
         }
