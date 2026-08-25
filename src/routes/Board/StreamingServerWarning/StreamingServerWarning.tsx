@@ -74,7 +74,9 @@ const StreamingServerWarning = ({ className }: Props) => {
     return (
         <div className={classnames(className, styles['warning-container'])}>
             <div className={styles['top-row']}>
-                <Icon className={styles['warning-icon']} name={'warning'} />
+                <div className={styles['warning-icon-container']}>
+                    <Icon className={styles['warning-icon']} name={'warning'} />
+                </div>
                 <div className={styles['warning-statement']}>
                     {t('SETTINGS_SERVER_UNAVAILABLE')}
                 </div>

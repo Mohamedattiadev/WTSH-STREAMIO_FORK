@@ -232,8 +232,11 @@
         }
         
         .board-warning-container {
+            // Was a hard-coded height: 7rem here, far shorter than the banner's own real
+            // content (statement + two buttons + divider + hint + command row) needs once
+            // everything stacks vertically on a narrow screen - confirmed live, it forced
+            // severe overlap/clipping instead of just letting the box size to its content.
             bottom: calc(var(--vertical-nav-bar-size) + 0.5rem);
-            height: 7rem;
         }
     }
 }
