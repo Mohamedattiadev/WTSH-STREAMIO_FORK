@@ -20,7 +20,7 @@ const SUGGESTIONS = [
 ];
 
 const ChatPanel = ({ className, compact, closeChatPanel, onExpand }) => {
-    const { messages, inputValue, setInputValue, sendMessage, isPending } = useChatSession();
+    const { messages, inputValue, setInputValue, sendMessage, isPending, pendingPhase } = useChatSession();
     const { user: supabaseUser } = useSupabaseAuth();
     const listRef = React.useRef(null);
 
@@ -90,6 +90,19 @@ const ChatPanel = ({ className, compact, closeChatPanel, onExpand }) => {
                                 {
                                     message.role === 'assistant' && message.pending ?
                                         <div className={styles['message-bubble']}>
+                                            {
+                                                pendingPhase !== null && pendingPhase.phase === 'searching' ?
+                                                    <div className={styles['progress-label']}>
+                                                        {
+                                                            pendingPhase.totalCount > 0 ?
+                                                                `Searching your addons... (${pendingPhase.settledCount}/${pendingPhase.totalCount})`
+                                                                :
+                                                                'Searching your addons...'
+                                                        }
+                                                    </div>
+                                                    :
+                                                    null
+                                            }
                                             <div className={styles['typing-indicator']}>
                                                 <div className={styles['dot']} />
                                                 <div className={styles['dot']} />

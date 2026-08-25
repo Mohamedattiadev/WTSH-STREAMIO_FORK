@@ -33,6 +33,14 @@ const useChatSession = () => {
     const [pendingQuery, setPendingQuery] = React.useState(null);
     const idRef = React.useRef(0);
     const historyLoadedForUserRef = React.useRef(null);
+    // A single Enter/click can fire sendMessage twice within the same synchronous tick (before
+    // React flushes the setPendingQuery below), so the `pendingQuery !== null` check alone can't
+    // catch a re-entrant call - both calls still read the same pre-update `pendingQuery` from
+    // their closures. This ref is set synchronously the instant the first call is accepted, so
+    // the second sees it immediately regardless of render timing. Confirmed live: without this,
+    // a single Enter press produced two user bubbles (one assistant reply permanently stuck on
+    // the typing indicator, since its pendingQuery got silently overwritten by the second call's).
+    const sendingRef = React.useRef(false);
 
     // Real persisted history - loaded once per signed-in user, so it survives a refresh/new
     // device. Only text/role are stored (matches the chat_messages schema); the result cards
@@ -96,11 +104,34 @@ const useChatSession = () => {
             null;
     }, [search.selected]);
 
-    const settled = React.useMemo(() => {
-        return search.catalogs.length === 0 || search.catalogs.every((catalog) => (
+    const settledCatalogCount = React.useMemo(() => {
+        return search.catalogs.filter((catalog) => (
             catalog.content?.type === 'Ready' || catalog.content?.type === 'Err'
-        ));
+        )).length;
     }, [search.catalogs]);
+
+    const settled = React.useMemo(() => {
+        return search.catalogs.length === 0 || settledCatalogCount === search.catalogs.length;
+    }, [search.catalogs, settledCatalogCount]);
+
+    // Surfaced so the UI can show real progress instead of a bare typing dot that looks
+    // identical whether it's been 1 second or the ~20s a full cross-addon fan-out can take -
+    // confirmed live this reads as "broken" without it. 'searching' covers both the optional
+    // reference-title lookup stage and the main candidate fan-out; 'thinking' covers the LLM
+    // call once every addon has responded (Ready or Err).
+    const pendingPhase = React.useMemo(() => {
+        if (pendingQuery === null) {
+            return null;
+        }
+        if (!settled || currentSearchTerm !== pendingQuery.searchTerm) {
+            return {
+                phase: 'searching',
+                settledCount: settledCatalogCount,
+                totalCount: search.catalogs.length
+            };
+        }
+        return { phase: 'thinking' };
+    }, [pendingQuery, settled, currentSearchTerm, settledCatalogCount, search.catalogs.length]);
 
     React.useEffect(() => {
         if (pendingQuery === null || !settled || currentSearchTerm !== pendingQuery.searchTerm) {
@@ -160,6 +191,7 @@ const useChatSession = () => {
             }
 
             setPendingQuery((prev) => (prev !== null && prev.messageId === pendingQuery.messageId ? null : prev));
+            sendingRef.current = false;
         })();
 
         return () => {
@@ -169,9 +201,10 @@ const useChatSession = () => {
 
     const sendMessage = React.useCallback((text) => {
         const trimmed = typeof text === 'string' ? text.trim() : '';
-        if (trimmed.length === 0 || pendingQuery !== null) {
+        if (trimmed.length === 0 || pendingQuery !== null || sendingRef.current) {
             return;
         }
+        sendingRef.current = true;
 
         const parsed = parseQuery(trimmed);
         const userMessageId = `msg-${++idRef.current}`;
@@ -204,7 +237,8 @@ const useChatSession = () => {
         inputValue,
         setInputValue,
         sendMessage,
-        isPending: pendingQuery !== null
+        isPending: pendingQuery !== null,
+        pendingPhase
     };
 };
 

@@ -291,7 +291,22 @@ const retrieveCandidates = (parsed, items, referenceItem = null, limit = 20) => 
         };
     });
 
-    const ranked = hasSpecificAsk ? scored.filter((entry) => entry.score > 0) : scored;
+    let ranked = hasSpecificAsk ? scored.filter((entry) => entry.score > 0) : scored;
+
+    // A genre-style ask (e.g. "a good sci-fi movie") is searched cross-addon as literal text
+    // (see useChatSession's initialTerm - the shared search model only supports a text query,
+    // not genre filtering), so addons can legitimately return real 200 results whose own
+    // `links` genre tagging just doesn't literally match our GENRE_KEYWORDS strings (different
+    // casing/wording, or search results carrying thinner metadata than a catalog browse would).
+    // Confirmed live: this produced "I couldn't find any sci-fi movies" even when catalogs had
+    // real data, because every item scored 0 and got filtered out here - not because nothing
+    // relevant actually came back. Falling back to the addon's own real result order (still
+    // real, never fabricated - just unranked by our local keyword match) beats a false "nothing
+    // found" when data genuinely exists; matchReason still carries each item's own real genre so
+    // the answer generator can describe them honestly rather than overclaiming a perfect match.
+    if (hasSpecificAsk && ranked.length === 0 && scored.length > 0) {
+        ranked = scored;
+    }
 
     return ranked
         .sort((a, b) => b.score - a.score || a.index - b.index)
