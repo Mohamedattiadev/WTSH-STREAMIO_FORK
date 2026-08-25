@@ -10,6 +10,7 @@ import Table from './Table';
 import List from './List';
 import Reminders from './Reminders';
 import Details from './Details';
+import VideoPreview from './VideoPreview';
 import Placeholder from './Placeholder';
 import useCalendar from './useCalendar';
 import useCalendarDate from './useCalendarDate';
@@ -29,11 +30,18 @@ const Calendar = () => {
     const { toDayMonth } = useCalendarDate(profile);
 
     const [selected, setSelected] = useState<CalendarDate | null>(null);
+    const [previewDeepLink, setPreviewDeepLink] = useState<string | null>(null);
 
     const detailsTitle = useMemo(() => toDayMonth(selected), [selected, toDayMonth]);
 
     const onDetailsClose = () => {
         setSelected(null);
+    };
+    const onVideoSelect = (deepLink: string) => {
+        setPreviewDeepLink(deepLink);
+    };
+    const onPreviewClose = () => {
+        setPreviewDeepLink(null);
     };
 
     return (
@@ -55,6 +63,12 @@ const Calendar = () => {
                             />
                         </div>
                         <div className={styles['side']}>
+                            {
+                                previewDeepLink !== null ?
+                                    <VideoPreview deepLink={previewDeepLink} onCloseRequest={onPreviewClose} />
+                                    :
+                                    null
+                            }
                             <List
                                 items={calendar.items}
                                 selected={selected}
@@ -68,6 +82,7 @@ const Calendar = () => {
                             <Details
                                 selected={selected}
                                 items={calendar.items}
+                                onVideoSelect={onVideoSelect}
                             />
                         </BottomSheet>
                     </div>

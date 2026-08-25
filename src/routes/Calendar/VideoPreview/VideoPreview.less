@@ -1,0 +1,40 @@
+// Copyright (C) 2017-2026 Smart code 203358507
+
+.video-preview {
+    position: relative;
+    flex: none;
+    border-radius: 1rem;
+    border: 0.06rem solid var(--overlay-color);
+    background-color: var(--modal-background-color);
+    overflow: hidden;
+
+    .close-button {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        z-index: 2;
+        width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background-color: rgba(0, 0, 0, 0.4);
+
+        .icon {
+            width: 1rem;
+            height: 1rem;
+            color: var(--primary-foreground-color);
+        }
+
+        &:hover {
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+    }
+
+    .loading {
+        padding: 3rem 1.75rem;
+        text-align: center;
+        color: var(--muted-foreground-color);
+    }
+}
