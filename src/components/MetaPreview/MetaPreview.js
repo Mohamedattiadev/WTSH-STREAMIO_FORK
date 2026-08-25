@@ -28,6 +28,10 @@ const ALLOWED_LINK_REDIRECTS = [
     routesRegexp.metadetails.regexp
 ];
 
+// Matches Board.js's own extractGenres - addons are inconsistent about casing ("Genres" vs
+// "genres") for this link category, so this is never a plain equality check.
+const GENRE_LINK_CATEGORY = 'genres';
+
 const MetaPreview = React.forwardRef(({ className, compact, name, logo, background, poster, runtime, releaseInfo, released, description, deepLinks, links, trailerStreams, inLibrary, toggleInLibrary, watched, toggleWatched, ratingInfo }, ref) => {
     const { t } = useTranslation();
     const [shareModalOpen, openShareModal, closeShareModal] = useBinaryState(false);
@@ -110,6 +114,14 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
     const renderLogoFallback = React.useCallback(() => (
         <div className={styles['logo-placeholder']}>{name}</div>
     ), [name]);
+    // Real, navigable genre links (each still routes to that genre's Discover filter, same as
+    // the generic MetaLinks rendering below) - pulled out and rendered as its own pill row for
+    // the compact preview panel, matching the mockup's tag-row, instead of the plain
+    // label-plus-comma-list MetaLinks treatment the full detail page still uses.
+    const genreCategory = React.useMemo(() => {
+        return Array.from(linksGroups.keys()).find((category) => category.toLowerCase() === GENRE_LINK_CATEGORY);
+    }, [linksGroups]);
+    const genreLinks = genreCategory ? linksGroups.get(genreCategory) : null;
     // "+ Library" gets its own labeled pill in the main action row (matching the mockup) instead
     // of being buried in the icon-only secondary group - "mark watched" stays there since the
     // mockup has no equivalent for it.
@@ -123,9 +135,20 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
     return (
         <div className={classnames(className, styles['meta-preview-container'], { [styles['compact']]: compact })} ref={ref}>
             {
-                typeof background === 'string' && background.length > 0 ?
+                // The full detail page keeps the blurred full-bleed backdrop (its own hero
+                // treatment, matching Board's Hero) - the compact preview panel gets a clean,
+                // contained poster block instead, right below.
+                !compact && typeof background === 'string' && background.length > 0 ?
                     <div className={styles['background-image-layer']}>
                         <Image className={styles['background-image']} src={background} alt={' '} />
+                    </div>
+                    :
+                    null
+            }
+            {
+                compact && typeof poster === 'string' && poster.length > 0 ?
+                    <div className={styles['compact-poster-container']}>
+                        <Image className={styles['compact-poster']} src={poster} alt={' '} />
                     </div>
                     :
                     null
@@ -181,6 +204,18 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
                         null
                 }
                 {
+                    compact && genreLinks && genreLinks.length > 0 ?
+                        <div className={styles['tag-row']}>
+                            {genreLinks.map((link, index) => (
+                                <Button key={index} className={styles['tag']} title={link.label} href={link.href}>
+                                    {t(link.label)}
+                                </Button>
+                            ))}
+                        </div>
+                        :
+                        null
+                }
+                {
                     compact && typeof description === 'string' && description.length > 0 ?
                         <div className={styles['description-container']}>
                             {description}
@@ -193,7 +228,8 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
                         .filter((category) => {
                             return category !== CONSTANTS.IMDB_LINK_CATEGORY &&
                                 category !== CONSTANTS.SHARE_LINK_CATEGORY &&
-                                category !== CONSTANTS.WRITERS_LINK_CATEGORY;
+                                category !== CONSTANTS.WRITERS_LINK_CATEGORY &&
+                                category !== genreCategory;
                         })
                         .map((category, index) => (
                             <MetaLinks

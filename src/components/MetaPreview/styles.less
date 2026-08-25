@@ -10,6 +10,52 @@
     flex-direction: column;
 
     &.compact {
+        // A clean, contained poster block instead of the full detail page's blurred full-bleed
+        // backdrop - matches the mockup's own compact preview panel, where the poster reads as
+        // a distinct image block above the text rather than a hazy background behind it.
+        .compact-poster-container {
+            flex: none;
+            align-self: stretch;
+            height: 9rem;
+            border-radius: 1rem;
+            overflow: hidden;
+            margin-bottom: 1rem;
+
+            .compact-poster {
+                display: block;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                object-position: center 20%;
+            }
+        }
+
+        .tag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.6rem;
+
+            .tag {
+                flex: none;
+                height: 1.8rem;
+                padding: 0 0.8rem;
+                display: flex;
+                align-items: center;
+                border-radius: 1rem;
+                border: 0.06rem solid var(--overlay-color);
+                font-size: 0.8rem;
+                font-weight: 600;
+                color: var(--primary-foreground-color);
+                white-space: nowrap;
+
+                &:hover, &:focus {
+                    background-color: var(--overlay-color);
+                    outline: none;
+                }
+            }
+        }
+
         .meta-info-container {
             .logo {
                 width: 100%;
@@ -71,6 +117,14 @@
 
             .action-button:not(:last-child), .group-container:not(:last-child) {
                 margin-right: 0;
+            }
+
+            // Tighter than the base 0.75rem/1.3rem pill padding, matching the mockup's own more
+            // compact button sizing within a narrow panel - the Show/Trailer/Library pills fit
+            // one row far more often at this width.
+            .action-button:global(.wide) {
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
             }
         }
     }

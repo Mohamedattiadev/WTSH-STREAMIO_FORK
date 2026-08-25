@@ -257,7 +257,13 @@ html {
                 position: absolute;
                 top: calc(1.2 * var(--horizontal-nav-bar-size) + var(--safe-area-inset-top));
                 right: var(--safe-area-inset-right);
-                bottom: calc(1.2 * var(--horizontal-nav-bar-size) + var(--safe-area-inset-bottom, 0rem));
+                // Was 1.2 * --horizontal-nav-bar-size alone (~5.4rem/86px), which left only ~5px
+                // of clearance above ChatFab's own top edge (bottom:1.5rem + height:3.6rem =
+                // 5.1rem/82px from this same edge) - not enough of a gap once combined with this
+                // container's own `overflow: visible` letting a tall toast's real content spill
+                // past its box, right onto the fab. The extra 1.5rem is a real safety margin, not
+                // a rounding tweak.
+                bottom: calc(1.2 * var(--horizontal-nav-bar-size) + 1.5rem + var(--safe-area-inset-bottom, 0rem));
                 left: auto;
                 z-index: 1;
                 padding: 0 calc(0.5 * var(--horizontal-nav-bar-size));
