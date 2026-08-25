@@ -28,7 +28,7 @@ const ChatFab = ({ className }) => {
             <div className={classnames(styles['chat-popup'], { [styles['open']]: open })}>
                 {
                     open ?
-                        <ChatPanel className={styles['chat-panel']} closeChatPanel={close} onExpand={expandOnClick} />
+                        <ChatPanel className={styles['chat-panel']} popup closeChatPanel={close} onExpand={expandOnClick} />
                         :
                         null
                 }

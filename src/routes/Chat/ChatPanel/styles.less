@@ -256,6 +256,41 @@
         color: var(--muted-foreground-color);
     }
 
+    // Distinct from .compact below (the in-Player side-drawer, deliberately full-height/wide) -
+    // this is the small ChatFab floating popup. It was rendering the exact same header as the
+    // full-page Chat route (a 1.5rem icon, 1.3rem title, two 2.5rem filled circular buttons)
+    // crammed into a 24rem-wide popup, which read as visually heavy next to the mockup's own
+    // popup header - a plain title and small icon-only buttons with no persistent background.
+    &.popup {
+        .header {
+            margin-bottom: 0.75rem;
+
+            .header-title {
+                font-size: 1rem;
+            }
+
+            .close-button {
+                width: 1.8rem;
+                height: 1.8rem;
+                background-color: transparent;
+
+                &:hover {
+                    background-color: var(--overlay-color);
+                }
+
+                .icon {
+                    width: 0.9rem;
+                    height: 0.9rem;
+                    color: var(--muted-foreground-color);
+                }
+
+                &:hover .icon {
+                    color: var(--primary-foreground-color);
+                }
+            }
+        }
+    }
+
     &.compact {
         height: 100dvh;
         width: 40rem;

@@ -19,7 +19,7 @@ const SUGGESTIONS = [
     'Best animated movies'
 ];
 
-const ChatPanel = ({ className, compact, closeChatPanel, onExpand }) => {
+const ChatPanel = ({ className, compact, popup, closeChatPanel, onExpand }) => {
     const { messages, inputValue, setInputValue, sendMessage, isPending, pendingPhase } = useChatSession();
     const { user: supabaseUser } = useSupabaseAuth();
     const listRef = React.useRef(null);
@@ -43,9 +43,14 @@ const ChatPanel = ({ className, compact, closeChatPanel, onExpand }) => {
     }, [sendMessage]);
 
     return (
-        <div className={classnames(className, styles['chat-panel'], { [styles['compact']]: compact })}>
+        <div className={classnames(className, styles['chat-panel'], { [styles['compact']]: compact, [styles['popup']]: popup })}>
             <div className={styles['header']}>
-                <ChatIcon className={styles['header-icon']} />
+                {
+                    popup ?
+                        null
+                        :
+                        <ChatIcon className={styles['header-icon']} />
+                }
                 <div className={styles['header-title']}>Ask WTSH</div>
                 <div className={styles['header-actions']}>
                     {
@@ -168,6 +173,7 @@ const ChatPanel = ({ className, compact, closeChatPanel, onExpand }) => {
 ChatPanel.propTypes = {
     className: PropTypes.string,
     compact: PropTypes.bool,
+    popup: PropTypes.bool,
     closeChatPanel: PropTypes.func,
     onExpand: PropTypes.func
 };
