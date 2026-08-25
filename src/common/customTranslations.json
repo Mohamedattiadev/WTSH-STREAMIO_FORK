@@ -1,4 +1,20 @@
 {
+    "Chat": {
+        "en-US": "Chat",
+        "ar-AR": "الدردشة",
+        "tr-TR": "Sohbet",
+        "fr-FR": "Discussion",
+        "nl-NL": "Chat",
+        "es-ES": "Chat"
+    },
+    "TOPBAR_WELCOME": {
+        "en-US": "Welcome,",
+        "ar-AR": "أهلاً بك،",
+        "tr-TR": "Hoş geldin,",
+        "fr-FR": "Bienvenue,",
+        "nl-NL": "Welkom,",
+        "es-ES": "Bienvenido,"
+    },
     "CHAT_TITLE": {
         "en-US": "Ask WTSH",
         "ar-AR": "اسأل WTSH",

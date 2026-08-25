@@ -12,6 +12,16 @@
     align-items: flex-end;
     gap: 1rem;
 
+    // Direct child of .main-nav-bars-container, which spans the whole app width - the vertical
+    // rail mirrors to the right edge under dir="rtl" (plain flexbox row reversal, see App.js),
+    // but this stayed pinned to the physical right edge regardless, landing it on top of the
+    // rail's own bottom-most nav tab in Arabic.
+    :global(html[dir='rtl']) & {
+        right: auto;
+        left: 1.5rem;
+        align-items: flex-start;
+    }
+
     .fab-button {
         all: unset;
         box-sizing: border-box;
@@ -77,6 +87,11 @@
     .chat-fab-container {
         right: 1rem;
         bottom: 1rem;
+
+        :global(html[dir='rtl']) & {
+            right: auto;
+            left: 1rem;
+        }
 
         .fab-button {
             width: 3.2rem;

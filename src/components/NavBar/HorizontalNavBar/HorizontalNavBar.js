@@ -50,7 +50,7 @@ const HorizontalNavBar = React.memo(({ className, route, query, title, backButto
         <Button ref={ref} className={classnames(className, styles['avatar-group-container'])} tabIndex={-1} onClick={onClick}>
             {
                 displayName !== null ?
-                    <div className={styles['welcome-text']}>Welcome, <strong>{displayName}</strong></div>
+                    <div className={styles['welcome-text']}>{t('TOPBAR_WELCOME')} <strong>{displayName}</strong></div>
                     :
                     null
             }

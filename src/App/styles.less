@@ -295,6 +295,20 @@ html {
     }
 }
 
+// The vertical nav rail mirrors to the right edge under dir="rtl" (plain flexbox row reversal -
+// see App.js), but .toasts-container above stays pinned to the physical right edge regardless,
+// since env(safe-area-inset-*) and `right` are both physical, not logical - confirmed live, in
+// Arabic this landed toasts directly on top of the now-right-side rail's nav tabs and its toggle
+// button. A standalone top-level rule, not nested inside the `html { ... }` block above, because
+// nesting `:global(html[dir='rtl']) &` in there doubled the `html` ancestor in the compiled
+// selector (`html[dir="rtl"] html body #app ...`), which can never match a real document.
+:global(html[dir='rtl'] #app) {
+    .toasts-container {
+        right: auto;
+        left: var(--safe-area-inset-left);
+    }
+}
+
 @media only screen and (min-width: @xxlarge) {
     html {
         font-size: 18px;
