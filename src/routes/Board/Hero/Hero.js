@@ -6,6 +6,8 @@ const classnames = require('classnames');
 const { default: Icon } = require('stremio/components/Icon');
 const { Button, Image } = require('stremio/components');
 const { default: getMetaDetailsHref } = require('stremio/common/getMetaDetailsHref');
+const TrailerModal = require('stremio/components/TrailerModal');
+const useBinaryState = require('stremio/common/useBinaryState');
 const styles = require('./styles');
 
 const AUTOPLAY_INTERVAL_MS = 7000;
@@ -29,8 +31,14 @@ const extractYear = (releaseInfo) => {
 };
 
 const HeroSlide = React.memo(({ item, resumable, active }) => {
+    const [trailerModalOpen, openTrailerModal, closeTrailerModal] = useBinaryState(false);
     const playerHref = resumable && item.deepLinks && typeof item.deepLinks.player === 'string' ? item.deepLinks.player : null;
     const detailsHref = React.useMemo(() => getMetaDetailsHref(item.deepLinks), [item.deepLinks]);
+    const hasTrailer = Array.isArray(item.trailerStreams) && item.trailerStreams.length > 0 && typeof item.trailerStreams[0].ytId === 'string';
+    const onTrailerClick = React.useCallback((event) => {
+        event.preventDefault();
+        openTrailerModal();
+    }, [openTrailerModal]);
     const renderBackdropFallback = React.useCallback(() => null, []);
     const renderTitleFallback = React.useCallback(() => (
         <div className={styles['title']}>{item.name}</div>
@@ -49,7 +57,13 @@ const HeroSlide = React.memo(({ item, resumable, active }) => {
                     resumable ?
                         <div className={styles['eyebrow']}>Continue Watching</div>
                         :
-                        null
+                        typeof item.type === 'string' && item.type.length > 0 ?
+                            <div className={styles['eyebrow']}>
+                                {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                                {year !== null ? ` · ${year}` : ''}
+                            </div>
+                            :
+                            null
                 }
                 {
                     typeof item.logo === 'string' && item.logo.length > 0 ?
@@ -94,20 +108,32 @@ const HeroSlide = React.memo(({ item, resumable, active }) => {
                 }
                 <div className={styles['buttons-container']}>
                     <Button className={styles['primary-button']} href={playerHref ?? detailsHref ?? undefined} tabIndex={active ? 0 : -1}>
-                        <Icon className={styles['icon']} name={playerHref ? 'play' : 'about'} />
-                        <div className={styles['label']}>{playerHref ? 'Resume' : 'More Info'}</div>
+                        <Icon className={styles['icon']} name={'play'} />
+                        <div className={styles['label']}>{playerHref ? 'Resume' : 'Show'}</div>
                     </Button>
                     {
-                        playerHref && detailsHref ?
-                            <Button className={styles['secondary-button']} href={detailsHref} tabIndex={active ? 0 : -1}>
-                                <Icon className={styles['icon']} name={'about'} />
-                                <div className={styles['label']}>Details</div>
+                        hasTrailer ?
+                            <Button className={styles['secondary-button']} onClick={onTrailerClick} tabIndex={active ? 0 : -1}>
+                                <Icon className={styles['icon']} name={'trailer'} />
+                                <div className={styles['label']}>Trailer</div>
                             </Button>
                             :
-                            null
+                            detailsHref ?
+                                <Button className={styles['secondary-button']} href={detailsHref} tabIndex={active ? 0 : -1}>
+                                    <Icon className={styles['icon']} name={'about'} />
+                                    <div className={styles['label']}>Details</div>
+                                </Button>
+                                :
+                                null
                     }
                 </div>
             </div>
+            {
+                trailerModalOpen ?
+                    <TrailerModal name={item.name} trailerStreams={item.trailerStreams} links={item.links} onCloseRequest={closeTrailerModal} />
+                    :
+                    null
+            }
         </div>
     );
 });
@@ -117,6 +143,7 @@ HeroSlide.displayName = 'HeroSlide';
 HeroSlide.propTypes = {
     item: PropTypes.shape({
         name: PropTypes.string,
+        type: PropTypes.string,
         logo: PropTypes.string,
         poster: PropTypes.string,
         background: PropTypes.string,
