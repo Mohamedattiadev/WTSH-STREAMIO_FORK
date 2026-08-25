@@ -10,6 +10,11 @@ const styles = require('./styles');
 
 const IMDB_ID_PATTERN = /^tt\d+$/;
 const SCROLL_AMOUNT = 320;
+// Below this, every review already fits in view (or close enough) with no scrolling needed at
+// all - auto-advancing a row nobody has to scroll would just be motion for its own sake, moving
+// content out from under someone mid-read for no reason.
+const AUTO_SLIDE_MIN_REVIEWS = 6;
+const AUTO_SLIDE_INTERVAL = 4500;
 
 // "What people are saying" - the hero's mockup counterpart, but backed by real TMDB reviews
 // (see api/reviews.js) instead of the mockup's fabricated quotes. Renders nothing at all when
@@ -44,6 +49,39 @@ const ReviewsRow = ({ className, item }) => {
         scrollRef.current?.scrollBy({ left: SCROLL_AMOUNT, behavior: 'smooth' });
     }, []);
 
+    const [autoSlidePaused, setAutoSlidePaused] = React.useState(false);
+    const pauseAutoSlide = React.useCallback(() => setAutoSlidePaused(true), []);
+    const resumeAutoSlide = React.useCallback(() => setAutoSlidePaused(false), []);
+
+    // Loops back to the start instead of stopping at the last card - with real TMDB review
+    // counts running well past what fits on screen, a one-shot scroll-to-the-end would just
+    // leave the row stuck there for anyone who steps away for a minute, never showing the first
+    // few reviews again.
+    React.useEffect(() => {
+        if (reviews.length <= AUTO_SLIDE_MIN_REVIEWS || autoSlidePaused) {
+            return;
+        }
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            return;
+        }
+
+        const interval = setInterval(() => {
+            const el = scrollRef.current;
+            if (!el) {
+                return;
+            }
+            if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 1) {
+                el.scrollTo({ left: 0, behavior: 'smooth' });
+            } else {
+                el.scrollBy({ left: SCROLL_AMOUNT, behavior: 'smooth' });
+            }
+        }, AUTO_SLIDE_INTERVAL);
+
+        return () => {
+            clearInterval(interval);
+        };
+    }, [reviews.length, autoSlidePaused]);
+
     if (reviews.length === 0) {
         return null;
     }
@@ -54,7 +92,15 @@ const ReviewsRow = ({ className, item }) => {
                 <h3 className={styles['row-title']}>{'What people are saying'}</h3>
             </div>
             <div className={styles['review-row-container']}>
-                <div ref={scrollRef} className={styles['review-row']} onScroll={updateScrollState}>
+                <div
+                    ref={scrollRef}
+                    className={styles['review-row']}
+                    onScroll={updateScrollState}
+                    onMouseEnter={pauseAutoSlide}
+                    onMouseLeave={resumeAutoSlide}
+                    onFocus={pauseAutoSlide}
+                    onBlur={resumeAutoSlide}
+                >
                     {reviews.map((review, index) => (
                         <div key={index} className={styles['review-card']}>
                             {

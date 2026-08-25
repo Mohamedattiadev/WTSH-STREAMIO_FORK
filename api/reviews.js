@@ -59,7 +59,10 @@ module.exports = async (req, res) => {
 
         const reviews = (Array.isArray(reviewsData.results) ? reviewsData.results : [])
             .filter((review) => typeof review.content === 'string' && review.content.trim().length > 0)
-            .slice(0, 6)
+            // TMDB's own default page size - was capped at 6, which meant ReviewsRow's
+            // auto-slide (only kicks in above 6 real reviews) could never actually trigger for
+            // any title, no matter how many reviews TMDB really has.
+            .slice(0, 20)
             .map((review) => ({
                 author: typeof review.author === 'string' && review.author.length > 0 ? review.author : 'Anonymous',
                 // TMDB's own 0-10 author rating, converted to the app's 5-star display -
