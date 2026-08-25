@@ -11,6 +11,7 @@ const useBoard = require('./useBoard');
 const useContinueWatchingPreview = require('./useContinueWatchingPreview');
 const Hero = require('./Hero');
 const LocalizedChannels = require('./LocalizedChannels');
+const ReviewsRow = require('./ReviewsRow');
 const styles = require('./styles');
 const { default: StreamingServerWarning } = require('./StreamingServerWarning');
 
@@ -35,6 +36,7 @@ const Board = () => {
     const [board, loadBoardRows] = useBoard();
     const notifications = useNotifications();
     const profile = useProfile();
+    const [activeHeroItem, setActiveHeroItem] = React.useState(null);
     const boardCatalogsOffset = continueWatchingPreview.items.length > 0 ? 1 : 0;
     const heroItems = React.useMemo(() => {
         const seenIds = new Set();
@@ -123,10 +125,11 @@ const Board = () => {
                 <div ref={scrollContainerRef} className={styles['board-content']} onScroll={onScroll}>
                     {
                         heroItems.length > 0 ?
-                            <Hero items={heroItems} />
+                            <Hero items={heroItems} onActiveItemChange={setActiveHeroItem} />
                             :
                             null
                     }
+                    <ReviewsRow className={classnames(styles['board-row'], 'animation-fade-in')} item={activeHeroItem} />
                     <LocalizedChannels className={classnames(styles['board-row'], 'animation-fade-in')} />
                     {
                         continueWatchingPreview.items.length > 0 ?

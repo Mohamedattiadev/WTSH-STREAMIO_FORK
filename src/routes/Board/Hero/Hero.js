@@ -162,7 +162,7 @@ HeroSlide.propTypes = {
     active: PropTypes.bool,
 };
 
-const Hero = ({ items }) => {
+const Hero = ({ items, onActiveItemChange }) => {
     const [index, setIndex] = React.useState(0);
     const [paused, setPaused] = React.useState(false);
 
@@ -171,6 +171,12 @@ const Hero = ({ items }) => {
             setIndex(0);
         }
     }, [items.length, index]);
+
+    React.useEffect(() => {
+        if (typeof onActiveItemChange === 'function') {
+            onActiveItemChange(items[index]?.item ?? null);
+        }
+    }, [items, index, onActiveItemChange]);
 
     const goTo = React.useCallback((nextIndex) => {
         if (items.length === 0) {
@@ -270,6 +276,7 @@ Hero.propTypes = {
         item: PropTypes.object.isRequired,
         resumable: PropTypes.bool,
     })).isRequired,
+    onActiveItemChange: PropTypes.func,
 };
 
 module.exports = Hero;

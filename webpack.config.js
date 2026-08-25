@@ -245,6 +245,30 @@ module.exports = (env, argv) => ({
                     await handler(req, res);
                 });
             });
+            // Same re-hosting as /api/chat above - devServer.app is Express, which already
+            // parses the query string onto req.query for a plain GET, no manual body buffering
+            // needed here.
+            devServer.app.get('/api/reviews', async (req, res) => {
+                delete require.cache[require.resolve('./api/reviews.js')];
+                const handler = require('./api/reviews.js');
+                await handler(req, res);
+            });
+            // Same re-hosting as /api/chat above.
+            devServer.app.post('/api/link-account', (req, res) => {
+                let body = '';
+                req.on('data', (chunk) => { body += chunk; });
+                req.on('end', async () => {
+                    try {
+                        req.body = body.length > 0 ? JSON.parse(body) : {};
+                    } catch (error) {
+                        res.status(400).json({ error: 'Invalid JSON body' });
+                        return;
+                    }
+                    delete require.cache[require.resolve('./api/link-account.js')];
+                    const handler = require('./api/link-account.js');
+                    await handler(req, res);
+                });
+            });
             return middlewares;
         }
     },
