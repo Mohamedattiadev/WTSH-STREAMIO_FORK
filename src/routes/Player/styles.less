@@ -156,21 +156,24 @@ html:not(.active-slider-within) {
         }
 
         &.side-drawer-layer {
-            // Was `bottom: 0` immediately overridden by a second conflicting `bottom: initial`
-            // right after it - net effect was an unconstrained (auto) height, which happened
-            // to still reach the bottom edge only because SideDrawer.tsx sets its own height
-            // to 100dvh (real viewport height - see that file) rather than filling this layer.
-            // Anchoring this layer itself top-to-bottom lets SideDrawer.less use a real 100%
-            // instead, so it's actually scoped to the embedded player instead of the browser
-            // viewport.
+            // top/bottom here (rather than the base .layer's 0/0) plus no explicit height on
+            // SideDrawer.less's own root (see that file) is what makes this box's real height
+            // just the space between them, instead of an over-constrained box whose height
+            // came from somewhere else entirely (100dvh, then 100%, in two prior passes) while
+            // top/bottom got silently dropped.
             //
-            // top starts below the mini-topbar (nav-bar-layer) rather than at 0 - the drawer's
-            // own z-index (1, in SideDrawer.less) sits above nav-bar-layer's, so at top:0 it
-            // silently covered the back/fullscreen buttons in that top-right corner and
-            // intercepted their clicks entirely once open-by-default made the overlap
-            // unavoidable instead of a brief manual-toggle state.
+            // top starts below the mini-topbar (nav-bar-layer) - the drawer's own z-index (1,
+            // in SideDrawer.less) sits above nav-bar-layer's, so at top:0 it silently covered
+            // the back/fullscreen buttons in that corner and intercepted their clicks entirely
+            // once open-by-default made the overlap unavoidable instead of a brief manual-
+            // toggle state.
+            //
+            // bottom clears the control bar for the same reason (that overlap was more visible
+            // for a series: control-bar-layer's own "Episodes" button sat right where the
+            // drawer's edge landed). 7.5rem matches menu-layer's own bottom offset just below,
+            // which already accounts for the control bar's real height.
             top: var(--horizontal-nav-bar-size);
-            bottom: 0;
+            bottom: 7.5rem;
             right: 0;
             left: initial;
         }

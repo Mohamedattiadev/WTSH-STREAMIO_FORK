@@ -36,7 +36,12 @@
         all: unset;
         box-sizing: border-box;
         position: absolute;
-        top: 50%;
+        // Was top: 50% - centers on the *whole rail's* height, not the tab icon list's, so on
+        // a real short browser window (confirmed live down to ~620px tall) the rail's vertical
+        // midpoint lands directly on one of the tab icons instead of in the empty space below
+        // them, rendering the toggle and that tab on top of each other. Anchoring from the
+        // bottom instead keeps it in the same predictable spot regardless of window height.
+        bottom: 1.5rem;
         // Was right: -0.85rem, intentionally poking half outside the rail to float over the
         // content next to it (matching the mockup) - but .vertical-nav-bar-container also sets
         // overflow-x: hidden (needed to suppress a horizontal scrollbar from the icon column's
@@ -45,7 +50,6 @@
         // inside the rail's own bounds is a real, reliable fix rather than fighting the
         // clipping with a container restructure for one button.
         right: 0.45rem;
-        transform: translateY(-50%);
         flex: none;
         width: 1.8rem;
         height: 1.8rem;

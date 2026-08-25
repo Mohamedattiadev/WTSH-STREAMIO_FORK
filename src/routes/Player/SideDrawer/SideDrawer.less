@@ -19,11 +19,17 @@
     flex-direction: column;
     padding: @padding;
     padding-top: calc(@padding + var(--safe-area-inset-top));
-    // Was 100dvh (the real browser viewport height) - harmless while Player always filled the
-    // viewport itself, but this drawer now lives inside an embedded, shorter player container
-    // (see .side-drawer-layer in Player/styles.less, which this fills via 100%), so 100dvh
-    // overflowed well past the actual video box.
-    height: 100%;
+    // No explicit height at all now (was 100dvh, then 100% - see below for why both were
+    // wrong). This same element also carries .layer and .side-drawer-layer (Player/styles.less
+    // applies them directly to this component's own root, not a separate wrapper), which
+    // position it absolutely with both `top` (below the mini-topbar) and `bottom: 0` set. An
+    // absolutely-positioned box with top, height, AND bottom all specified is over-constrained -
+    // the browser satisfies top+height and silently drops bottom, which is exactly what a fixed
+    // height (100dvh, then 100%, both computed independently of this element's own top offset)
+    // did: the box's own height stayed the container's *full* height regardless of top, pushing
+    // its bottom edge that same distance past the container's actual bottom edge - overlapping
+    // the control bar and, for a series with a long episode list, running off the bottom of the
+    // screen entirely. Leaving height unspecified lets top+bottom determine it correctly instead.
     max-width: 35rem;
     overflow-y: auto;
     position: relative;
