@@ -91,6 +91,14 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
             :
             null;
     }, [deepLinks]);
+    // On the full detail page (compact === false) the whole right-hand panel *is* the stream
+    // picker already, so a generic "Show" button there would just link back to the same page -
+    // only worth surfacing when there's a real saved position to resume (deepLinks.player),
+    // matching the mockup's "Resume" pill for continue-watching titles.
+    const showLabel = React.useMemo(() => {
+        return typeof deepLinks?.player === 'string' ? t('CONTINUE_WATCHING') : t('SHOW');
+    }, [deepLinks, t]);
+    const showButtonVisible = typeof showHref === 'string' && (compact || typeof deepLinks?.player === 'string');
     const trailerHref = React.useMemo(() => {
         if (!Array.isArray(trailerStreams) || trailerStreams.length === 0) {
             return null;
@@ -101,18 +109,16 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
     const renderLogoFallback = React.useCallback(() => (
         <div className={styles['logo-placeholder']}>{name}</div>
     ), [name]);
+    // "+ Library" gets its own labeled pill in the main action row (matching the mockup) instead
+    // of being buried in the icon-only secondary group - "mark watched" stays there since the
+    // mockup has no equivalent for it.
     const metaItemActions = React.useMemo(() => [
-        {
-            icon: inLibrary ? 'remove-from-library' : 'add-to-library',
-            label: inLibrary ? t('REMOVE_FROM_LIB') : t('ADD_TO_LIB'),
-            onClick: typeof toggleInLibrary === 'function' ? toggleInLibrary : null,
-        },
         {
             icon: watched ? 'eye-off' : 'eye',
             label: watched ? t('CTX_MARK_UNWATCHED') : t('CTX_MARK_WATCHED'),
             onClick: typeof toggleWatched === 'function' ? toggleWatched : undefined,
         },
-    ], [inLibrary, watched, toggleInLibrary, toggleWatched]);
+    ], [watched, toggleWatched]);
     return (
         <div className={classnames(className, styles['meta-preview-container'], { [styles['compact']]: compact })} ref={ref}>
             {
@@ -211,6 +217,18 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
             </div>
             <div className={styles['action-buttons-container']}>
                 {
+                    showButtonVisible ?
+                        <ActionButton
+                            className={classnames(styles['action-button'], styles['show-button'])}
+                            icon={'play'}
+                            label={showLabel}
+                            tabIndex={0}
+                            href={showHref}
+                        />
+                        :
+                        null
+                }
+                {
                     typeof trailerHref === 'string' ?
                         <ActionButton
                             className={styles['action-button']}
@@ -218,27 +236,26 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
                             label={t('TRAILER')}
                             tabIndex={0}
                             onClick={openTrailerModal}
-                            tooltip={compact}
                         />
                         :
                         null
                 }
                 {
-                    typeof toggleInLibrary === 'function' && typeof toggleWatched === 'function'
+                    typeof toggleInLibrary === 'function' ?
+                        <ActionButton
+                            className={styles['action-button']}
+                            icon={inLibrary ? 'remove-from-library' : 'add-to-library'}
+                            label={inLibrary ? t('REMOVE_FROM_LIB') : t('ADD_TO_LIB')}
+                            tabIndex={0}
+                            onClick={toggleInLibrary}
+                        />
+                        :
+                        null
+                }
+                {
+                    typeof toggleWatched === 'function'
                         ? <ActionsGroup items={metaItemActions} className={styles['group-container']} />
                         : null
-                }
-                {
-                    typeof showHref === 'string' && compact ?
-                        <ActionButton
-                            className={classnames(styles['action-button'], styles['show-button'])}
-                            icon={'play'}
-                            label={t('SHOW')}
-                            tabIndex={0}
-                            href={showHref}
-                        />
-                        :
-                        null
                 }
                 {
                     !compact && ratingInfo !== null ?
