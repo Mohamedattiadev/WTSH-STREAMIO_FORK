@@ -55,21 +55,24 @@
         border-radius: 50%;
         // A previous pass tried a muted, mockup-matching rest color here (rgba(245,242,236,0.55)
         // on var(--surface-panel-2)) and it was still unreadable in practice at this button's
-        // real size - the chevron all but disappeared. This trades literal mockup-color parity
-        // for an affordance a user can actually see: a lighter surface + solid, higher-contrast
-        // icon color at rest, not just on hover.
-        background-color: var(--surface-elevated-color);
-        border: 0.09rem solid rgba(255, 255, 255, 0.22);
-        color: var(--primary-foreground-color);
+        // real size - the chevron all but disappeared. A second pass swapped in
+        // var(--surface-elevated-color), but that token is only rgba(255,255,255,0.04) - a 4%
+        // white wash over the rail's near-black background is still functionally invisible at
+        // rest (confirmed live: only the chevron's own color gave it any presence at all). Using
+        // the ember accent itself at low opacity, always on (not just on hover), is the fix that
+        // actually reads as a distinct button against the rail.
+        background-color: rgba(255, 95, 54, 0.16);
+        border: 0.09rem solid rgba(255, 95, 54, 0.45);
+        color: var(--ember-soft);
         cursor: pointer;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
         z-index: 3;
         transition: color 0.15s ease-out, border-color 0.15s ease-out, background-color 0.15s ease-out;
 
         &:hover {
-            color: var(--primary-accent-color);
-            border-color: rgba(255, 95, 54, 0.5);
-            background-color: var(--surface-panel-2);
+            color: var(--primary-foreground-color);
+            border-color: rgba(255, 95, 54, 0.75);
+            background-color: var(--primary-accent-color);
         }
     }
 
