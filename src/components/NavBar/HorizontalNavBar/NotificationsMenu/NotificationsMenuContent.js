@@ -2,6 +2,7 @@
 
 const React = require('react');
 const PropTypes = require('prop-types');
+const { useTranslation } = require('react-i18next');
 const { default: Icon } = require('stremio/components/Icon');
 const { default: Image } = require('stremio/components/Image');
 const { default: Button } = require('stremio/components/Button');
@@ -38,6 +39,7 @@ const buildEntries = (notifications, previewItems) => {
 };
 
 const NotificationsMenuContent = ({ onClick, closeMenu }) => {
+    const { t } = useTranslation();
     const core = useCore();
     const notifications = useNotifications();
     const continueWatchingPreview = useModelState({ model: 'continue_watching_preview' });
@@ -65,7 +67,7 @@ const NotificationsMenuContent = ({ onClick, closeMenu }) => {
     return (
         <div className={styles['notifications-menu-container']} onClick={onClick}>
             <div className={styles['header']}>
-                <div className={styles['title']}>Notifications</div>
+                <div className={styles['title']}>{t('NOTIFICATIONS_PANEL_TITLE')}</div>
             </div>
             {
                 entries.length > 0 ?
@@ -81,7 +83,7 @@ const NotificationsMenuContent = ({ onClick, closeMenu }) => {
                                 <div className={styles['body']}>
                                     <div className={styles['name']}>{item.name}</div>
                                     <div className={styles['meta']}>
-                                        {count === 1 ? 'New episode available' : `${count} new episodes available`}
+                                        {count === 1 ? t('NOTIFICATIONS_NEW_EPISODE') : t('NOTIFICATIONS_NEW_EPISODES', { count })}
                                         {
                                             latestReleased !== null ?
                                                 <React.Fragment> · {latestReleased.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</React.Fragment>
@@ -90,14 +92,14 @@ const NotificationsMenuContent = ({ onClick, closeMenu }) => {
                                         }
                                     </div>
                                 </div>
-                                <Button className={styles['dismiss']} title={'Dismiss'} onClick={(event) => dismissOnClick(event, metaId)}>
+                                <Button className={styles['dismiss']} title={t('WARNING_STREAMING_SERVER_DISMISS')} onClick={(event) => dismissOnClick(event, metaId)}>
                                     <Icon className={styles['dismiss-icon']} name={'close'} />
                                 </Button>
                             </Button>
                         ))}
                     </div>
                     :
-                    <div className={styles['empty']}>You're all caught up.</div>
+                    <div className={styles['empty']}>{t('NOTIFICATIONS_EMPTY')}</div>
             }
         </div>
     );

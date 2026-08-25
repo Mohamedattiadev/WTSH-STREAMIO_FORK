@@ -67,7 +67,7 @@ const HorizontalNavBar = React.memo(({ className, route, query, title, backButto
         </Button>
     ), [displayName, initials]);
     const renderNotificationsLabel = React.useCallback(({ ref, className, onClick, children, count }) => (
-        <Button ref={ref} className={classnames(className, styles['button-container'], styles['notifications-button-container'])} title={t('NOTIFICATIONS')} tabIndex={-1} onClick={onClick}>
+        <Button ref={ref} className={classnames(className, styles['button-container'], styles['notifications-button-container'])} title={t('NOTIFICATIONS_PANEL_TITLE')} tabIndex={-1} onClick={onClick}>
             <Icon className={styles['icon']} name={'notifications'} />
             {
                 count > 0 ?

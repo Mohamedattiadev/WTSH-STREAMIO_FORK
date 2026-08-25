@@ -2,6 +2,7 @@
 
 const React = require('react');
 const PropTypes = require('prop-types');
+const { useTranslation } = require('react-i18next');
 const { default: Icon } = require('stremio/components/Icon');
 const { default: Button } = require('stremio/components/Button');
 const { default: Image } = require('stremio/components/Image');
@@ -17,6 +18,7 @@ const styles = require('./styles');
 // mockup's own click-to-start affordance in front of it instead of surprising the user with
 // instant autoplay.
 const TrailerModal = ({ name, trailerStreams, links, description, runtime, poster, background, deepLinks, inLibrary, toggleInLibrary, onCloseRequest }) => {
+    const { t } = useTranslation();
     const [playing, setPlaying] = React.useState(false);
     const ytId = Array.isArray(trailerStreams) && trailerStreams.length > 0 && typeof trailerStreams[0].ytId === 'string' ?
         trailerStreams[0].ytId
@@ -68,7 +70,7 @@ const TrailerModal = ({ name, trailerStreams, links, description, runtime, poste
                             // overlay - they visibly clash with the app's own close button and
                             // card chrome.
                             src={`https://www.youtube.com/embed/${ytId}?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1`}
-                            title={typeof name === 'string' ? name : 'Trailer'}
+                            title={typeof name === 'string' ? name : t('TRAILER')}
                             frameBorder={'0'}
                             allow={'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'}
                             allowFullScreen
@@ -85,7 +87,7 @@ const TrailerModal = ({ name, trailerStreams, links, description, runtime, poste
                             <div className={styles['play-ring']}>
                                 <Icon className={styles['play-icon']} name={'play'} />
                             </div>
-                            <div className={styles['play-caption']}>{'Play Trailer'}</div>
+                            <div className={styles['play-caption']}>{t('TRAILER_PLAY')}</div>
                         </Button>
                 }
             </div>
@@ -123,7 +125,7 @@ const TrailerModal = ({ name, trailerStreams, links, description, runtime, poste
                         typeof showHref === 'string' ?
                             <Button className={styles['watch-now-button']} href={showHref}>
                                 <Icon className={styles['icon']} name={'play'} />
-                                <div className={styles['label']}>{'Watch Now'}</div>
+                                <div className={styles['label']}>{t('TRAILER_WATCH_NOW')}</div>
                             </Button>
                             :
                             null
@@ -132,13 +134,13 @@ const TrailerModal = ({ name, trailerStreams, links, description, runtime, poste
                         typeof toggleInLibrary === 'function' ?
                             <Button className={styles['ghost-button']} onClick={toggleInLibrary}>
                                 <Icon className={styles['icon']} name={inLibrary ? 'checkmark' : 'add'} />
-                                <div className={styles['label']}>{inLibrary ? 'In Library' : 'Library'}</div>
+                                <div className={styles['label']}>{inLibrary ? t('TRAILER_IN_LIBRARY') : t('TRAILER_ADD_LIBRARY')}</div>
                             </Button>
                             :
                             null
                     }
                     <Button className={styles['ghost-button']} onClick={onCloseRequest}>
-                        <div className={styles['label']}>{'Not Now'}</div>
+                        <div className={styles['label']}>{t('TRAILER_NOT_NOW')}</div>
                     </Button>
                 </div>
             </div>

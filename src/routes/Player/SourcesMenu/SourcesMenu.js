@@ -3,6 +3,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const classnames = require('classnames');
+const { useTranslation } = require('react-i18next');
 const Stream = require('stremio/routes/MetaDetails/StreamsList/Stream');
 const styles = require('./styles');
 
@@ -12,6 +13,7 @@ const styles = require('./styles');
 // MetaDetails' own StreamsList already renders, just laid out as a compact in-player menu
 // instead of a full page list.
 const SourcesMenu = React.forwardRef(({ className, streams = [], loading = false, videoId, selectedStreamLink, onStreamSelected }, ref) => {
+    const { t } = useTranslation();
     const onMouseDown = React.useCallback((event) => {
         event.nativeEvent.sourcesMenuClosePrevented = true;
     }, []);
@@ -19,7 +21,7 @@ const SourcesMenu = React.forwardRef(({ className, streams = [], loading = false
     return (
         <div ref={ref} className={classnames(className, styles['sources-menu'])} onMouseDown={onMouseDown}>
             <div className={styles['container']}>
-                <div className={styles['header']}>{'Switch Source'}</div>
+                <div className={styles['header']}>{t('SOURCES_MENU_TITLE')}</div>
                 <div className={styles['list']}>
                     {
                         streams.map((stream, index) => (
@@ -38,10 +40,10 @@ const SourcesMenu = React.forwardRef(({ className, streams = [], loading = false
                     }
                     {
                         loading ?
-                            <div className={styles['status']}>{'Loading other sources...'}</div>
+                            <div className={styles['status']}>{t('SOURCES_MENU_LOADING')}</div>
                             :
                             streams.length === 0 ?
-                                <div className={styles['status']}>{'No other sources found.'}</div>
+                                <div className={styles['status']}>{t('SOURCES_MENU_EMPTY')}</div>
                                 :
                                 null
                     }

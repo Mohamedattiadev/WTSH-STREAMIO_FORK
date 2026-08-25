@@ -121,7 +121,7 @@ const Stream = ({ className, videoId, videoReleased, addonName, name, descriptio
             markVideoAsWatched();
             toast.show({
                 type: 'success',
-                title: 'Stream opened in external player',
+                title: t('STREAM_OPENED_EXTERNAL'),
                 timeout: 4000
             });
         }
