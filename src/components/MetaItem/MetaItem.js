@@ -16,7 +16,7 @@ const CONSTANTS = require('stremio/common/CONSTANTS');
 const { ICON_FOR_TYPE } = CONSTANTS;
 const styles = require('./styles');
 
-const MetaItem = React.memo(({ className, type, name, poster, posterShape, posterChangeCursor, progress, newVideos, deepLinks, links, trailerStreams, releaseInfo, href: customHref, onDismissClick, onPlayClick, watched, badgeLabel, ...props }) => {
+const MetaItem = React.memo(({ className, type, name, poster, posterShape, posterChangeCursor, progress, newVideos, deepLinks, links, trailerStreams, releaseInfo, description, runtime, background, href: customHref, onDismissClick, onPlayClick, watched, badgeLabel, ...props }) => {
     const { t } = useTranslation();
     const [trailerModalOpen, openTrailerModal, closeTrailerModal] = useBinaryState(false);
     // Same real IMDb-link convention MetaPreview reads its rating badge from (the link's
@@ -205,7 +205,17 @@ const MetaItem = React.memo(({ className, type, name, poster, posterShape, poste
             }
             {
                 trailerModalOpen ?
-                    <TrailerModal name={name} trailerStreams={trailerStreams} links={links} poster={poster} deepLinks={deepLinks} onCloseRequest={closeTrailerModal} />
+                    <TrailerModal
+                        name={name}
+                        trailerStreams={trailerStreams}
+                        links={links}
+                        description={description}
+                        runtime={runtime}
+                        poster={poster}
+                        background={background}
+                        deepLinks={deepLinks}
+                        onCloseRequest={closeTrailerModal}
+                    />
                     :
                     null
             }
@@ -224,6 +234,9 @@ MetaItem.propTypes = {
     posterChangeCursor: PropTypes.bool,
     progress: PropTypes.number,
     newVideos: PropTypes.number,
+    description: PropTypes.string,
+    runtime: PropTypes.string,
+    background: PropTypes.string,
     href: PropTypes.string,
     deepLinks: PropTypes.shape({
         metaDetailsVideos: PropTypes.string,

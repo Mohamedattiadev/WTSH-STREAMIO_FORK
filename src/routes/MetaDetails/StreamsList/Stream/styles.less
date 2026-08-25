@@ -120,10 +120,17 @@
         line-height: 1.5;
         color: var(--muted-foreground-color);
 
+        // Was a single nowrap+ellipsis line - a real release filename ("Silo S03E08 Gray Goo
+        // 2160p ATVP WEB-DL DDP5.1 Atmos DV HDR H265-FLUX") routinely runs well past what one
+        // line can show, so it got chopped mid-word into something unreadable. Two lines gives
+        // it enough room to actually read the title, matching the same clamp technique already
+        // used just below for .description-meta.
         .description-title {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
             font-weight: 600;
             color: var(--primary-foreground-color);
-            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
@@ -145,6 +152,21 @@
             font-size: 0.8rem;
             opacity: 0.85;
         }
+    }
+
+    // The quality tag (e.g. "1080p") split off of stream.name's "<Addon Name>\n<Quality>"
+    // convention (see Stream.js) - its own small pill next to the play icon instead of being
+    // squeezed into the addon-name badge above, where it used to collapse into one unreadable,
+    // ellipsis-truncated string with the addon's own name.
+    .quality-label {
+        flex: none;
+        padding: 0.25rem 0.6rem;
+        border-radius: 1rem;
+        background-color: var(--overlay-color);
+        color: var(--muted-foreground-color);
+        font-size: 0.72rem;
+        font-weight: 600;
+        white-space: nowrap;
     }
 
     .icon {
