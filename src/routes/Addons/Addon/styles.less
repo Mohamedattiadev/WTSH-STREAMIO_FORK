@@ -61,6 +61,14 @@
             gap: 0.55rem;
 
             .name-container {
+                // A flex item with overflow:hidden and no explicit flex/min-width has an
+                // automatic minimum size of 0 per the flexbox spec - harmless at this row's
+                // normal full-list width (always enough room), but confirmed live to collapse
+                // a long name to nothing under real space pressure. The featured-hub-strip
+                // (Addons/styles.less) squeezes this row into a much narrower card and adds
+                // its own flex/min-width override scoped to just that context (via :import()),
+                // rather than changing this shared component's default for every list that
+                // uses it.
                 font-family: var(--font-display);
                 font-weight: 600;
                 font-size: 0.92rem;

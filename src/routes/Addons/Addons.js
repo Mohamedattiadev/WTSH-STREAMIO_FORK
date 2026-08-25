@@ -8,6 +8,7 @@ const { useTranslation } = require('react-i18next');
 const { default: Icon } = require('stremio/components/Icon');
 const { useCore } = require('stremio/core');
 const { usePlatform, useBinaryState, withCoreSuspender } = require('stremio/common');
+const { default: HorizontalScroll } = require('stremio/components/HorizontalScroll');
 const { AddonDetailsModal, Button, Image, MainNavBars, ModalDialog, SearchBar, SharePrompt, TextInput, MultiselectMenu } = require('stremio/components');
 const useToast = require('stremio/common/Toast/useToast');
 const Addon = require('./Addon');
@@ -18,7 +19,17 @@ const useSelectableInputs = require('./useSelectableInputs');
 const styles = require('./styles');
 const { AddonPlaceholder } = require('./AddonPlaceholder');
 const RegionalHub = require('./RegionalHub');
-const { OFFICIAL_ADDON_CATALOG, COMMUNITY_ADDON_CATALOG } = require('./CONSTANTS');
+const AddonHub = require('./AddonHub');
+const useAddonManifests = require('./RegionalHub/useAddonManifests');
+const useAddonActions = require('./RegionalHub/useAddonActions');
+const CuratedAddonCard = require('./RegionalHub/CuratedAddonCard');
+const { OFFICIAL_ADDON_CATALOG, COMMUNITY_ADDON_CATALOG, REGIONAL_ADDONS } = require('./CONSTANTS');
+
+// A handful of the safest one-tap picks (autoInstall: true - legitimate by construction, no
+// setup needed) surfaced directly on the My tab, matching the mockup's "From the Addon Hub"
+// featured strip - picked deterministically (first N autoInstall entries in CONSTANTS' own
+// order) rather than a hand-curated "best of" list, so this never drifts into opinion/fabrication.
+const FEATURED_HUB_ADDONS = REGIONAL_ADDONS.filter((addon) => addon.autoInstall === true).slice(0, 6);
 
 const Addons = () => {
     const { type, transportUrl, catalogId } = useParams();
@@ -36,6 +47,8 @@ const Addons = () => {
     const installedAddons = useInstalledAddons(urlParams);
     const remoteAddons = useRemoteAddons(urlParams);
     const goToInstalledAddons = React.useCallback(() => {
+        setRegionalHubOpen(false);
+        setHubOpen(false);
         navigate('/addons');
     }, [navigate]);
     const goToCatalog = React.useCallback((catalog) => {
@@ -49,9 +62,33 @@ const Addons = () => {
         goToCatalog(COMMUNITY_ADDON_CATALOG);
     }, [goToCatalog]);
     const [regionalHubOpen, setRegionalHubOpen] = React.useState(false);
+    const [hubOpen, setHubOpen] = React.useState(false);
     const goToRegionalHub = React.useCallback(() => {
         setRegionalHubOpen(true);
+        setHubOpen(false);
     }, []);
+    const goToHub = React.useCallback(() => {
+        setHubOpen(true);
+        setRegionalHubOpen(false);
+    }, []);
+    const featuredManifestsByUrl = useAddonManifests(FEATURED_HUB_ADDONS);
+    const featuredActions = useAddonActions();
+    // Derived from installedAddons.catalog (already fetched below via useInstalledAddons)
+    // rather than a separate useInstalledAddonIds() subscription - useModelState (see
+    // src/common/useModelState.js) unconditionally dispatches an Unload for its model name on
+    // unmount, and RegionalHub/AddonHub each already subscribe to this same shared
+    // 'installed_addons' core model via that hook. Confirmed live: fixing the tab-highlight
+    // bug below (so Regional/Hub properly unmount when switching to My) meant that unmount's
+    // Unload was clobbering this component's own installedAddons state, permanently stuck on
+    // the loading skeleton. A second independent subscription here would hit the exact same
+    // hazard, so this reuses the data already being fetched instead of opening another one.
+    const installedAddonIds = React.useMemo(() => {
+        return new Set(
+            installedAddons.catalog
+                .map((addon) => addon.manifest && addon.manifest.id)
+                .filter((id) => typeof id === 'string')
+        );
+    }, [installedAddons.catalog]);
     const activeRemoteCatalogId = remoteAddons.selected !== null ? remoteAddons.selected.request.path.id : null;
     const isOfficialTab = activeRemoteCatalogId === OFFICIAL_ADDON_CATALOG.catalogId;
     const isCommunityTab = activeRemoteCatalogId === COMMUNITY_ADDON_CATALOG.catalogId;
@@ -145,12 +182,13 @@ const Addons = () => {
         setSearch('');
         clearSharedAddon();
         setRegionalHubOpen(false);
+        setHubOpen(false);
     }, [urlParams, queryParams]);
     return (
         <MainNavBars className={styles['addons-container']} route={'addons'}>
             <div className={styles['addons-content']}>
                 <div className={styles['tabs-container']}>
-                    <Button className={classnames(styles['tab'], { [styles['selected']]: installedAddons.selected !== null })} title={t('ADDON_MY')} onClick={goToInstalledAddons}>
+                    <Button className={classnames(styles['tab'], { [styles['selected']]: installedAddons.selected !== null && !regionalHubOpen && !hubOpen })} title={t('ADDON_MY')} onClick={goToInstalledAddons}>
                         <div className={styles['label']}>{t('ADDON_MY')}</div>
                         {
                             installedAddons.selected !== null ?
@@ -180,9 +218,12 @@ const Addons = () => {
                     <Button className={classnames(styles['tab'], { [styles['selected']]: regionalHubOpen })} title={'Regional'} onClick={goToRegionalHub}>
                         <div className={styles['label']}>{'Regional'}</div>
                     </Button>
+                    <Button className={classnames(styles['tab'], { [styles['selected']]: hubOpen })} title={'Hub'} onClick={goToHub}>
+                        <div className={styles['label']}>{'Hub'}</div>
+                    </Button>
                 </div>
                 {
-                    regionalHubOpen ?
+                    regionalHubOpen || hubOpen ?
                         null
                         :
                         <div className={styles['selectable-inputs-container']}>
@@ -210,9 +251,49 @@ const Addons = () => {
                         </div>
                 }
                 {
-                    regionalHubOpen ?
-                        <RegionalHub className={styles['addons-list-container']} />
+                    !regionalHubOpen && !hubOpen && installedAddons.selected !== null && FEATURED_HUB_ADDONS.length > 0 ?
+                        <div className={styles['featured-hub-strip']}>
+                            <div className={styles['featured-hub-head']}>
+                                <div className={styles['featured-hub-title']}>{'From the Addon Hub'}</div>
+                                <Button className={styles['featured-hub-see-all']} title={'Hub'} onClick={goToHub}>
+                                    {'See all'}
+                                </Button>
+                            </div>
+                            <HorizontalScroll className={styles['featured-hub-scroll']}>
+                                {FEATURED_HUB_ADDONS.map((curated) => (
+                                    <CuratedAddonCard
+                                        key={curated.transportUrl}
+                                        className={styles['featured-hub-addon']}
+                                        curated={curated}
+                                        manifest={featuredManifestsByUrl[curated.transportUrl]}
+                                        installed={typeof featuredManifestsByUrl[curated.transportUrl]?.id === 'string' && installedAddonIds.has(featuredManifestsByUrl[curated.transportUrl].id)}
+                                        onInstall={featuredActions.onInstall}
+                                        onUninstall={featuredActions.onUninstall}
+                                        onConfigure={featuredActions.onConfigure}
+                                        onOpen={featuredActions.onOpen}
+                                    />
+                                ))}
+                            </HorizontalScroll>
+                            {
+                                typeof featuredActions.detailsTransportUrl === 'string' ?
+                                    <AddonDetailsModal
+                                        transportUrl={featuredActions.detailsTransportUrl}
+                                        onCloseRequest={featuredActions.closeDetails}
+                                    />
+                                    :
+                                    null
+                            }
+                        </div>
                         :
+                        null
+                }
+                {
+                    regionalHubOpen ?
+                        <RegionalHub className={styles['addons-list-container']} installedIds={installedAddonIds} />
+                        :
+                        hubOpen ?
+                            <AddonHub className={styles['addons-list-container']} installedIds={installedAddonIds} />
+                            :
                         installedAddons.selected !== null ?
                             installedAddons.selectable.types.length === 0 ?
                                 <div className={styles['message-container']}>

@@ -21,6 +21,16 @@
     filters-modal-content: modal-dialog-content;
 }
 
+// CSS Modules hashes class names per file, so a bare `.description-container` nested selector
+// here would compile against a class this file's own module generates, never the one Addon's
+// component actually renders - same cross-file scoping gotcha TrailerModal/styles.less and
+// MetaItem/styles.less already document. This pulls in the real compiled class name so the
+// featured-hub-strip's description clamp below actually applies.
+:import('~stremio/routes/Addons/Addon/styles.less') {
+    addon-description: description-container;
+    addon-name: name-container;
+}
+
 .addons-container {
     height: calc(100% - var(--safe-area-inset-bottom));
     background-color: transparent;
@@ -238,6 +248,71 @@
 
             .addon {
                 margin-bottom: 1.5rem;
+            }
+        }
+
+        .featured-hub-strip {
+            flex: none;
+            align-self: stretch;
+            padding: 0 1.5rem 1.25rem;
+
+            .featured-hub-head {
+                display: flex;
+                flex-direction: row;
+                align-items: baseline;
+                justify-content: space-between;
+                margin-bottom: 0.75rem;
+
+                .featured-hub-title {
+                    font-size: 1.1rem;
+                    font-weight: 700;
+                    color: var(--primary-foreground-color);
+                }
+
+                .featured-hub-see-all {
+                    font-size: 0.85rem;
+                    color: var(--muted-foreground-color);
+
+                    &:hover {
+                        color: var(--primary-accent-color);
+                    }
+                }
+            }
+
+            .featured-hub-scroll {
+                display: flex;
+                flex-direction: row;
+                // Addon is a horizontal row component built for full-width lists (its own
+                // buttons-container wraps and its height is unbounded to accommodate that) -
+                // without this, the flex row's default align-items:stretch made every card
+                // match whichever one happened to wrap its buttons onto a second line,
+                // producing cards that stretched to fill the whole page height.
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .featured-hub-addon {
+                flex: none;
+                width: 24rem;
+
+                // Squeezing Addon's row layout into a 24rem card means its name and version
+                // badge no longer have the wide-list room they normally can rely on - the name
+                // label has no flex/min-width of its own (harmless there, real elsewhere - see
+                // Addon/styles.less), so under this narrower width it was collapsing to 0 and
+                // showing no name text at all. Scoped here rather than changed on the shared
+                // component, since the wide-list layout doesn't need it and giving the name
+                // flex:1 there would shove every row's version badge to the far right.
+                .addon-name {
+                    flex: 1 1 auto;
+                    min-width: 3rem;
+                }
+
+                .addon-description {
+                    display: -webkit-box;
+                    -webkit-box-orient: vertical;
+                    -webkit-line-clamp: 2;
+                    overflow: hidden;
+                }
             }
         }
     }
