@@ -112,16 +112,39 @@
 
     .description-container {
         flex: 1;
+        min-width: 0;
         display: flex;
         flex-direction: column;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        white-space: pre;
-        overflow-y: visible;
-        text-overflow: ellipsis;
+        gap: 0.2rem;
         font-size: 0.85rem;
         line-height: 1.5;
         color: var(--muted-foreground-color);
+
+        .description-title {
+            font-weight: 600;
+            color: var(--primary-foreground-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        // -webkit-line-clamp only truncates a -webkit-box, not a flex/block container - this
+        // whole block used to be `display: flex` with overflow-y: visible, so the clamp never
+        // actually applied, and `white-space: pre` (vs. pre-line) meant embedded newlines were
+        // kept but nothing could wrap, so one long raw addon line (a common shape from scraper
+        // addons like Torrentio - title, then a "seeders / size / source" line, then language
+        // flags) would run past the card's width instead of wrapping or truncating. This is a
+        // structural fix (how the text box lays out and clips), not addon-specific parsing.
+        .description-meta {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            white-space: pre-line;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.8rem;
+            opacity: 0.85;
+        }
     }
 
     .icon {

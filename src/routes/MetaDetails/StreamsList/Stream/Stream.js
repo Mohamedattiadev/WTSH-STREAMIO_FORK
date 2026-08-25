@@ -197,6 +197,24 @@ const Stream = ({ className, videoId, videoReleased, addonName, name, descriptio
         }
     }, [streamLink]);
 
+    // Scraper-style addons (Torrentio and friends) pack a multi-line free-text description:
+    // release title, then a "seeders / size / source" line, then language flags - no reliable
+    // cross-addon structure to actually parse (confirmed earlier this session), but splitting on
+    // the FIRST newline is a structural assumption true of any addon's multi-line description,
+    // not content-specific parsing - giving the release title its own bold line reads far better
+    // than one dense wall of text, without inventing or reformatting what the addon actually said.
+    const [descriptionTitle, descriptionRest] = React.useMemo(() => {
+        if (typeof description !== 'string' || description.length === 0) {
+            return [null, null];
+        }
+
+        const newlineIndex = description.indexOf('\n');
+        return newlineIndex === -1 ?
+            [description, null]
+            :
+            [description.slice(0, newlineIndex), description.slice(newlineIndex + 1)];
+    }, [description]);
+
     const renderThumbnailFallback = React.useCallback(() => (
         <Icon className={styles['placeholder-icon']} name={'ic_broken_link'} />
     ), []);
@@ -230,12 +248,25 @@ const Stream = ({ className, videoId, videoReleased, addonName, name, descriptio
                             null
                     }
                 </div>
-                <div className={styles['description-container']} title={description}>{description}</div>
+                <div className={styles['description-container']} title={description}>
+                    {
+                        descriptionTitle !== null ?
+                            <div className={styles['description-title']}>{descriptionTitle}</div>
+                            :
+                            null
+                    }
+                    {
+                        descriptionRest !== null ?
+                            <div className={styles['description-meta']}>{descriptionRest}</div>
+                            :
+                            null
+                    }
+                </div>
                 <Icon className={styles['icon']} name={'play'} />
                 {children}
             </Button>
         );
-    }, [thumbnail, progress, addonName, name, description, href, target, download, onClick]);
+    }, [thumbnail, progress, addonName, name, description, descriptionTitle, descriptionRest, href, target, download, onClick]);
 
     const renderMenu = React.useMemo(() => function renderMenu() {
         return (

@@ -31,6 +31,7 @@ const { default: SideDrawerButton } = require('./SideDrawerButton');
 const { default: SideDrawer } = require('./SideDrawer');
 const SearchPanel = require('./SearchPanel');
 const ChatPanel = require('stremio/routes/Chat/ChatPanel');
+const useMetaDetails = require('stremio/routes/MetaDetails/useMetaDetails');
 const usePlayer = require('./usePlayer');
 const { default: usePlayOnDevice } = require('./usePlayOnDevice');
 const { default: useKeyboardSeek } = require('./useKeyboardSeek');
@@ -240,6 +241,54 @@ const Player = () => {
     const defaultAudioTrackSelected = React.useRef(false);
     const playingOnExternalDevice = React.useRef(false);
     const [error, setError] = React.useState(null);
+
+    // Auto-fallback to a different stream/source when the one actually playing fails outright
+    // (video.events' 'error' with .critical - the same real signal Error.js already renders
+    // from below, not a fabricated "not working" detector). Only fetches the full cross-addon
+    // streams list (the same useMetaDetails hook MetaDetails' own StreamsList already uses)
+    // lazily, after a real failure - not eagerly on every player mount, which would mean a
+    // second full addon fetch on every successful playback too.
+    const streamFallbackUrlParams = React.useMemo(() => {
+        return error !== null ? { type, id, videoId } : {};
+    }, [error, type, id, videoId]);
+    const streamFallbackMetaDetails = useMetaDetails(streamFallbackUrlParams);
+    const triedStreamPlayerLinks = React.useRef(new Set());
+    React.useEffect(() => {
+        triedStreamPlayerLinks.current = new Set();
+    }, [videoId]);
+    React.useEffect(() => {
+        if (error === null) {
+            return;
+        }
+
+        const failedStreamLink = player.selected?.stream?.deepLinks?.player;
+        if (typeof failedStreamLink === 'string') {
+            triedStreamPlayerLinks.current.add(failedStreamLink);
+        }
+
+        const stillLoading = streamFallbackMetaDetails.streams.some((streams) => streams.content.type === 'Loading');
+        if (stillLoading) {
+            return;
+        }
+
+        const allStreams = streamFallbackMetaDetails.streams
+            .filter((streams) => streams.content.type === 'Ready')
+            .flatMap((streams) => streams.content.content);
+        const nextStream = allStreams.find((stream) => {
+            const link = stream.deepLinks?.player;
+            return typeof link === 'string' && !triedStreamPlayerLinks.current.has(link);
+        });
+
+        if (nextStream) {
+            toast.show({
+                type: 'info',
+                title: 'Trying another source',
+                message: 'That source failed to play - trying a different one.',
+                timeout: 4000
+            });
+            navigate(toPath(nextStream.deepLinks.player), { replace: true });
+        }
+    }, [error, streamFallbackMetaDetails.streams]);
 
     const VIDEO_SCALES = ['contain', 'cover', 'fill'];
     const VIDEO_SCALE_LABELS = { contain: t('PLAYER_SCALE_FIT'), cover: t('PLAYER_SCALE_CROP'), fill: t('PLAYER_SCALE_STRETCH') };
