@@ -61,11 +61,24 @@ const ControlBar = React.forwardRef(({
     // OptionsMenu's buried "Download Video" option already used) - only ever shown when a
     // real one exists, never fabricated for streams (most torrent streams) that don't offer it.
     const downloadUrl = stream?.deepLinks?.externalPlayer?.download ?? null;
+    // Deliberately not platform.openExternal() here - that routes any non-whitelisted host
+    // (which every real torrent/debrid download link is, by nature) through the
+    // stremio.com/warning interstitial first, turning one click into "new tab -> warning page
+    // -> click through -> finally reaches the file." A direct <a download> click is the real
+    // one-hop download this button promises; openExternal's warning page still protects every
+    // other external link in the app (addon sources, share links, etc.) unchanged.
     const onDownloadButtonClick = React.useCallback(() => {
-        if (typeof downloadUrl === 'string') {
-            platform.openExternal(downloadUrl);
+        if (typeof downloadUrl !== 'string') {
+            return;
         }
-    }, [downloadUrl, platform]);
+        const anchor = document.createElement('a');
+        anchor.href = downloadUrl;
+        anchor.download = '';
+        anchor.rel = 'noopener noreferrer';
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+    }, [downloadUrl]);
     const [buttonsMenuOpen, , , toggleButtonsMenu] = useBinaryState(false);
     const onSubtitlesButtonMouseDown = React.useCallback((event) => {
         event.nativeEvent.subtitlesMenuClosePrevented = true;

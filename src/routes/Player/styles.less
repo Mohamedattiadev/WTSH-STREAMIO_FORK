@@ -43,10 +43,12 @@ html:not(.active-slider-within) {
     z-index: 0;
     flex: none;
     width: 100%;
-    // A 16:9 box sized to the embedded column's width, same idea as a YouTube/Netflix web
-    // embed - was implicitly 100% of a viewport-covering ancestor before, which no longer
-    // exists now that this isn't a stacked full-viewport overlay.
-    aspect-ratio: 16 / 9;
+    // Matches the mockup's own .player-stage exactly (16/7.2, not a plain 16:9) - shorter than
+    // standard widescreen so the info panel below has real presence on screen instead of
+    // requiring a scroll just to see any of it. Was implicitly 100% of a viewport-covering
+    // ancestor before, which no longer exists now that this isn't a stacked full-viewport
+    // overlay.
+    aspect-ratio: 16 / 7.2;
     background-color: @background-color;
 
     // The native Fullscreen API stretches whatever element requestFullscreen() was called on
