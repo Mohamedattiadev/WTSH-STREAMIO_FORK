@@ -122,6 +122,35 @@
                 }
             }
         }
+
+        .reminder-item {
+            .reminder-icon {
+                width: 1.1rem;
+                height: 1.1rem;
+                padding: 0;
+                background-color: var(--ember, var(--primary-accent-color));
+            }
+
+            .reminder-poster-placeholder {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                width: 100%;
+                aspect-ratio: 2 / 3;
+                border-radius: inherit;
+                background-color: var(--overlay-color);
+
+                .icon {
+                    position: static;
+                    opacity: 0.6;
+                    background-color: transparent;
+                    width: 1.2rem;
+                    height: 1.2rem;
+                    padding: 0;
+                }
+            }
+        }
     }
 
     .more {

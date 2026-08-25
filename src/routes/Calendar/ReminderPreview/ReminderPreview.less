@@ -1,0 +1,112 @@
+.reminder-preview {
+    position: relative;
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    border-radius: 1rem;
+    border: 0.06rem solid var(--overlay-color);
+    background-color: var(--modal-background-color);
+    overflow: hidden;
+
+    .close-button {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        z-index: 2;
+        width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background-color: rgba(0, 0, 0, 0.4);
+
+        .icon {
+            width: 1rem;
+            height: 1rem;
+            color: var(--primary-foreground-color);
+        }
+
+        &:hover {
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+    }
+
+    .poster {
+        display: block;
+        width: 100%;
+        max-height: 16rem;
+        object-fit: cover;
+    }
+
+    .poster-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 8rem;
+        background-color: var(--overlay-color);
+
+        .icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            opacity: 0.4;
+            color: var(--primary-foreground-color);
+        }
+    }
+
+    .body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        padding: 1.1rem 1.25rem 1.35rem;
+
+        .title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--primary-foreground-color);
+        }
+
+        .date {
+            font-size: 0.85rem;
+            color: var(--muted-foreground-color);
+        }
+
+        .source-badge {
+            align-self: flex-start;
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            background-color: var(--overlay-color);
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--primary-accent-color);
+        }
+
+        .remove-button {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.4rem;
+            padding: 0.65rem;
+            border-radius: var(--border-radius);
+            background-color: var(--overlay-color);
+            color: var(--primary-foreground-color);
+
+            .icon {
+                width: 1rem;
+                height: 1rem;
+            }
+
+            .label {
+                font-size: 0.85rem;
+                font-weight: 600;
+            }
+
+            &:hover {
+                background-color: var(--danger-accent-color);
+            }
+        }
+    }
+}

@@ -28,7 +28,11 @@ const getLocalDateString = () => {
 // gate the rest of this route uses - the two are separate sign-in systems (see
 // useSupabaseAuth.js), and a user who only set up "Watch Reminders & Chat Sync" should still see
 // what they scheduled even without a Stremio account.
-const Reminders = () => {
+type Props = {
+    onSelect?: (reminder: CalendarEventRow) => void,
+};
+
+const Reminders = ({ onSelect }: Props) => {
     const { user } = useSupabaseAuth();
     const { reminders, addReminder, removeReminder } = useCalendarReminders(user);
     const [formOpen, setFormOpen] = useState(false);
@@ -115,40 +119,45 @@ const Reminders = () => {
             <div className={styles['body']}>
                 {
                     user === null ?
-                        <div className={styles['empty']}>Sign in to "Watch Reminders & Chat Sync" in Settings to get reminders here.</div>
+                        <div className={styles['empty']}>Sign in to &quot;Watch Reminders &amp; Chat Sync&quot; in Settings to get reminders here.</div>
                         :
-                    reminders.length === 0 ?
-                        <div className={styles['empty']}>No reminders yet - ask "Ask WTSH" to schedule something, like "I'll watch [title] on Friday".</div>
-                        :
-                        reminders.map(({ id, title, poster_ref: poster, scheduled_date: scheduledDate, source }) => {
-                            const dateLabel = new Date(`${scheduledDate}T00:00:00`).toLocaleString(undefined, {
-                                weekday: 'short',
-                                day: 'numeric',
-                                month: 'short'
-                            });
-                            return (
-                                <div className={styles['reminder']} key={id}>
-                                    {
-                                        typeof poster === 'string' && poster.length > 0 ?
-                                            <Image className={styles['thumb']} src={poster} alt={title} />
-                                            :
-                                            <div className={styles['thumb-placeholder']}>
-                                                <Icon className={styles['icon']} name={'calendar-thin'} />
+                        reminders.length === 0 ?
+                            <div className={styles['empty']}>No reminders yet - ask &quot;Ask WTSH&quot; to schedule something, like &quot;I&apos;ll watch [title] on Friday&quot;.</div>
+                            :
+                            reminders.map((reminder) => {
+                                const { id, title, poster_ref: poster, scheduled_date: scheduledDate, source } = reminder;
+                                const dateLabel = new Date(`${scheduledDate}T00:00:00`).toLocaleString(undefined, {
+                                    weekday: 'short',
+                                    day: 'numeric',
+                                    month: 'short'
+                                });
+                                return (
+                                    <div
+                                        className={classNames(styles['reminder'], { [styles['selectable']]: typeof onSelect === 'function' })}
+                                        key={id}
+                                        onClick={() => onSelect && onSelect(reminder)}
+                                    >
+                                        {
+                                            typeof poster === 'string' && poster.length > 0 ?
+                                                <Image className={styles['thumb']} src={poster} alt={title} />
+                                                :
+                                                <div className={styles['thumb-placeholder']}>
+                                                    <Icon className={styles['icon']} name={'calendar-thin'} />
+                                                </div>
+                                        }
+                                        <div className={styles['body-text']}>
+                                            <div className={styles['name']}>{title}</div>
+                                            <div className={styles['info']}>
+                                                {dateLabel}
+                                                {source === 'chat' ? <span className={styles['source-badge']}>via chat</span> : null}
                                             </div>
-                                    }
-                                    <div className={styles['body-text']}>
-                                        <div className={styles['name']}>{title}</div>
-                                        <div className={styles['info']}>
-                                            {dateLabel}
-                                            {source === 'chat' ? <span className={styles['source-badge']}>via chat</span> : null}
                                         </div>
+                                        <Button className={styles['remove-button']} title={'Remove'} onClick={(event) => onRemoveClick(event, id)}>
+                                            <Icon className={classNames(styles['icon'], styles['remove-icon'])} name={'bin'} />
+                                        </Button>
                                     </div>
-                                    <Button className={styles['remove-button']} title={'Remove'} onClick={(event) => onRemoveClick(event, id)}>
-                                        <Icon className={classNames(styles['icon'], styles['remove-icon'])} name={'bin'} />
-                                    </Button>
-                                </div>
-                            );
-                        })
+                                );
+                            })
                 }
             </div>
         </div>

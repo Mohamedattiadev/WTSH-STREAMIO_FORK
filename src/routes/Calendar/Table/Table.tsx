@@ -11,10 +11,12 @@ type Props = {
     items: CalendarItem[],
     selected: CalendarDate | null,
     monthInfo: CalendarMonthInfo,
+    remindersByDay?: Map<number, CalendarEventRow[]>,
     onChange: (date: CalendarDate) => void,
+    onReminderClick?: (reminder: CalendarEventRow) => void,
 };
 
-const Table = ({ items, selected, monthInfo, onChange }: Props) => {
+const Table = ({ items, selected, monthInfo, remindersByDay, onChange, onReminderClick }: Props) => {
     const { t } = useTranslation();
 
     const cellsOffset = useMemo(() => {
@@ -50,7 +52,9 @@ const Table = ({ items, selected, monthInfo, onChange }: Props) => {
                             {...item}
                             selected={selected}
                             monthInfo={monthInfo}
+                            reminders={remindersByDay?.get(item.date.day)}
                             onClick={onChange}
+                            onReminderClick={onReminderClick}
                         />
                     ))
                 }
