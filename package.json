@@ -11,8 +11,10 @@
         "start-prod": "webpack serve --mode production",
         "build": "webpack --mode production",
         "test": "jest",
+        "test:cache": "jest tests/cache.test.js",
         "lint": "eslint src",
-        "scan-translations": "pnpx jest ./tests/i18nScan.test.js"
+        "scan-translations": "pnpx jest ./tests/i18nScan.test.js",
+        "benchmark:cache": "node scripts/cache-benchmark.js"
     },
     "engines": {
         "node": ">=22",

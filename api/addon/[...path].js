@@ -28,6 +28,18 @@
 
 const zlib = require('zlib');
 
+// Shared cache/proxy layer (see api/_lib/cache). Every upstream this addon calls - TMDB,
+// OpenSubtitles, Internet Archive, Cinemeta - now goes through it: Redis (or in-memory locally)
+// hot cache, request coalescing so 50 concurrent misses for the same id become 1 upstream call,
+// stale-while-revalidate, and a short negative-cache so a broken upstream is not hammered. The
+// existing CDN Cache-Control headers are kept - the two layers are complementary.
+const { getCache, UpstreamError } = require('../_lib/cache');
+const { CACHE_CONFIG } = require('../_lib/cache/config');
+const KEYS = require('../_lib/cache/keys');
+const { getObjectStore } = require('../_lib/object-store');
+const { waitUntil } = require('../_lib/wait-until');
+const TTL = CACHE_CONFIG.ttl;
+
 const TMDB_API_BASE = 'https://api.themoviedb.org/3';
 const TMDB_POSTER_BASE = 'https://image.tmdb.org/t/p/w500';
 const TMDB_BACKDROP_BASE = 'https://image.tmdb.org/t/p/w1280';
@@ -129,6 +141,21 @@ const fetchWithTimeout = async (url, options = {}, ms = 9000) => {
     }
 };
 
+// Run an upstream call through the shared cache. On a cache/upstream failure this preserves
+// this file's long-standing "empty result, not an error" contract by returning `fallback` (the
+// same [] / null every call site here already handles) - the cache layer still records the
+// failure and briefly negative-caches it so the upstream is not hammered on the next request.
+const cached = async (key, ttlSeconds, fetchFn, fallback, opts) => {
+    try {
+        return await getCache().getOrFetch(key, ttlSeconds, fetchFn, { waitUntil, ...opts });
+    } catch (err) {
+        if (err instanceof UpstreamError) {
+            return typeof fallback === 'function' ? fallback() : fallback;
+        }
+        throw err;
+    }
+};
+
 // Parse the trailing `key=value&key2=value2` segment Stremio appends to catalog/subtitle URLs.
 const parseExtra = (raw, query) => {
     const out = {};
@@ -185,7 +212,7 @@ const buildManifest = () => {
 
 // -- subtitles ----------------------------------------------------------------------------
 
-const osSearch = async (params) => {
+const osSearchLive = async (params) => {
     // opensubtitles.com canonicalises its query string: keys lowercased and sorted, list
     // values sorted. Send it any other way and it 301s / misses cache instead of answering.
     const usp = new URLSearchParams();
@@ -196,22 +223,34 @@ const osSearch = async (params) => {
     const url = `${OS_API_BASE}/subtitles?${usp.toString()}`;
     const headers = { 'User-Agent': OS_USER_AGENT, 'Accept': 'application/json' };
     if (OS_API_KEY) headers['Api-Key'] = OS_API_KEY;
+    let lastErr = new Error('opensubtitles search failed');
     for (let attempt = 0; attempt < 2; attempt++) {
         try {
             const resp = await fetchWithTimeout(url, { headers }, 9000);
             if (resp.status === 429 || resp.status >= 500) {
+                lastErr = new Error(`opensubtitles ${resp.status}`);
                 await new Promise((r) => setTimeout(r, 400));
                 continue;
             }
+            // A 4xx (bad id, nothing found) is a real, cacheable "no subtitles" answer.
             if (!resp.ok) return [];
             const data = await resp.json();
             return Array.isArray(data.data) ? data.data : [];
-        } catch (_) {
-            // timeout / network - retry once, then give up quietly
+        } catch (err) {
+            lastErr = err; // timeout / network - retry once, then surface it to the cache layer
         }
     }
-    return [];
+    throw lastErr;
 };
+
+// Cached wrapper: same signature as before. Key is the canonical (sorted, lowercased) param
+// set so ar,tr vs tr,ar and key order never split the cache.
+const osSearch = (params) => cached(
+    KEYS.rawKey('os-sub', Object.keys(params).sort().map((k) => `${k}=${String(params[k]).toLowerCase()}`).join('&')),
+    TTL.search,
+    () => osSearchLive(params),
+    []
+);
 
 const handleSubtitles = async (res, type, id, extra, base) => {
     if (!id || !/^tt\d+/.test(id)) {
@@ -410,6 +449,31 @@ const handleOsFile = async (res, b64) => {
         return res.status(403).send('forbidden host');
     }
 
+    // Optional durable object store (Telegram, OFF by default). A subtitle file behind a legacy
+    // id never changes, so once fetched-and-cleaned it is worth keeping as a blob: Redis holds a
+    // tiny reference, Telegram holds the ~tens-of-KB of text. No-op unless TELEGRAM_STORAGE_
+    // ENABLED=true. (This is the one place a blob store beats re-fetching; hot JSON stays in
+    // Redis only.)
+    const objectStore = getObjectStore();
+    const blobRefKey = objectStore.enabled
+        ? KEYS.rawKey('osfile-blob', Buffer.from(target).toString('base64url').slice(0, 120))
+        : null;
+    if (blobRefKey) {
+        try {
+            const ref = await getCache().get(blobRefKey);
+            const blob = ref ? await objectStore.get(ref) : null;
+            if (blob && blob.buffer) {
+                cors(res);
+                res.setHeader('Content-Type', 'application/x-subrip; charset=utf-8');
+                res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=2592000, immutable');
+                res.setHeader('X-WTS-Object-Store', 'telegram');
+                return res.status(200).send(blob.buffer.toString('utf-8'));
+            }
+        } catch (_) {
+            // any store/reference miss -> fall through to a normal upstream fetch
+        }
+    }
+
     try {
         const resp = await fetchWithTimeout(target, {
             headers: { 'User-Agent': OS_USER_AGENT, 'Accept': '*/*' },
@@ -436,6 +500,18 @@ const handleOsFile = async (res, b64) => {
         }
 
         const text = bytesToUtf8(bytes, '');
+
+        if (blobRefKey) {
+            try {
+                const ref = await objectStore.put(blobRefKey, Buffer.from(text, 'utf-8'), {
+                    contentType: 'application/x-subrip; charset=utf-8',
+                });
+                if (ref) await getCache().set(blobRefKey, ref, TTL.image);
+            } catch (_) {
+                // storage is best-effort - never fail the response over it
+            }
+        }
+
         cors(res);
         res.setHeader('Content-Type', 'application/x-subrip; charset=utf-8');
         // The file behind a legacy id never changes - cache it hard at the edge.
@@ -487,21 +563,24 @@ const humanSize = (bytes) => {
     return `${Math.round(n / 1024 ** 2)} MB`;
 };
 
-const cinemetaMeta = async (type, ttid) => {
-    try {
-        const resp = await fetchWithTimeout(`${CINEMETA_BASE}/${type}/${ttid}.json`, {}, 7000);
-        if (!resp.ok) return null;
-        const data = await resp.json();
-        const m = data && data.meta;
-        if (!m) return null;
-        const year = parseInt(String(m.year || m.releaseInfo || '').slice(0, 4), 10) || null;
-        return { name: m.name || '', year };
-    } catch (_) {
-        return null;
-    }
+const cinemetaMetaLive = async (type, ttid) => {
+    const resp = await fetchWithTimeout(`${CINEMETA_BASE}/${type}/${ttid}.json`, {}, 7000);
+    if (!resp.ok) throw new Error(`cinemeta ${resp.status}`);
+    const data = await resp.json();
+    const m = data && data.meta;
+    if (!m) return null;
+    const year = parseInt(String(m.year || m.releaseInfo || '').slice(0, 4), 10) || null;
+    return { name: m.name || '', year };
 };
 
-const iaSearch = async (name, year) => {
+const cinemetaMeta = (type, ttid) => cached(
+    KEYS.metadataKey('cinemeta', type, ttid),
+    TTL.metadata,
+    () => cinemetaMetaLive(type, ttid),
+    null
+);
+
+const iaSearchLive = async (name, year) => {
     const safe = name.replace(/"/g, '');
     // Three gates, all required: (1) a title phrase match, (2) sits in one of IA's curated
     // public-domain collections, (3) the item carries a public-domain license tag. None of
@@ -517,69 +596,75 @@ const iaSearch = async (name, year) => {
     usp.append('fl[]', 'title');
     usp.append('fl[]', 'year');
     usp.append('fl[]', 'collection');
-    try {
-        const resp = await fetchWithTimeout(`${IA_SEARCH}?${usp.toString()}`, {}, 9000);
-        if (!resp.ok) return [];
-        const data = await resp.json();
-        const docs = (data && data.response && data.response.docs) || [];
-        const target = normTitle(name);
-        return docs.filter((d) => {
-            const cols = [].concat(d.collection || []);
-            // must sit in at least one whitelisted collection and none of the unmoderated ones
-            if (!cols.some((c) => IA_PD_COLLECTIONS.includes(c))) return false;
-            if (cols.some((c) => IA_BAD_COLLECTIONS.test(c))) return false;
-            const t = normTitle(d.title);
-            if (t === target) return true;
-            // looser match only when we can corroborate with the year, and only when the IA
-            // title *begins with* the full canonical name (so "saboteur" can't match "saboteur
-            // 3d edition" away, but also can't match an unrelated same-year film)
-            if (!year || target.length < 4) return false;
-            return t.startsWith(target)
-                && Math.abs((parseInt(d.year, 10) || 0) - year) <= 1;
-        }).slice(0, 3);
-    } catch (_) {
-        return [];
-    }
+    const resp = await fetchWithTimeout(`${IA_SEARCH}?${usp.toString()}`, {}, 9000);
+    if (!resp.ok) throw new Error(`archive.org search ${resp.status}`);
+    const data = await resp.json();
+    const docs = (data && data.response && data.response.docs) || [];
+    const target = normTitle(name);
+    return docs.filter((d) => {
+        const cols = [].concat(d.collection || []);
+        // must sit in at least one whitelisted collection and none of the unmoderated ones
+        if (!cols.some((c) => IA_PD_COLLECTIONS.includes(c))) return false;
+        if (cols.some((c) => IA_BAD_COLLECTIONS.test(c))) return false;
+        const t = normTitle(d.title);
+        if (t === target) return true;
+        // looser match only when we can corroborate with the year, and only when the IA
+        // title *begins with* the full canonical name (so "saboteur" can't match "saboteur
+        // 3d edition" away, but also can't match an unrelated same-year film)
+        if (!year || target.length < 4) return false;
+        return t.startsWith(target)
+            && Math.abs((parseInt(d.year, 10) || 0) - year) <= 1;
+    }).slice(0, 3);
 };
 
-const iaFiles = async (identifier, episode, yearHint) => {
-    try {
-        const resp = await fetchWithTimeout(`${IA_META}${identifier}`, {}, 9000);
-        if (!resp.ok) return [];
-        const data = await resp.json();
-        const files = Array.isArray(data.files) ? data.files : [];
+const iaSearch = (name, year) => cached(
+    KEYS.rawKey('ia-search', normTitle(name), year || 0),
+    TTL.catalog,
+    () => iaSearchLive(name, year),
+    []
+);
 
-        let vids = files.filter((f) => {
-            if (!f.name || !VIDEO_EXT.test(f.name) || /\bthumb/i.test(f.name)) return false;
-            if (SCENE_MARKER.test(f.name)) return false;
-            // If the file name carries its own 4-digit year and it's well off the title's year,
-            // it's a different film dumped into the same IA item (a real IA data-entry failure).
-            if (yearHint) {
-                const fy = (f.name.match(/\b(19\d\d|20\d\d)\b/) || [])[1];
-                if (fy && Math.abs(parseInt(fy, 10) - yearHint) > 2) return false;
-            }
-            return true;
-        });
-        if (episode) {
-            const { season, number } = episode;
-            const rx = new RegExp(
-                `(s0*${season}[ ._-]*e0*${number}\\b|\\b${season}x0*${number}\\b|\\bep?0*${number}\\b)`, 'i'
-            );
-            const matched = vids.filter((f) => rx.test(f.name));
-            vids = matched.length ? matched : [];
+const iaFilesLive = async (identifier, episode, yearHint) => {
+    const resp = await fetchWithTimeout(`${IA_META}${identifier}`, {}, 9000);
+    if (!resp.ok) throw new Error(`archive.org metadata ${resp.status}`);
+    const data = await resp.json();
+    const files = Array.isArray(data.files) ? data.files : [];
+
+    let vids = files.filter((f) => {
+        if (!f.name || !VIDEO_EXT.test(f.name) || /\bthumb/i.test(f.name)) return false;
+        if (SCENE_MARKER.test(f.name)) return false;
+        // If the file name carries its own 4-digit year and it's well off the title's year,
+        // it's a different film dumped into the same IA item (a real IA data-entry failure).
+        if (yearHint) {
+            const fy = (f.name.match(/\b(19\d\d|20\d\d)\b/) || [])[1];
+            if (fy && Math.abs(parseInt(fy, 10) - yearHint) > 2) return false;
         }
-
-        vids.sort((a, b) => (Number(b.size) || 0) - (Number(a.size) || 0));
-        return vids.slice(0, 4).map((f) => ({
-            url: `${IA_DL}${identifier}/${f.name.split('/').map(encodeURIComponent).join('/')}`,
-            name: f.name.replace(/^.*\//, ''),
-            size: humanSize(f.size),
-            webReady: WEB_READY_EXT.test(f.name)
-        }));
-    } catch (_) {
-        return [];
+        return true;
+    });
+    if (episode) {
+        const { season, number } = episode;
+        const rx = new RegExp(
+            `(s0*${season}[ ._-]*e0*${number}\\b|\\b${season}x0*${number}\\b|\\bep?0*${number}\\b)`, 'i'
+        );
+        const matched = vids.filter((f) => rx.test(f.name));
+        vids = matched.length ? matched : [];
     }
+
+    vids.sort((a, b) => (Number(b.size) || 0) - (Number(a.size) || 0));
+    return vids.slice(0, 4).map((f) => ({
+        url: `${IA_DL}${identifier}/${f.name.split('/').map(encodeURIComponent).join('/')}`,
+        name: f.name.replace(/^.*\//, ''),
+        size: humanSize(f.size),
+        webReady: WEB_READY_EXT.test(f.name)
+    }));
 };
+
+const iaFiles = (identifier, episode, yearHint) => cached(
+    KEYS.rawKey('ia-files', identifier, episode ? `${episode.season}x${episode.number}` : 'all', yearHint || 0),
+    TTL.catalog,
+    () => iaFilesLive(identifier, episode, yearHint),
+    []
+);
 
 const handleStream = async (res, type, id) => {
     if (!id || !/^tt\d+/.test(id) || (type !== 'movie' && type !== 'series')) {
@@ -626,16 +711,23 @@ const tmdbUrl = (path, params) => {
     return `${TMDB_API_BASE}/${path}?${usp.toString()}`;
 };
 
-const resolveImdbId = async (tmdbType, tmdbId) => {
-    try {
-        const resp = await fetchWithTimeout(tmdbUrl(`${tmdbType}/${tmdbId}/external_ids`, {}), {}, 8000);
-        if (!resp.ok) return null;
-        const data = await resp.json();
-        return typeof data.imdb_id === 'string' && /^tt\d+$/.test(data.imdb_id) ? data.imdb_id : null;
-    } catch (_) {
-        return null;
-    }
+const resolveImdbIdLive = async (tmdbType, tmdbId) => {
+    const resp = await fetchWithTimeout(tmdbUrl(`${tmdbType}/${tmdbId}/external_ids`, {}), {}, 8000);
+    if (!resp.ok) throw new Error(`tmdb external_ids ${resp.status}`);
+    const data = await resp.json();
+    return typeof data.imdb_id === 'string' && /^tt\d+$/.test(data.imdb_id) ? data.imdb_id : null;
 };
+
+// tmdbId -> imdbId is effectively immutable, so this is cached for ID_MAP_CACHE_TTL (30d) with
+// stale-while-revalidate off (no point background-refreshing a value that never changes). This
+// is the call that used to fan out to ~20 parallel TMDB requests per catalog page.
+const resolveImdbId = (tmdbType, tmdbId) => cached(
+    KEYS.idMapKey(`tmdb-${tmdbType}`, 'imdb', tmdbId),
+    TTL.idMap,
+    () => resolveImdbIdLive(tmdbType, tmdbId),
+    null,
+    { swr: false }
+);
 
 const handleCatalog = async (res, type, catalogId, extra) => {
     if (!hasTmdb()) return sendJson(res, 200, { metas: [] }, 300);
@@ -650,18 +742,30 @@ const handleCatalog = async (res, type, catalogId, extra) => {
         ? tmdbUrl(`search/${def.tmdbType}`, { language: def.lang, page, query: search, include_adult: 'false' })
         : tmdbUrl(def.path, { language: def.lang, page, ...(def.discover || {}), include_adult: 'false' });
 
-    let results;
-    try {
+    const fetchList = async () => {
         const resp = await fetchWithTimeout(listUrl, {}, 9000);
-        if (!resp.ok) return sendJson(res, 200, { metas: [] }, 300);
+        if (!resp.ok) throw new Error(`tmdb list ${resp.status}`);
         const data = await resp.json();
-        results = Array.isArray(data.results) ? data.results.slice(0, PAGE_SIZE) : [];
-    } catch (_) {
-        return sendJson(res, 200, { metas: [] }, 300);
-    }
+        return Array.isArray(data.results) ? data.results.slice(0, PAGE_SIZE) : [];
+    };
 
-    const resolved = await Promise.all(results.map(async (r) => {
-        const imdbId = await resolveImdbId(def.tmdbType, r.id);
+    // A search page is volatile (SEARCH_CACHE_TTL); a browse row is not (CATALOG_CACHE_TTL).
+    const results = await cached(
+        KEYS.catalogKey('tmdb', type, catalogId, { page: String(page), search }),
+        search ? TTL.search : TTL.catalog,
+        fetchList,
+        null
+    );
+    if (!Array.isArray(results)) return sendJson(res, 200, { metas: [] }, 300);
+
+    // Batched id-map read: one MGET for every tmdbId->imdbId on the page, then only the misses
+    // fall through to resolveImdbId (which fetches + caches + coalesces). A fully-warm page went
+    // from ~20 sequential Redis round trips to 1.
+    const idMapKeys = results.map((r) => KEYS.idMapKey(`tmdb-${def.tmdbType}`, 'imdb', r.id));
+    const preIds = await getCache().mget(idMapKeys);
+
+    const resolved = await Promise.all(results.map(async (r, i) => {
+        const imdbId = typeof preIds[i] === 'string' ? preIds[i] : await resolveImdbId(def.tmdbType, r.id);
         if (!imdbId) return null;
         const year = (r.release_date || r.first_air_date || '').slice(0, 4);
         return {
@@ -735,3 +839,7 @@ module.exports = async (req, res) => {
     cors(res);
     return res.status(404).json({ error: 'Not found' });
 };
+
+// The browse rows worth keeping warm - consumed by api/cron/prefetch.js. Source of truth for
+// the catalog set stays here (CATALOGS above).
+module.exports.WARM_TARGETS = Object.entries(CATALOGS).map(([id, def]) => ({ type: def.type, id }));

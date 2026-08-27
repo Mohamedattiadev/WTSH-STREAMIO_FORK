@@ -253,6 +253,19 @@ module.exports = (env, argv) => ({
                 const handler = require('./api/reviews.js');
                 await handler(req, res);
             });
+            // Same re-hosting as /api/reviews above.
+            devServer.app.get('/api/hero-enrichment', async (req, res) => {
+                delete require.cache[require.resolve('./api/hero-enrichment.js')];
+                const handler = require('./api/hero-enrichment.js');
+                await handler(req, res);
+            });
+            // Same re-hosting as /api/reviews above - the cache/proxy layer's observability
+            // endpoint (api/_lib/cache). Only responds once CACHE_STATS_TOKEN is set.
+            devServer.app.get('/api/cache-stats', async (req, res) => {
+                delete require.cache[require.resolve('./api/cache-stats.js')];
+                const handler = require('./api/cache-stats.js');
+                await handler(req, res);
+            });
             // Same re-hosting as /api/chat above.
             devServer.app.post('/api/link-account', (req, res) => {
                 let body = '';

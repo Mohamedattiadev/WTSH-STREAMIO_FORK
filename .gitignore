@@ -11,3 +11,6 @@
 .claude
 .agents
 skills-lock.json
+
+# .env.example is the committed template (real .env / .env.local stay ignored above)
+!.env.example

@@ -1,0 +1,46 @@
+# Local hot-cache for the cache/proxy layer (api/_lib/cache) during development.
+#
+#   docker compose up -d
+#   # then in .env / .env.local:
+#   #   UPSTASH_REDIS_REST_URL=http://localhost:8079
+#   #   UPSTASH_REDIS_REST_TOKEN=local-dev-token
+#   vercel dev          # or: pnpm start   (serverless fns need `vercel dev`)
+#
+# Production does NOT use this file - it uses Upstash Redis provisioned from the Vercel
+# Marketplace, which speaks the same REST protocol as the `redis-http` shim below. Telegram,
+# if ever enabled, is an external service and is intentionally not part of this compose file.
+
+services:
+  # The actual data store. Valkey is a drop-in, BSD-licensed Redis fork. Its port is only
+  # reachable on the compose network (redis-http talks to it) - it is deliberately NOT published
+  # to the host, so this stack never clashes with a Redis you already run locally. Uncomment the
+  # `ports` block if you want to poke it directly with redis-cli.
+  valkey:
+    image: valkey/valkey:8-alpine
+    command: ["valkey-server", "--save", "60", "1", "--appendonly", "no"]
+    # ports:
+    #   - "6379:6379"
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Puts an Upstash-compatible REST API in front of Valkey, so the app's single dependency-free
+  # redis client (api/_lib/cache/redis-backend.js) works identically in local dev and in prod.
+  redis-http:
+    image: hiett/serverless-redis-http:latest
+    ports:
+      - "8079:80"
+    environment:
+      SRH_MODE: env
+      SRH_TOKEN: local-dev-token
+      SRH_CONNECTION_STRING: "redis://valkey:6379"
+    depends_on:
+      valkey:
+        condition: service_healthy
+
+volumes:
+  valkey-data:

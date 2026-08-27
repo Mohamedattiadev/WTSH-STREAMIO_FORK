@@ -54,8 +54,19 @@ The dev server runs at `http://localhost:8080`.
 | `pnpm run start-prod` | Development server in production mode |
 | `pnpm run build` | Production build |
 | `pnpm test` | Run tests |
+| `pnpm run test:cache` | Run the cache-layer tests |
+| `pnpm run benchmark:cache` | Cache before/after benchmark |
 | `pnpm run lint` | Lint the source |
 | `pnpm run scan-translations` | Check for missing translation keys |
+
+### ⚡ Cache / proxy layer
+
+The serverless functions in `api/` (TMDB reviews & hero-enrichment, and the first-party
+addon's OpenSubtitles / Internet Archive / TMDB calls) sit behind a hot cache with request
+coalescing, stale-while-revalidate and a negative cache — see **[docs/CACHING.md](/docs/CACHING.md)**.
+It needs no setup locally (in-memory by default). For a real Redis hot cache: `docker compose up -d`
+then set `UPSTASH_REDIS_REST_URL=http://localhost:8079` / `UPSTASH_REDIS_REST_TOKEN=local-dev-token`.
+In production, add **Upstash Redis** from the Vercel Marketplace and it wires itself.
 
 ### 🐳 Docker
 

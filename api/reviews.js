@@ -8,8 +8,65 @@
 //
 // Input:  GET /api/reviews?imdbId=tt...
 // Output: { reviews: Array<{ author: string, rating: number|null, content: string, url: string }> }
+//
+// Caching: every distinct imdbId's result is cached (Redis in prod, in-memory locally) via the
+// shared cache layer - see api/_lib/cache. Without it this did two sequential TMDB round trips
+// (/find then /reviews) on every single call. TTL comes from CATALOG_CACHE_TTL.
+
+const { getCache, UpstreamError } = require('./_lib/cache');
+const { CACHE_CONFIG } = require('./_lib/cache/config');
+const { rawKey } = require('./_lib/cache/keys');
+const { waitUntil } = require('./_lib/wait-until');
 
 const TMDB_API_BASE = 'https://api.themoviedb.org/3';
+
+// Throws on any upstream failure so the cache layer can negative-cache it (and not hammer TMDB);
+// returns { reviews: [...] } - including { reviews: [] } for a title TMDB simply has nothing for,
+// which is a valid result worth caching.
+const fetchReviews = async (imdbId, apiKey) => {
+    // TMDB's own catalogs are keyed by their own numeric id, not IMDb's - /find resolves the
+    // real IMDb id (already flowing through this app's catalog data) to it, and tells us whether
+    // it's a movie or a tv show so the right /reviews endpoint gets called.
+    const findResponse = await fetch(
+        `${TMDB_API_BASE}/find/${imdbId}?api_key=${apiKey}&external_source=imdb_id`
+    );
+    if (!findResponse.ok) {
+        throw new Error(`TMDB find returned ${findResponse.status}`);
+    }
+    const findData = await findResponse.json();
+    const movie = findData.movie_results?.[0];
+    const tvShow = findData.tv_results?.[0];
+    const match = movie ? { id: movie.id, type: 'movie' } : tvShow ? { id: tvShow.id, type: 'tv' } : null;
+
+    if (match === null) {
+        return { reviews: [] };
+    }
+
+    const reviewsResponse = await fetch(
+        `${TMDB_API_BASE}/${match.type}/${match.id}/reviews?api_key=${apiKey}`
+    );
+    if (!reviewsResponse.ok) {
+        throw new Error(`TMDB reviews returned ${reviewsResponse.status}`);
+    }
+    const reviewsData = await reviewsResponse.json();
+
+    const reviews = (Array.isArray(reviewsData.results) ? reviewsData.results : [])
+        .filter((review) => typeof review.content === 'string' && review.content.trim().length > 0)
+        // TMDB's own default page size - was capped at 6, which meant ReviewsRow's auto-slide
+        // (only kicks in above 6 real reviews) could never actually trigger for any title, no
+        // matter how many reviews TMDB really has.
+        .slice(0, 20)
+        .map((review) => ({
+            author: typeof review.author === 'string' && review.author.length > 0 ? review.author : 'Anonymous',
+            // TMDB's own 0-10 author rating, converted to the app's 5-star display - frequently
+            // absent (reviewers can skip rating), left null rather than guessed.
+            rating: typeof review.author_details?.rating === 'number' ? review.author_details.rating / 2 : null,
+            content: review.content.trim(),
+            url: typeof review.url === 'string' ? review.url : null,
+        }));
+
+    return { reviews };
+};
 
 module.exports = async (req, res) => {
     if (req.method !== 'GET') {
@@ -29,52 +86,23 @@ module.exports = async (req, res) => {
         return;
     }
 
+    const bypass = CACHE_CONFIG.allowBypass && /^(1|true|yes)$/i.test(String(req.query?.nocache ?? ''));
+
     try {
-        // TMDB's own catalogs are keyed by their own numeric id, not IMDb's - /find resolves
-        // the real IMDb id (already flowing through this app's catalog data) to it, and tells
-        // us whether it's a movie or a tv show so the right /reviews endpoint gets called.
-        const findResponse = await fetch(
-            `${TMDB_API_BASE}/find/${imdbId}?api_key=${apiKey}&external_source=imdb_id`
+        const payload = await getCache().getOrFetch(
+            rawKey('tmdb-reviews', imdbId),
+            CACHE_CONFIG.ttl.catalog,
+            () => fetchReviews(imdbId, apiKey),
+            { bypass, waitUntil }
         );
-        if (!findResponse.ok) {
-            throw new Error(`TMDB find returned ${findResponse.status}`);
-        }
-        const findData = await findResponse.json();
-        const movie = findData.movie_results?.[0];
-        const tvShow = findData.tv_results?.[0];
-        const match = movie ? { id: movie.id, type: 'movie' } : tvShow ? { id: tvShow.id, type: 'tv' } : null;
-
-        if (match === null) {
-            res.status(200).json({ reviews: [] });
-            return;
-        }
-
-        const reviewsResponse = await fetch(
-            `${TMDB_API_BASE}/${match.type}/${match.id}/reviews?api_key=${apiKey}`
-        );
-        if (!reviewsResponse.ok) {
-            throw new Error(`TMDB reviews returned ${reviewsResponse.status}`);
-        }
-        const reviewsData = await reviewsResponse.json();
-
-        const reviews = (Array.isArray(reviewsData.results) ? reviewsData.results : [])
-            .filter((review) => typeof review.content === 'string' && review.content.trim().length > 0)
-            // TMDB's own default page size - was capped at 6, which meant ReviewsRow's
-            // auto-slide (only kicks in above 6 real reviews) could never actually trigger for
-            // any title, no matter how many reviews TMDB really has.
-            .slice(0, 20)
-            .map((review) => ({
-                author: typeof review.author === 'string' && review.author.length > 0 ? review.author : 'Anonymous',
-                // TMDB's own 0-10 author rating, converted to the app's 5-star display -
-                // frequently absent (reviewers can skip rating), left null rather than guessed.
-                rating: typeof review.author_details?.rating === 'number' ? review.author_details.rating / 2 : null,
-                content: review.content.trim(),
-                url: typeof review.url === 'string' ? review.url : null
-            }));
-
-        res.status(200).json({ reviews });
+        // Let the CDN help too (complementary to the shared cache): serve repeats from the edge,
+        // keep serving the last good copy while a refresh runs.
+        res.setHeader('Cache-Control', `public, max-age=0, s-maxage=${CACHE_CONFIG.ttl.catalog}, stale-while-revalidate=86400`);
+        res.status(200).json(payload);
     } catch (error) {
-        console.error('Failed to fetch TMDB reviews', error);
+        if (!(error instanceof UpstreamError)) {
+            console.error('Failed to fetch TMDB reviews', error);
+        }
         res.status(502).json({ error: 'Failed to fetch reviews' });
     }
 };
