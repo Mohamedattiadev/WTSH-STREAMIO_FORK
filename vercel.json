@@ -2,6 +2,7 @@
     "buildCommand": "pnpm build",
     "outputDirectory": "build",
     "rewrites": [
-        { "source": "/(.*)", "destination": "/index.html" }
+        { "source": "/addon/(.*)", "destination": "/api/addon/$1" },
+        { "source": "/((?!api/|addon/).*)", "destination": "/index.html" }
     ]
 }
