@@ -144,14 +144,24 @@ fi
 # ---------- 5. run the streaming server container ----------
 step "Starting the Stremio Streaming Server"
 NEEDS_RECREATE=0
+# Pass the GPU render node through when the host has one, so HEVC/x265 (most anime, many 4K
+# releases) decodes in hardware instead of pegging the CPU and stalling playback. Harmless to
+# omit on a host with no /dev/dri.
+GPU_ARGS=""
+[ -e /dev/dri ] && GPU_ARGS="--device /dev/dri:/dev/dri"
+
 if $DOCKER inspect stremio-server >/dev/null 2>&1; then
     HAS_NO_CORS=$($DOCKER inspect stremio-server --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -q '^NO_CORS=.\+' && echo 1 || echo 0)
     NET_MODE=$($DOCKER inspect stremio-server --format '{{.HostConfig.NetworkMode}}' 2>/dev/null)
+    HAS_GPU=$($DOCKER inspect stremio-server --format '{{range .HostConfig.Devices}}{{.PathOnHost}} {{end}}' 2>/dev/null | grep -q '/dev/dri' && echo 1 || echo 0)
     if [ "$HAS_NO_CORS" != "1" ]; then
         warn "Existing container has CORS enabled (would show 'Error' in the app) — recreating it"
         NEEDS_RECREATE=1
     elif [ "$NET_MODE" != "host" ]; then
         warn "Existing container is on bridge networking (torrent playback stalls at ~99%) — recreating it with --network host"
+        NEEDS_RECREATE=1
+    elif [ -n "$GPU_ARGS" ] && [ "$HAS_GPU" != "1" ]; then
+        warn "Host has a GPU but the container can't see it (HEVC/x265 buffers on CPU) — recreating it with --device /dev/dri"
         NEEDS_RECREATE=1
     else
         $DOCKER start stremio-server >/dev/null 2>&1 || true
@@ -167,8 +177,10 @@ if [ "$NEEDS_RECREATE" = "1" ]; then
     # INCOMING peer connections to sustain a stream. Under Docker's default bridge network no
     # peer port is published, so it only ever gets a handful of outbound peers and playback
     # stalls at ~99% ("Buffering..."). Host networking still exposes 11470/12470 on the host.
+    # shellcheck disable=SC2086  # GPU_ARGS is intentionally word-split (empty or "--device ...")
     $DOCKER run -d --name stremio-server --restart unless-stopped \
         --network host \
+        $GPU_ARGS \
         -e NO_CORS=1 \
         -v stremio-server-data:/root/.stremio-server \
         stremio/server:latest >/dev/null || die "Could not start the streaming server container"
