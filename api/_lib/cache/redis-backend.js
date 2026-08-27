@@ -83,6 +83,30 @@ class RedisBackend {
     async incrBy(key, n) {
         return this._cmd(['INCRBY', key, n]);
     }
+
+    // One HTTP round trip for many commands. Used to flush buffered stats counters so a busy
+    // request costs Redis ~1 call for metrics instead of one per counter bump.
+    async pipeline(commands) {
+        if (!Array.isArray(commands) || commands.length === 0) return [];
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+        let res;
+        try {
+            res = await fetch(`${this.url}/pipeline`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${this.token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(commands.map((c) => c.map((a) => (a === undefined || a === null ? '' : String(a))))),
+                signal: controller.signal,
+            });
+        } catch (err) {
+            throw new RedisUnavailableError(err);
+        } finally {
+            clearTimeout(timer);
+        }
+        if (!res.ok) throw new RedisUnavailableError(new Error(`HTTP ${res.status}`));
+        const body = await res.json().catch(() => null);
+        return Array.isArray(body) ? body.map((e) => (e && 'result' in e ? e.result : e)) : [];
+    }
     async counterSnapshot(prefix) {
         // The stats counter set is small and fixed - GET each by name rather than SCAN, which
         // Upstash rate-limits and which would also sweep real cache entries.

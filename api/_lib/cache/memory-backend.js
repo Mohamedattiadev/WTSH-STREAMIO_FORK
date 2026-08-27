@@ -81,6 +81,14 @@ class MemoryBackend {
         this.counters.set(key, cur);
         return cur;
     }
+    async pipeline(commands) {
+        const out = [];
+        for (const [cmd, key, arg] of commands) {
+            if (cmd === 'INCRBY') out.push(await this.incrBy(key, arg));
+            else out.push(null);
+        }
+        return out;
+    }
     async counterSnapshot(prefix) {
         const out = {};
         for (const [k, v] of this.counters) {

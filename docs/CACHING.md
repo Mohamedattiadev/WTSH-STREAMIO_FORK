@@ -148,8 +148,8 @@ Synthetic upstream at 120 ms latency, 1000 requests, concurrency 50, 20 distinct
 
 - Cross-instance dedup relies on a Redis `SET NX` lock; waiters poll every `CACHE_LOCK_POLL_MS`.
   A pub/sub wakeup would cut miss-path tail latency.
-- `/api/cache-stats` latency percentiles are per-instance; the counters are Redis-aggregated.
-  Each `_count` fires its own fire-and-forget `INCRBY` — could be pipelined.
+- `/api/cache-stats` latency percentiles are per-instance; the counters are Redis-aggregated
+  (buffered per request and flushed as one `/pipeline` call).
 - Not built (deferred): a Stremio addon-protocol reverse proxy (would let Cinemeta / third-party
   addon responses be cached server-side too, at the cost of rewriting every installed addon's
   `transportUrl`).
@@ -163,3 +163,5 @@ Synthetic upstream at 120 ms latency, 1000 requests, concurrency 50, 20 distinct
 - **`waitUntil`** — `reviews.js`, `hero-enrichment.js` and the addon pass `api/_lib/wait-until`
   into `getOrFetch`, so SWR refreshes finish on the platform keep-alive when `@vercel/functions`
   is installed (detached-promise fallback otherwise).
+- **Pipelined stat counters** — a request bumps 3-5 counters; these are buffered and shipped to
+  Redis as one `/pipeline` call at the start of the next request, instead of one `INCRBY` each.

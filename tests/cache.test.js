@@ -24,7 +24,22 @@ afterEach(() => {
 // --- a fake Upstash-REST redis: one shared Map, understands the handful of verbs we use ------
 const makeFakeRedis = () => {
     const store = new Map();
-    const fn = jest.fn(async (_url, opts) => {
+    const runOne = (cmd, rest) => {
+        switch (cmd) {
+            case 'INCRBY': {
+                const cur = Number(store.get(rest[0]) || 0) + Number(rest[1]);
+                store.set(rest[0], String(cur));
+                return cur;
+            }
+            default:
+                return null;
+        }
+    };
+    const fn = jest.fn(async (url, opts) => {
+        if (String(url).endsWith('/pipeline')) {
+            const cmds = JSON.parse(opts.body);
+            return { ok: true, status: 200, json: async () => cmds.map(([c, ...r]) => ({ result: runOne(c, r) })) };
+        }
         const [cmd, ...rest] = JSON.parse(opts.body);
         let result = null;
         switch (cmd) {
@@ -80,6 +95,30 @@ describe('simple get / set / del / exists', () => {
         await c.del('k');
         expect(await c.get('k')).toBeNull();
         expect(await c.exists('k')).toBe(false);
+    });
+});
+
+describe('stat counters are pipelined, not one call per bump', () => {
+    test('a run of getOrFetch calls flushes buffered counts as /pipeline requests', async () => {
+        const fake = makeFakeRedis();
+        global.fetch = fake;
+        const c = new Cache({ backend: 'redis', redis: { url: 'http://fake', token: 't', timeoutMs: 500 }, lock: { enabled: false }, swr: { enabled: false }, negativeTtl: 0 });
+
+        for (let i = 0; i < 5; i++) {
+            // eslint-disable-next-line no-await-in-loop
+            await c.getOrFetch(`k${i}`, 60, () => i);
+        }
+        await c.stats(); // final flush
+
+        const pipelineCalls = fake.mock.calls.filter(([u]) => String(u).endsWith('/pipeline'));
+        const bareIncr = fake.mock.calls.filter(([, o]) => JSON.parse(o.body)[0] === 'INCRBY');
+        expect(pipelineCalls.length).toBeGreaterThan(0);
+        expect(bareIncr.length).toBe(0); // never a standalone INCRBY per counter
+
+        // each pipeline body is an array of ["INCRBY", key, n] tuples
+        const firstBody = JSON.parse(pipelineCalls[0][1].body);
+        expect(Array.isArray(firstBody)).toBe(true);
+        expect(firstBody.every((cmd) => cmd[0] === 'INCRBY')).toBe(true);
     });
 });
 

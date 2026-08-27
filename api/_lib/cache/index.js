@@ -69,18 +69,29 @@ class Cache {
             this.primary = 'memory';
         }
         this.inflight = new Map(); // key -> Promise (in-process single-flight)
+        this._pendingCounts = Object.create(null); // buffered stat increments, flushed as one pipeline
     }
 
     get backendName() {
         return this.primary;
     }
 
-    // --- metrics: local always, redis-aggregated best-effort ---------------------------------
+    // --- metrics: local always; redis totals are buffered and flushed as ONE pipeline ---------
+    // (a busy request bumps 3-5 counters; without buffering that was 3-5 separate Redis calls).
     _count(name) {
         metrics.bump(name);
         if (this.primary === 'redis') {
-            this.redis.incrBy(`${this.cfg.keyPrefix}:stats:${name}`, 1).catch(() => undefined);
+            this._pendingCounts[name] = (this._pendingCounts[name] || 0) + 1;
         }
+    }
+
+    _flushCounters() {
+        if (this.primary !== 'redis') return;
+        const names = Object.keys(this._pendingCounts);
+        if (names.length === 0) return;
+        const commands = names.map((n) => ['INCRBY', `${this.cfg.keyPrefix}:stats:${n}`, this._pendingCounts[n]]);
+        this._pendingCounts = Object.create(null);
+        this.redis.pipeline(commands).catch(() => undefined);
     }
 
     // --- low level: always resolves against a backend, redis failures fall through to memory --
@@ -186,6 +197,7 @@ class Cache {
             bypass = false,
         } = opts;
 
+        this._flushCounters(); // ship the previous request's buffered counts in one pipeline
         this._count('requests');
 
         if (bypass && this.cfg.allowBypass) {
@@ -314,6 +326,20 @@ class Cache {
 
     // --- introspection for /api/cache-stats ------------------------------------------------
     async stats() {
+        // flush buffered counts first so the numbers reported are current
+        if (this.primary === 'redis') {
+            const names = Object.keys(this._pendingCounts);
+            if (names.length) {
+                const commands = names.map((n) => ['INCRBY', `${this.cfg.keyPrefix}:stats:${n}`, this._pendingCounts[n]]);
+                this._pendingCounts = Object.create(null);
+                try {
+                    await this.redis.pipeline(commands);
+                } catch (_) {
+                    /* best effort */
+                }
+            }
+        }
+
         let cacheSize = -1;
         try {
             cacheSize = await this._backend().size();
