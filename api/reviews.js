@@ -17,26 +17,18 @@ const { getCache, UpstreamError } = require('./_lib/cache');
 const { CACHE_CONFIG } = require('./_lib/cache/config');
 const { rawKey } = require('./_lib/cache/keys');
 const { waitUntil } = require('./_lib/wait-until');
-
-const TMDB_API_BASE = 'https://api.themoviedb.org/3';
+const { TMDB_API_BASE, tmdbFind } = require('./_lib/tmdb');
 
 // Throws on any upstream failure so the cache layer can negative-cache it (and not hammer TMDB);
 // returns { reviews: [...] } - including { reviews: [] } for a title TMDB simply has nothing for,
 // which is a valid result worth caching.
 const fetchReviews = async (imdbId, apiKey) => {
-    // TMDB's own catalogs are keyed by their own numeric id, not IMDb's - /find resolves the
-    // real IMDb id (already flowing through this app's catalog data) to it, and tells us whether
-    // it's a movie or a tv show so the right /reviews endpoint gets called.
-    const findResponse = await fetch(
-        `${TMDB_API_BASE}/find/${imdbId}?api_key=${apiKey}&external_source=imdb_id`
-    );
-    if (!findResponse.ok) {
-        throw new Error(`TMDB find returned ${findResponse.status}`);
-    }
-    const findData = await findResponse.json();
-    const movie = findData.movie_results?.[0];
-    const tvShow = findData.tv_results?.[0];
-    const match = movie ? { id: movie.id, type: 'movie' } : tvShow ? { id: tvShow.id, type: 'tv' } : null;
+    // TMDB's own catalogs are keyed by their own numeric id, not IMDb's - the shared cached
+    // /find lookup resolves the real IMDb id to it (and is coalesced with hero-enrichment's own
+    // /find for the same title), and tells us whether it's a movie or a tv show so the right
+    // /reviews endpoint gets called.
+    const { movieId, tvId } = await tmdbFind(imdbId);
+    const match = movieId ? { id: movieId, type: 'movie' } : tvId ? { id: tvId, type: 'tv' } : null;
 
     if (match === null) {
         return { reviews: [] };
@@ -106,3 +98,8 @@ module.exports = async (req, res) => {
         res.status(502).json({ error: 'Failed to fetch reviews' });
     }
 };
+
+// Reused by api/board-hero.js (the combined hero+reviews endpoint).
+module.exports.fetchReviews = fetchReviews;
+module.exports.CACHE_KEY = (imdbId) => rawKey('tmdb-reviews', imdbId);
+module.exports.TTL = CACHE_CONFIG.ttl.catalog;

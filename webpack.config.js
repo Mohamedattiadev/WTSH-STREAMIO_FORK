@@ -266,6 +266,14 @@ module.exports = (env, argv) => ({
                 const handler = require('./api/cache-stats.js');
                 await handler(req, res);
             });
+            // Same re-hosting as /api/reviews above - the combined hero + reviews endpoint.
+            devServer.app.get('/api/board-hero', async (req, res) => {
+                for (const m of ['./api/board-hero.js', './api/hero-enrichment.js', './api/reviews.js']) {
+                    delete require.cache[require.resolve(m)];
+                }
+                const handler = require('./api/board-hero.js');
+                await handler(req, res);
+            });
             // Same re-hosting as /api/chat above.
             devServer.app.post('/api/link-account', (req, res) => {
                 let body = '';

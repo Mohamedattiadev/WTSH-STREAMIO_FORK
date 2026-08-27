@@ -470,6 +470,72 @@ describe('/api/cron/prefetch authorization', () => {
     });
 });
 
+describe('/api/board-hero combined endpoint', () => {
+    afterEach(() => {
+        delete process.env.TMDB_API_KEY;
+        jest.resetModules();
+    });
+
+    test('one /find feeds both halves; returns { enrichment, reviews, partial:false }', async () => {
+        await jest.isolateModulesAsync(async () => {
+            process.env.TMDB_API_KEY = 'k';
+            let findCalls = 0;
+            global.fetch = jest.fn(async (url) => {
+                const u = String(url);
+                if (u.includes('/find/')) {
+                    findCalls += 1;
+                    return { ok: true, status: 200, json: async () => ({ movie_results: [{ id: 99 }], tv_results: [] }) };
+                }
+                if (u.includes('/movie/99?') && u.includes('append_to_response')) {
+                    return {
+                        ok: true,
+                        status: 200,
+                        json: async () => ({
+                            genres: [{ name: 'Drama' }],
+                            runtime: 142,
+                            overview: 'Two imprisoned men bond.',
+                            release_date: '1994-09-23',
+                            images: { logos: [] },
+                            videos: { results: [] },
+                            vote_average: 8.7,
+                            backdrop_path: '/b.jpg',
+                        }),
+                    };
+                }
+                if (u.includes('/movie/99/reviews')) {
+                    return {
+                        ok: true,
+                        status: 200,
+                        json: async () => ({ results: [{ author: 'a', content: 'great', url: 'http://x', author_details: { rating: 8 } }] }),
+                    };
+                }
+                return { ok: false, status: 404, json: async () => ({}) };
+            });
+
+            const handler = require('../api/board-hero');
+            const res = mockRes();
+            await handler({ method: 'GET', headers: {}, query: { imdbId: 'tt0111161', type: 'movie' } }, res);
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.enrichment.genres).toEqual(['Drama']);
+            expect(res.body.enrichment.rating).toBe('8.7');
+            expect(res.body.reviews).toHaveLength(1);
+            expect(res.body.partial).toBe(false);
+            expect(findCalls).toBe(1); // the two halves shared one /find via tmdbFind coalescing
+        });
+    });
+
+    test('400 on a bad imdbId', async () => {
+        await jest.isolateModulesAsync(async () => {
+            process.env.TMDB_API_KEY = 'k';
+            const handler = require('../api/board-hero');
+            const res = mockRes();
+            await handler({ method: 'GET', headers: {}, query: { imdbId: 'bad' } }, res);
+            expect(res.statusCode).toBe(400);
+        });
+    });
+});
+
 describe('/api/reviews malformed-request handling', () => {
     test('400 on a non-imdb id, 405 on POST', async () => {
         await jest.isolateModulesAsync(async () => {

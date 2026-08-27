@@ -22,8 +22,8 @@ const { getCache, UpstreamError } = require('./_lib/cache');
 const { CACHE_CONFIG } = require('./_lib/cache/config');
 const { rawKey } = require('./_lib/cache/keys');
 const { waitUntil } = require('./_lib/wait-until');
+const { TMDB_API_BASE, tmdbFind } = require('./_lib/tmdb');
 
-const TMDB_API_BASE = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 const TMDB_BACKDROP_BASE = 'https://image.tmdb.org/t/p/w1280';
 
@@ -34,22 +34,14 @@ const EMPTY = { logo: null, description: null, runtime: null, releaseInfo: null,
 const fetchEnrichment = async (imdbId, type) => {
     const apiKey = process.env.TMDB_API_KEY;
 
-    // TMDB's own catalogs are keyed by their own numeric id, not IMDb's - /find resolves the
-    // real IMDb id to it, and tells us whether it's a movie or a tv show so the right /movie or
-    // /tv endpoint gets called. The app's own "series" type maps to TMDB's "tv".
-    const findResponse = await fetch(
-        `${TMDB_API_BASE}/find/${imdbId}?api_key=${apiKey}&external_source=imdb_id`
-    );
-    if (!findResponse.ok) {
-        throw new Error(`TMDB find returned ${findResponse.status}`);
-    }
-    const findData = await findResponse.json();
-    const movie = findData.movie_results?.[0];
-    const tvShow = findData.tv_results?.[0];
-    const match = movie
-        ? { id: movie.id, tmdbType: 'movie' }
-        : tvShow
-            ? { id: tvShow.id, tmdbType: 'tv' }
+    // TMDB's own catalogs are keyed by their own numeric id, not IMDb's - the shared cached
+    // /find lookup resolves the real IMDb id to it (coalesced with the reviews endpoint's own
+    // /find for the same title). The app's own "series" type maps to TMDB's "tv".
+    const { movieId, tvId } = await tmdbFind(imdbId);
+    const match = movieId
+        ? { id: movieId, tmdbType: 'movie' }
+        : tvId
+            ? { id: tvId, tmdbType: 'tv' }
             : typeof type === 'string' && type.length > 0
                 ? { id: null, tmdbType: type === 'movie' ? 'movie' : 'tv' }
                 : null;
@@ -138,3 +130,9 @@ module.exports = async (req, res) => {
         res.status(502).json({ error: 'Failed to fetch hero enrichment' });
     }
 };
+
+// Reused by api/board-hero.js (the combined hero+reviews endpoint).
+module.exports.fetchEnrichment = fetchEnrichment;
+module.exports.EMPTY = EMPTY;
+module.exports.CACHE_KEY = (imdbId, normType) => rawKey('tmdb-hero', imdbId, normType);
+module.exports.TTL = CACHE_CONFIG.ttl.metadata;

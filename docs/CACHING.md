@@ -39,7 +39,9 @@ the addon function already set are kept — the CDN and this cache are complemen
 | `api/_lib/http.js` | `fetchWithTimeout`, `fetchJson`, and `assertAllowedUrl` (SSRF allow-list). |
 | `api/_lib/wait-until.js` | Platform keep-alive for SWR background refreshes (`@vercel/functions` if installed, detached promise otherwise). |
 | `api/_lib/object-store/` | Optional durable blob store. `nullStore` by default; `telegram.js` when enabled. |
+| `api/_lib/tmdb.js` | `tmdbFind(imdbId)` — cached IMDb→TMDB id lookup, shared so the hero and the reviews row cost one `/find`, not two. |
 | `api/cache-stats.js` | `GET /api/cache-stats` — hit rate, latency percentiles, dedup counts, cache size. Token-gated. |
+| `api/board-hero.js` | `GET /api/board-hero?imdbId=&type=` — enrichment + reviews in one response; a fan-in over the same two cache entries, no duplicate storage. |
 | `api/cron/prefetch.js` | `GET /api/cron/prefetch` — Vercel Cron warms the catalog rows every 6h. Off unless `PREFETCH_ENABLED=true` + `CRON_SECRET`. |
 | `scripts/cache-benchmark.js` | `pnpm benchmark:cache` — before/after against a local synthetic upstream. |
 | `tests/cache.test.js` | `pnpm test:cache`. |
@@ -165,3 +167,7 @@ Synthetic upstream at 120 ms latency, 1000 requests, concurrency 50, 20 distinct
   is installed (detached-promise fallback otherwise).
 - **Pipelined stat counters** — a request bumps 3-5 counters; these are buffered and shipped to
   Redis as one `/pipeline` call at the start of the next request, instead of one `INCRBY` each.
+- **Shared `/find` + `/api/board-hero`** — `reviews.js` and `hero-enrichment.js` both resolve the
+  IMDb id through one cached `tmdbFind` (coalesced), and `/api/board-hero` returns both payloads
+  in one request as a fan-in over the same cache entries. Client can adopt it to drop a round
+  trip; the two standalone endpoints keep working.
