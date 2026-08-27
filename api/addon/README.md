@@ -1,9 +1,10 @@
-# WTSH — Subtitles & Catalogs addon
+# WTSH — Subtitles, Catalogs & Public-Domain addon
 
 A first-party Stremio addon served straight from this Vercel deployment. No separate host, no
-account, no token in any URL. It returns **no streams** and cannot surface an unlicensed source,
-which is why `src/common/useAutoInstallEssentialAddons.js` is allowed to install it silently on
-first run.
+account, no token in any URL. The only stream source is Internet Archive public-domain films
+(gated three ways, see below) — no torrent indexers, no scraper sites, ever. That best-effort
+bar matches the `org.stremio.pubdomainmovies` addon this app already auto-installs, which is why
+`src/common/useAutoInstallEssentialAddons.js` installs it silently on first run.
 
 Single serverless function: [`[...path].js`](./[...path].js).
 
@@ -13,6 +14,7 @@ Single serverless function: [`[...path].js`](./[...path].js).
 | --- | --- |
 | `GET /api/addon/manifest.json` | Addon manifest. `catalog` is only advertised when `TMDB_API_KEY` is set. |
 | `GET /api/addon/subtitles/{type}/{id}/{extra}.json` | Subtitle list. `id` is `tt1234567` or `tt1234567:1:2` (series S1E2). `extra` may carry `videoHash` + `videoSize` (the streaming server's OpenSubtitles hash). |
+| `GET /api/addon/stream/{type}/{id}.json` | Internet Archive public-domain streams. `id` as above. |
 | `GET /api/addon/catalog/{type}/{catalogId}/{extra}.json` | TMDB browse row. `extra` may carry `skip`, `search`, `genre`. |
 | `GET /api/addon/osfile/{base64url}.srt` | Internal proxy: fetches one subtitle from `dl.opensubtitles.org`, unzips it, guarantees UTF-8, serves `application/x-subrip`. |
 
@@ -44,6 +46,37 @@ Downloads never need it.
 Get one free: sign in at <https://www.opensubtitles.com>, open **Consumers**, **New consumer**,
 copy the **Api Key**. Add it in Vercel → Project → Settings → Environment Variables (and in
 `.env.local` for local `vercel dev`).
+
+## Streams — Internet Archive public domain
+
+`handleStream()` resolves the IMDb id to a title + year via Cinemeta, searches
+`archive.org/advancedsearch.php`, and returns direct `archive.org/download/…` video URLs
+(largest 4 files per matched item, up to 8 total). MP4/WebM are marked web-ready; MKV/OGV/MOV
+get `notWebReady` so the streaming server remuxes them.
+
+**Three gates, all required** — because Internet Archive has *no* authoritative "is this public
+domain" field (uploaders self-assign both collection and license, and IA moderates reactively):
+
+1. **Title + year** — normalized IA item title equals the canonical name, or begins with it and
+   the year is within ±1. Files whose own embedded year is >2 off are dropped (catches IA
+   data-entry errors where one item holds a different film).
+2. **Curated collection** — the item must be in `feature_films`, `silent_films`, `film_noir`,
+   `classic_tv`, `prelinger` or `animationandcartoons`, and must **not** be in
+   `opensource_movies` / `community` / `movie_trailers` (unmoderated buckets where pirate rips
+   land).
+3. **Public-domain license tag** — `licenseurl` must contain `publicdomain`.
+
+Plus a scene/release-group filename filter (`x265`, `BDRip`, `BluRay`, `WEB-DL`, `YIFY`,
+`RARBG`, `[SEV]`, …) as a backstop.
+
+**Known limitation:** a rare in-copyright old-catalog title that an uploader mislabeled on all
+three axes (e.g. *Dracula* 1931) can still slip through. This is the exact bar every IA-backed
+"public domain" Stremio addon runs at, including `org.stremio.pubdomainmovies`. Flagrant cases
+— anything modern or in-demand — return nothing, verified: *The Matrix*, *The Shawshank
+Redemption*, *Bicycle Thieves*, *Breaking Bad*, and every scene rip tested → 0 streams.
+
+There is deliberately **no** torrent, debrid, or HTTP-scraper source here and there never will
+be. Install a third-party addon (Torrentio/Comet/MediaFusion) yourself if you want that.
 
 ## Catalogs (TMDB)
 

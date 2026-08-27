@@ -151,13 +151,14 @@ const buildManifest = () => {
     const manifest = {
         id: 'org.wtsh.addon',
         version: '1.0.0',
-        name: 'WTSH — Subtitles & Catalogs',
+        name: 'WTSH — Subtitles, Catalogs & Public-Domain',
         description:
             'Multi-language subtitles (Arabic, English, Turkish first, then every other language) '
-            + 'from OpenSubtitles, synced to the video by hash, plus TMDB browse rows for movies, '
-            + 'series and anime. Metadata and subtitles only — no streams.',
+            + 'from OpenSubtitles, synced to the video by hash; TMDB browse rows for movies, series '
+            + 'and anime; and public-domain film streams from the Internet Archive. No torrent or '
+            + 'scraper sources.',
         logo: 'https://www.stremio.com/website/stremio-logo-small.png',
-        resources: ['subtitles'],
+        resources: ['subtitles', 'stream'],
         types: ['movie', 'series'],
         idPrefixes: ['tt'],
         catalogs: [],
@@ -165,7 +166,7 @@ const buildManifest = () => {
     };
 
     if (hasTmdb()) {
-        manifest.resources = ['subtitles', 'catalog'];
+        manifest.resources = ['subtitles', 'stream', 'catalog'];
         manifest.catalogs = Object.entries(CATALOGS).map(([id, def]) => ({
             type: def.type,
             id,
@@ -446,6 +447,178 @@ const handleOsFile = async (res, b64) => {
     }
 };
 
+// -- streams: Internet Archive public-domain films -----------------------------------------
+//
+// Deliberately the ONLY stream source here. The Internet Archive hosts public-domain and
+// openly-licensed media; we match a title by name + year and hand back its direct download
+// URLs. No torrent indexers, no scraper sites - if you want those, install a third-party addon
+// (Torrentio/Comet/...) yourself; this addon will never carry one.
+
+const CINEMETA_BASE = 'https://v3-cinemeta.strem.io/meta';
+const IA_SEARCH = 'https://archive.org/advancedsearch.php';
+const IA_META = 'https://archive.org/metadata/';
+const IA_DL = 'https://archive.org/download/';
+
+const VIDEO_EXT = /\.(mp4|m4v|webm|mkv|ogv|mov)$/i;
+const WEB_READY_EXT = /\.(mp4|m4v|webm)$/i;
+
+// IA's own curated public-domain / freely-licensed collections. The search is constrained to
+// these so it can't surface a `opensource_movies` / `community` upload (unmoderated - that's
+// where pirate rips of in-copyright films and TV end up).
+const IA_PD_COLLECTIONS = ['feature_films', 'silent_films', 'film_noir', 'classic_tv', 'prelinger', 'animationandcartoons'];
+const IA_BAD_COLLECTIONS = /^(opensource_movies|community|movie_trailers|movie_trailers_unsorted|test_collection)$/;
+// Scene / release-group markers - a genuinely public-domain IA upload is a plain transfer, not
+// a modern P2P encode. Belt-and-braces on top of the collection filter (some slip into
+// feature_films). Plain resolution tags like `_1080p` are NOT a reject signal - legit IA
+// transfers use them too.
+const SCENE_MARKER = /(yify|yts|rarbg|galaxyrg|\bvxt\b|-vxt|web[ ._-]?dl|web[ ._-]?rip|hd[ ._-]?rip|bd[ ._-]?rip|br[ ._-]?rip|blu[ ._-]?ray|remux|x265|x264|hevc|h[ .]?265|h[ .]?264|\[sev\]|d0ct0r|dts[ ._-]?hd|\bddp?5\b|myme|meflix|eztv|\bfgt\b|\bevo\b|\btgx\b)/i;
+
+const normTitle = (s) => String(s || '')
+    .toLowerCase()
+    .replace(/^\s*the\s+/, '')
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+
+const humanSize = (bytes) => {
+    const n = Number(bytes);
+    if (!n) return null;
+    if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(2)} GB`;
+    return `${Math.round(n / 1024 ** 2)} MB`;
+};
+
+const cinemetaMeta = async (type, ttid) => {
+    try {
+        const resp = await fetchWithTimeout(`${CINEMETA_BASE}/${type}/${ttid}.json`, {}, 7000);
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        const m = data && data.meta;
+        if (!m) return null;
+        const year = parseInt(String(m.year || m.releaseInfo || '').slice(0, 4), 10) || null;
+        return { name: m.name || '', year };
+    } catch (_) {
+        return null;
+    }
+};
+
+const iaSearch = async (name, year) => {
+    const safe = name.replace(/"/g, '');
+    // Three gates, all required: (1) a title phrase match, (2) sits in one of IA's curated
+    // public-domain collections, (3) the item carries a public-domain license tag. None of
+    // these is individually authoritative (uploaders self-assign collection + license), but
+    // together they block everything obviously in-copyright. Rare mislabeled uploads can still
+    // get through - same limitation every IA-backed "public domain" addon has.
+    let q = `title:("${safe}") AND mediatype:(movies)`
+        + ` AND collection:(${IA_PD_COLLECTIONS.join(' OR ')})`
+        + ' AND licenseurl:(*publicdomain*)';
+    if (year) q += ` AND year:[${year - 1} TO ${year + 1}]`;
+    const usp = new URLSearchParams({ q, rows: '15', output: 'json', sort: 'downloads desc' });
+    usp.append('fl[]', 'identifier');
+    usp.append('fl[]', 'title');
+    usp.append('fl[]', 'year');
+    usp.append('fl[]', 'collection');
+    try {
+        const resp = await fetchWithTimeout(`${IA_SEARCH}?${usp.toString()}`, {}, 9000);
+        if (!resp.ok) return [];
+        const data = await resp.json();
+        const docs = (data && data.response && data.response.docs) || [];
+        const target = normTitle(name);
+        return docs.filter((d) => {
+            const cols = [].concat(d.collection || []);
+            // must sit in at least one whitelisted collection and none of the unmoderated ones
+            if (!cols.some((c) => IA_PD_COLLECTIONS.includes(c))) return false;
+            if (cols.some((c) => IA_BAD_COLLECTIONS.test(c))) return false;
+            const t = normTitle(d.title);
+            if (t === target) return true;
+            // looser match only when we can corroborate with the year, and only when the IA
+            // title *begins with* the full canonical name (so "saboteur" can't match "saboteur
+            // 3d edition" away, but also can't match an unrelated same-year film)
+            if (!year || target.length < 4) return false;
+            return t.startsWith(target)
+                && Math.abs((parseInt(d.year, 10) || 0) - year) <= 1;
+        }).slice(0, 3);
+    } catch (_) {
+        return [];
+    }
+};
+
+const iaFiles = async (identifier, episode, yearHint) => {
+    try {
+        const resp = await fetchWithTimeout(`${IA_META}${identifier}`, {}, 9000);
+        if (!resp.ok) return [];
+        const data = await resp.json();
+        const files = Array.isArray(data.files) ? data.files : [];
+
+        let vids = files.filter((f) => {
+            if (!f.name || !VIDEO_EXT.test(f.name) || /\bthumb/i.test(f.name)) return false;
+            if (SCENE_MARKER.test(f.name)) return false;
+            // If the file name carries its own 4-digit year and it's well off the title's year,
+            // it's a different film dumped into the same IA item (a real IA data-entry failure).
+            if (yearHint) {
+                const fy = (f.name.match(/\b(19\d\d|20\d\d)\b/) || [])[1];
+                if (fy && Math.abs(parseInt(fy, 10) - yearHint) > 2) return false;
+            }
+            return true;
+        });
+        if (episode) {
+            const { season, number } = episode;
+            const rx = new RegExp(
+                `(s0*${season}[ ._-]*e0*${number}\\b|\\b${season}x0*${number}\\b|\\bep?0*${number}\\b)`, 'i'
+            );
+            const matched = vids.filter((f) => rx.test(f.name));
+            vids = matched.length ? matched : [];
+        }
+
+        vids.sort((a, b) => (Number(b.size) || 0) - (Number(a.size) || 0));
+        return vids.slice(0, 4).map((f) => ({
+            url: `${IA_DL}${identifier}/${f.name.split('/').map(encodeURIComponent).join('/')}`,
+            name: f.name.replace(/^.*\//, ''),
+            size: humanSize(f.size),
+            webReady: WEB_READY_EXT.test(f.name)
+        }));
+    } catch (_) {
+        return [];
+    }
+};
+
+const handleStream = async (res, type, id) => {
+    if (!id || !/^tt\d+/.test(id) || (type !== 'movie' && type !== 'series')) {
+        return sendJson(res, 200, { streams: [] }, 300);
+    }
+
+    const [ttid, season, number] = id.split(':');
+    const episode = (season !== undefined && number !== undefined)
+        ? { season: parseInt(season, 10), number: parseInt(number, 10) }
+        : null;
+
+    const meta = await cinemetaMeta(type, ttid);
+    if (!meta || !meta.name) return sendJson(res, 200, { streams: [] }, 1800);
+
+    const candidates = await iaSearch(meta.name, meta.year);
+    if (!candidates.length) return sendJson(res, 200, { streams: [] }, 3600);
+
+    const perId = await Promise.all(candidates.map((c) => iaFiles(c.identifier, episode, meta.year)));
+
+    const streams = [];
+    perId.forEach((files, i) => {
+        for (const f of files) {
+            if (streams.length >= 8) break;
+            streams.push({
+                name: 'Internet Archive\nPublic Domain',
+                title: [meta.name + (meta.year ? ` (${meta.year})` : ''), f.name, f.size]
+                    .filter(Boolean).join('\n'),
+                url: f.url,
+                behaviorHints: {
+                    bingeGroup: `wtsh-ia-${candidates[i].identifier}`,
+                    notWebReady: !f.webReady
+                }
+            });
+        }
+    });
+
+    return sendJson(res, 200, { streams }, 21600);
+};
+
 // -- catalog (TMDB) ---------------------------------------------------------------------------
 
 const tmdbUrl = (path, params) => {
@@ -547,6 +720,10 @@ module.exports = async (req, res) => {
         const id = rest[0] || '';
         const extra = parseExtra(rest[1], req.query);
         return handleSubtitles(res, type, id, extra, base);
+    }
+
+    if (resource === 'stream' && dotJson) {
+        return handleStream(res, type, rest[0] || '');
     }
 
     if (resource === 'catalog' && dotJson) {
