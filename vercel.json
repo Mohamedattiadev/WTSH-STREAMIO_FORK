@@ -1,0 +1,11 @@
+{
+    "buildCommand": "pnpm build",
+    "outputDirectory": "build",
+    "rewrites": [
+        { "source": "/addon/(.*)", "destination": "/api/addon/$1" },
+        { "source": "/((?!api/|addon/).*)", "destination": "/index.html" }
+    ],
+    "crons": [
+        { "path": "/api/cron/prefetch", "schedule": "0 */6 * * *" }
+    ]
+}

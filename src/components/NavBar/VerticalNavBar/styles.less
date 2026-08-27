@@ -1,17 +1,23 @@
-// Copyright (C) 2017-2023 Smart code 203358507
+// Copyright (C) 2017-2026 Smart code 203358507
 
 @import (reference) '~@stremio/stremio-colors/less/stremio-colors.less';
 @import (reference) '~stremio/common/screen-sizes.less';
 
 .vertical-nav-bar-container {
+    flex: none;
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
-    width: var(--vertical-nav-bar-size);
-    padding: 1rem 0;
-    background-color: transparent;
+    gap: 0.3rem;
+    width: 4.75rem;
+    height: 100%;
+    padding: 1.35rem 0 1.1rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 40%), var(--surface-ink);
+    border-right: 0.06rem solid var(--overlay-color);
+    transition: width 0.28s cubic-bezier(.4, 0, .2, 1);
     overflow-y: auto;
+    overflow-x: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
 
@@ -19,40 +25,214 @@
         display: none;
     }
 
+    &:global(.expanded) {
+        width: 14rem;
+        align-items: stretch;
+        padding-left: 0.9rem;
+        padding-right: 0.9rem;
+    }
+
+    .rail-toggle {
+        all: unset;
+        box-sizing: border-box;
+        position: absolute;
+        // Was top: 50% - centers on the *whole rail's* height, not the tab icon list's, so on
+        // a real short browser window (confirmed live down to ~620px tall) the rail's vertical
+        // midpoint lands directly on one of the tab icons instead of in the empty space below
+        // them, rendering the toggle and that tab on top of each other. Anchoring from the
+        // bottom instead keeps it in the same predictable spot regardless of window height.
+        bottom: 1.5rem;
+        // Was right: -0.85rem, intentionally poking half outside the rail to float over the
+        // content next to it (matching the mockup) - but .vertical-nav-bar-container also sets
+        // overflow-x: hidden (needed to suppress a horizontal scrollbar from the icon column's
+        // own overflow-y: auto), which silently clipped that overflowing half away. Confirmed
+        // live: only a sliver of the button was ever actually rendering. Keeping it fully
+        // inside the rail's own bounds is a real, reliable fix rather than fighting the
+        // clipping with a container restructure for one button.
+        right: 0.45rem;
+        flex: none;
+        width: 1.8rem;
+        height: 1.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        // A previous pass tried a muted, mockup-matching rest color here (rgba(245,242,236,0.55)
+        // on var(--surface-panel-2)) and it was still unreadable in practice at this button's
+        // real size - the chevron all but disappeared. A second pass swapped in
+        // var(--surface-elevated-color), but that token is only rgba(255,255,255,0.04) - a 4%
+        // white wash over the rail's near-black background is still functionally invisible at
+        // rest (confirmed live: only the chevron's own color gave it any presence at all). Using
+        // the ember accent itself at low opacity, always on (not just on hover), is the fix that
+        // actually reads as a distinct button against the rail.
+        background-color: rgba(255, 95, 54, 0.16);
+        border: 0.09rem solid rgba(255, 95, 54, 0.45);
+        color: var(--ember-soft);
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+        z-index: 3;
+        transition: color 0.15s ease-out, border-color 0.15s ease-out, background-color 0.15s ease-out;
+
+        &:hover {
+            color: var(--primary-foreground-color);
+            border-color: rgba(255, 95, 54, 0.75);
+            background-color: var(--primary-accent-color);
+        }
+    }
+
+    .rail-toggle-icon {
+        width: 1.05rem;
+        height: 1.05rem;
+        transition: transform 0.28s ease;
+    }
+
+    &:global(.expanded) .rail-toggle-icon {
+        transform: rotate(180deg);
+    }
+
+    // The rail itself mirrors to the right edge under dir="rtl" (plain flexbox row reversal -
+    // see App.js), so this button's own meaning flips too: collapsed now needs to point toward
+    // the content on its *left* (not the App-wide chevron-forward RTL mirror in App/styles.less,
+    // deliberately excluded there - see its own comment - since this icon composes its own
+    // rotation for expand/collapse, which a plain scaleX(-1) can't just layer on top of. A
+    // symmetric chevron rotated 180deg and then mirrored lands back pointing the same way it
+    // started (the two operations don't compose the way they would for an asymmetric shape), so
+    // the correct fix is picking the *opposite* of each LTR state's transform directly: RTL
+    // collapsed points left (mirrored), RTL expanded points right (natural, unrotated).
+    :global(html[dir='rtl']) & {
+        .rail-toggle-icon {
+            transform: scaleX(-1);
+        }
+
+        &:global(.expanded) .rail-toggle-icon {
+            transform: none;
+        }
+    }
+
+    .rail-mark-row {
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        width: 100%;
+        margin-bottom: 1.1rem;
+    }
+
+    &:global(.expanded) .rail-mark-row {
+        justify-content: flex-start;
+        padding-left: 0.1rem;
+    }
+
+    .rail-mark {
+        flex: none;
+        width: 2.75rem;
+        height: 2.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        filter: drop-shadow(0 4px 10px rgba(255, 61, 46, 0.5));
+    }
+
+    .rail-mark-logo {
+        flex: none;
+        width: 1.7rem;
+        height: 1.7rem;
+        object-fit: contain;
+    }
+
+    .rail-wordmark {
+        flex: none;
+        font-family: var(--font-display);
+        font-weight: 800;
+        font-size: 1.05rem;
+        letter-spacing: 0.01em;
+        color: var(--primary-foreground-color);
+        white-space: nowrap;
+        opacity: 0;
+        max-width: 0;
+        overflow: hidden;
+        transition: opacity 0.15s ease, max-width 0.28s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    &:global(.expanded) .rail-wordmark {
+        opacity: 1;
+        max-width: 8rem;
+    }
+
+    .rail-nav {
+        flex: none;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        width: 100%;
+    }
+
+    .rail-indicator {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 0.22rem;
+        height: 2.75rem;
+        border-radius: 0 0.2rem 0.2rem 0;
+        background: linear-gradient(180deg, var(--ember), var(--ember-2));
+        box-shadow: 0 0 12px rgba(255, 95, 54, 0.6);
+        opacity: 0;
+        transition: transform 0.15s cubic-bezier(.2, 0, .2, 1), opacity 0.1s ease;
+    }
+
     .nav-tab-button {
-        width: calc(var(--vertical-nav-bar-size) - 1.2rem);
-        height: calc(var(--vertical-nav-bar-size) - 1.2rem);
-        min-height: 3.5rem;
+        flex: none;
+        width: 2.75rem;
+        height: 2.75rem;
+        min-height: unset;
+        margin: 0 auto;
+    }
+
+    &:global(.expanded) .nav-tab-button {
+        width: 100%;
+        margin: 0;
     }
 }
 
 @media only screen and (max-width: @minimum) {
     .vertical-nav-bar-container {
         flex-direction: row;
-        justify-content: space-between;
+        align-items: stretch;
         gap: 0;
-        height: var(--vertical-nav-bar-size);
         width: 100%;
-        padding: 0 1rem;
-        overflow-y: hidden;
-        overflow-x: auto;
+        height: auto;
+        padding: 0.35rem 0.25rem calc(0.35rem + var(--safe-area-inset-bottom));
+        border-right: none;
+        border-top: 0.06rem solid var(--overlay-color);
+        background: var(--surface-panel-2);
 
-        .nav-tab-button {
-            flex: none;
-
-            &:last-child {
-                display: none;
-            }
+        &:global(.expanded) {
+            width: 100%;
+            align-items: stretch;
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
         }
-    }
-}
 
-@media only screen and (max-height: @minimum) {
-    .vertical-nav-bar-container {
-        .nav-tab-button {
-            &:last-child {
-                display: none;
-            }
+        .rail-toggle, .rail-mark-row {
+            display: none;
+        }
+
+        .rail-nav {
+            flex-direction: row;
+            gap: 0;
+        }
+
+        .rail-indicator {
+            display: none;
+        }
+
+        .nav-tab-button, &:global(.expanded) .nav-tab-button {
+            flex: 1 1 0;
+            width: auto;
+            height: auto;
+            margin: 0;
         }
     }
 }

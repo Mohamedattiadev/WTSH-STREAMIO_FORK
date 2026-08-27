@@ -4,9 +4,14 @@ import { createContext } from 'react';
 
 export type FullscreenContextValue = readonly [
     fullscreen: boolean,
-    requestFullscreen: () => Promise<void> | void,
+    // `target` defaults to document.documentElement (whole-app fullscreen, used by every
+    // route's generic topbar button) - passing a specific element (e.g. the Player route's
+    // own video+controls container) fullscreens just that element instead. Ignored when
+    // running in the Electron shell, where fullscreen is a whole-window property with no
+    // per-element equivalent.
+    requestFullscreen: (target?: HTMLElement) => Promise<void> | void,
     exitFullscreen: () => void,
-    toggleFullscreen: () => void,
+    toggleFullscreen: (target?: HTMLElement) => void,
     supported: boolean,
     setVideoElement: (el: HTMLVideoElement | null) => void,
 ];

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, ContextMenu } from 'stremio/components';
 import { languages, useToast } from 'stremio/common';
 import classNames from 'classnames';
-import Icon from '@stremio/stremio-icons/react';
+import Icon from 'stremio/components/Icon';
 import styles from './SubtitleVariant.less';
 
 type SubtitlesTrack = {

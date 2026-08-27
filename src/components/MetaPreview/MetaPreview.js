@@ -5,12 +5,14 @@ const PropTypes = require('prop-types');
 const classnames = require('classnames');
 const UrlUtils = require('url');
 const { useTranslation } = require('react-i18next');
-const { default: Icon } = require('@stremio/stremio-icons/react');
+const { default: Icon } = require('stremio/components/Icon');
 const { default: Button } = require('stremio/components/Button');
 const { default: Image } = require('stremio/components/Image');
 const { default: ActionsGroup } = require('stremio/components/ActionsGroup');
+const { default: AddToCalendarButton } = require('stremio/components/AddToCalendarButton');
 const ModalDialog = require('stremio/components/ModalDialog');
 const SharePrompt = require('stremio/components/SharePrompt');
+const TrailerModal = require('stremio/components/TrailerModal');
 const CONSTANTS = require('stremio/common/CONSTANTS');
 const routesRegexp = require('stremio/common/routesRegexp');
 const useBinaryState = require('stremio/common/useBinaryState');
@@ -26,9 +28,14 @@ const ALLOWED_LINK_REDIRECTS = [
     routesRegexp.metadetails.regexp
 ];
 
-const MetaPreview = React.forwardRef(({ className, compact, name, logo, background, runtime, releaseInfo, released, description, deepLinks, links, trailerStreams, inLibrary, toggleInLibrary, watched, toggleWatched, ratingInfo }, ref) => {
+// Matches Board.js's own extractGenres - addons are inconsistent about casing ("Genres" vs
+// "genres") for this link category, so this is never a plain equality check.
+const GENRE_LINK_CATEGORY = 'genres';
+
+const MetaPreview = React.forwardRef(({ className, compact, name, logo, background, poster, runtime, releaseInfo, released, description, deepLinks, links, trailerStreams, inLibrary, toggleInLibrary, watched, toggleWatched, ratingInfo }, ref) => {
     const { t } = useTranslation();
     const [shareModalOpen, openShareModal, closeShareModal] = useBinaryState(false);
+    const [trailerModalOpen, openTrailerModal, closeTrailerModal] = useBinaryState(false);
     const linksGroups = React.useMemo(() => {
         return Array.isArray(links) ?
             links
@@ -89,6 +96,14 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
             :
             null;
     }, [deepLinks]);
+    // On the full detail page (compact === false) the whole right-hand panel *is* the stream
+    // picker already, so a generic "Show" button there would just link back to the same page -
+    // only worth surfacing when there's a real saved position to resume (deepLinks.player),
+    // matching the mockup's "Resume" pill for continue-watching titles.
+    const showLabel = React.useMemo(() => {
+        return typeof deepLinks?.player === 'string' ? t('CONTINUE_WATCHING') : t('SHOW');
+    }, [deepLinks, t]);
+    const showButtonVisible = typeof showHref === 'string' && (compact || typeof deepLinks?.player === 'string');
     const trailerHref = React.useMemo(() => {
         if (!Array.isArray(trailerStreams) || trailerStreams.length === 0) {
             return null;
@@ -99,24 +114,41 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
     const renderLogoFallback = React.useCallback(() => (
         <div className={styles['logo-placeholder']}>{name}</div>
     ), [name]);
+    // Real, navigable genre links (each still routes to that genre's Discover filter, same as
+    // the generic MetaLinks rendering below) - pulled out and rendered as its own pill row for
+    // the compact preview panel, matching the mockup's tag-row, instead of the plain
+    // label-plus-comma-list MetaLinks treatment the full detail page still uses.
+    const genreCategory = React.useMemo(() => {
+        return Array.from(linksGroups.keys()).find((category) => category.toLowerCase() === GENRE_LINK_CATEGORY);
+    }, [linksGroups]);
+    const genreLinks = genreCategory ? linksGroups.get(genreCategory) : null;
+    // "+ Library" gets its own labeled pill in the main action row (matching the mockup) instead
+    // of being buried in the icon-only secondary group - "mark watched" stays there since the
+    // mockup has no equivalent for it.
     const metaItemActions = React.useMemo(() => [
-        {
-            icon: inLibrary ? 'remove-from-library' : 'add-to-library',
-            label: inLibrary ? t('REMOVE_FROM_LIB') : t('ADD_TO_LIB'),
-            onClick: typeof toggleInLibrary === 'function' ? toggleInLibrary : null,
-        },
         {
             icon: watched ? 'eye-off' : 'eye',
             label: watched ? t('CTX_MARK_UNWATCHED') : t('CTX_MARK_WATCHED'),
             onClick: typeof toggleWatched === 'function' ? toggleWatched : undefined,
         },
-    ], [inLibrary, watched, toggleInLibrary, toggleWatched]);
+    ], [watched, toggleWatched]);
     return (
         <div className={classnames(className, styles['meta-preview-container'], { [styles['compact']]: compact })} ref={ref}>
             {
-                typeof background === 'string' && background.length > 0 ?
+                // The full detail page keeps the blurred full-bleed backdrop (its own hero
+                // treatment, matching Board's Hero) - the compact preview panel gets a clean,
+                // contained poster block instead, right below.
+                !compact && typeof background === 'string' && background.length > 0 ?
                     <div className={styles['background-image-layer']}>
                         <Image className={styles['background-image']} src={background} alt={' '} />
+                    </div>
+                    :
+                    null
+            }
+            {
+                compact && typeof poster === 'string' && poster.length > 0 ?
+                    <div className={styles['compact-poster-container']}>
+                        <Image className={styles['compact-poster']} src={poster} alt={' '} />
                     </div>
                     :
                     null
@@ -172,6 +204,18 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
                         null
                 }
                 {
+                    compact && genreLinks && genreLinks.length > 0 ?
+                        <div className={styles['tag-row']}>
+                            {genreLinks.map((link, index) => (
+                                <Button key={index} className={styles['tag']} title={link.label} href={link.href}>
+                                    {t(link.label)}
+                                </Button>
+                            ))}
+                        </div>
+                        :
+                        null
+                }
+                {
                     compact && typeof description === 'string' && description.length > 0 ?
                         <div className={styles['description-container']}>
                             {description}
@@ -184,7 +228,8 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
                         .filter((category) => {
                             return category !== CONSTANTS.IMDB_LINK_CATEGORY &&
                                 category !== CONSTANTS.SHARE_LINK_CATEGORY &&
-                                category !== CONSTANTS.WRITERS_LINK_CATEGORY;
+                                category !== CONSTANTS.WRITERS_LINK_CATEGORY &&
+                                category !== genreCategory;
                         })
                         .map((category, index) => (
                             <MetaLinks
@@ -209,31 +254,52 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
             </div>
             <div className={styles['action-buttons-container']}>
                 {
+                    showButtonVisible ?
+                        <ActionButton
+                            className={classnames(styles['action-button'], styles['show-button'])}
+                            icon={'play'}
+                            label={showLabel}
+                            tabIndex={0}
+                            href={showHref}
+                        />
+                        :
+                        null
+                }
+                {
                     typeof trailerHref === 'string' ?
                         <ActionButton
                             className={styles['action-button']}
                             icon={'trailer'}
                             label={t('TRAILER')}
                             tabIndex={0}
-                            href={trailerHref}
-                            tooltip={compact}
+                            onClick={openTrailerModal}
                         />
                         :
                         null
                 }
                 {
-                    typeof toggleInLibrary === 'function' && typeof toggleWatched === 'function'
+                    typeof toggleInLibrary === 'function' ?
+                        <ActionButton
+                            className={styles['action-button']}
+                            icon={inLibrary ? 'remove-from-library' : 'add-to-library'}
+                            label={inLibrary ? t('REMOVE_FROM_LIB') : t('ADD_TO_LIB')}
+                            tabIndex={0}
+                            onClick={toggleInLibrary}
+                        />
+                        :
+                        null
+                }
+                {
+                    typeof toggleWatched === 'function'
                         ? <ActionsGroup items={metaItemActions} className={styles['group-container']} />
                         : null
                 }
                 {
-                    typeof showHref === 'string' && compact ?
-                        <ActionButton
-                            className={classnames(styles['action-button'], styles['show-button'])}
-                            icon={'play'}
-                            label={t('SHOW')}
-                            tabIndex={0}
-                            href={showHref}
+                    typeof name === 'string' && name.length > 0 ?
+                        <AddToCalendarButton
+                            className={styles['action-button']}
+                            title={name}
+                            poster={typeof poster === 'string' ? poster : background}
                         />
                         :
                         null
@@ -274,6 +340,24 @@ const MetaPreview = React.forwardRef(({ className, compact, name, logo, backgrou
                         null
                 }
             </div>
+            {
+                trailerModalOpen ?
+                    <TrailerModal
+                        name={name}
+                        trailerStreams={trailerStreams}
+                        links={links}
+                        description={description}
+                        runtime={runtime}
+                        poster={poster}
+                        background={background}
+                        deepLinks={deepLinks}
+                        inLibrary={inLibrary}
+                        toggleInLibrary={toggleInLibrary}
+                        onCloseRequest={closeTrailerModal}
+                    />
+                    :
+                    null
+            }
         </div>
     );
 });
@@ -286,6 +370,7 @@ MetaPreview.propTypes = {
     name: PropTypes.string,
     logo: PropTypes.string,
     background: PropTypes.string,
+    poster: PropTypes.string,
     runtime: PropTypes.string,
     releaseInfo: PropTypes.string,
     released: PropTypes.instanceOf(Date),

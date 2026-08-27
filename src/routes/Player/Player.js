@@ -11,22 +11,28 @@ const { default: useRouteFocused } = require('stremio/common/useRouteFocused');
 const { useCore } = require('stremio/core');
 const { useServices, useGamepad } = require('stremio/services');
 const { useContentGamepadNavigation } = require('stremio/services/GamepadNavigation');
-const { useSettings, useProfile, useFullscreen, useBinaryState, useToast, useStreamingServer, withCoreSuspender, usePlatform, onShortcut, getKeyboardShortcutKey, getKeyboardShortcutKeys, useDiscord, EMPTY_DISCORD_TIMESTAMPS, getPlaybackDiscordActivity } = require('stremio/common');
+const { useSettings, useProfile, useFullscreen, useBinaryState, useToast, useStreamingServer, useModelState, withCoreSuspender, usePlatform, onShortcut, getKeyboardShortcutKey, getKeyboardShortcutKeys, useDiscord, EMPTY_DISCORD_TIMESTAMPS, getPlaybackDiscordActivity } = require('stremio/common');
 const { default: toPath } = require('stremio-router/toPath');
-const { HorizontalNavBar, Transition, ContextMenu } = require('stremio/components');
+const { HorizontalNavBar, MainNavBars, Transition, ContextMenu } = require('stremio/components');
 const { default: Buffering } = require('./Buffering');
 const VolumeChangeIndicator = require('./VolumeChangeIndicator');
 const Error = require('./Error');
 const ControlBar = require('./ControlBar');
+const CenterControls = require('./CenterControls');
 const NextVideoPopup = require('./NextVideoPopup');
 const StatisticsMenu = require('./StatisticsMenu');
 const OptionsMenu = require('./OptionsMenu');
 const { default: CastDevicesMenu } = require('./CastDevicesMenu');
+const { default: StreamingServerMenu } = require('./StreamingServerMenu');
 const SubtitlesMenu = require('./SubtitlesMenu');
 const { default: AudioMenu } = require('./AudioMenu');
 const SpeedMenu = require('./SpeedMenu');
 const { default: SideDrawerButton } = require('./SideDrawerButton');
 const { default: SideDrawer } = require('./SideDrawer');
+const SearchPanel = require('./SearchPanel');
+const SourcesMenu = require('./SourcesMenu');
+const ChatPanel = require('stremio/routes/Chat/ChatPanel');
+const useMetaDetails = require('stremio/routes/MetaDetails/useMetaDetails');
 const usePlayer = require('./usePlayer');
 const { default: usePlayOnDevice } = require('./usePlayOnDevice');
 const { default: useKeyboardSeek } = require('./useKeyboardSeek');
@@ -41,7 +47,12 @@ const { default: useMediaSession } = require('./useMediaSession');
 const findTrackByLang = (tracks, lang) => tracks.find((track) => track.lang === lang || langs.where('1', track.lang)?.[2] === lang);
 const findTrackById = (tracks, id) => tracks.find((track) => track.id === id);
 
-const GAMEPAD_HANDLER_ID = 'player';
+// Distinct from the 'player' id MainNavBars registers its own useContentGamepadNavigation
+// under for this route (keyed off the route name) - now that Player renders inside MainNavBars
+// instead of as a standalone fullscreen overlay, both hooks are mounted at once, and sharing
+// the exact same id would make the second one to register silently overwrite the first's
+// gamepad.on('analog'/'buttonA', ...) handlers instead of both coexisting.
+const GAMEPAD_HANDLER_ID = 'player-video';
 
 const CAST_DEVICES_REFRESH_INTERVAL = 5000;
 
@@ -65,6 +76,7 @@ const Player = () => {
         return queryParams.has('forceTranscoding');
     }, [queryParams]);
     const profile = useProfile();
+    const ctx = useModelState({ model: 'ctx' });
     const [player, videoParamsChanged, streamStateChanged, subtitlePreferenceChanged, timeChanged, seek, pausedChanged, ended, nextVideo] = usePlayer(urlParams);
     const [settings] = useSettings();
     const streamingServer = useStreamingServer();
@@ -103,12 +115,31 @@ const Player = () => {
     const [speedMenuOpen, , closeSpeedMenu, toggleSpeedMenu] = useBinaryState(false);
     const [statisticsMenuOpen, openStatisticsMenu, closeStatisticsMenu, toggleStatisticsMenu] = useBinaryState(false);
     const [castDevicesMenuOpen, , closeCastDevicesMenu, toggleCastDevicesMenu] = useBinaryState(false);
+    const [streamingServerMenuOpen, , closeStreamingServerMenu, toggleStreamingServerMenu] = useBinaryState(false);
+    const [sourcesMenuOpen, , closeSourcesMenu, toggleSourcesMenu] = useBinaryState(false);
     const [nextVideoPopupOpen, openNextVideoPopup, closeNextVideoPopup] = useBinaryState(false);
-    const [sideDrawerOpen, , closeSideDrawer, toggleSideDrawer] = useBinaryState(false);
+    // Opens automatically once real data is ready (see the effect below) rather than starting
+    // true - this is the one real info panel for the title (compact MetaPreview inside
+    // SideDrawer.tsx), so it needs to be visible without a click rather than living behind a
+    // menu the user has to go find. A separate always-on panel below the video was tried first
+    // and dropped - it duplicated this exact content instead of reusing it. Can't just default
+    // the raw state to true though: SideDrawer.tsx reads props.metaItem.videos with no
+    // undefined guard, and player.metaItem is still null for the first render or two while the
+    // real data loads - opening it before then crashed the route.
+    const [sideDrawerOpen, openSideDrawer, closeSideDrawer, toggleSideDrawer] = useBinaryState(false);
+    const autoOpenedSideDrawerRef = React.useRef(false);
+    React.useEffect(() => {
+        if (!autoOpenedSideDrawerRef.current && player.metaItem?.type === 'Ready') {
+            autoOpenedSideDrawerRef.current = true;
+            openSideDrawer();
+        }
+    }, [player.metaItem, openSideDrawer]);
+    const [searchPanelOpen, , closeSearchPanel, toggleSearchPanel] = useBinaryState(false);
+    const [chatPanelOpen, , closeChatPanel, toggleChatPanel] = useBinaryState(false);
 
     const menusOpen = React.useMemo(() => {
-        return optionsMenuOpen || subtitlesMenuOpen || audioMenuOpen || speedMenuOpen || statisticsMenuOpen || castDevicesMenuOpen || sideDrawerOpen || nextVideoPopupOpen;
-    }, [optionsMenuOpen, subtitlesMenuOpen, audioMenuOpen, speedMenuOpen, statisticsMenuOpen, castDevicesMenuOpen, sideDrawerOpen, nextVideoPopupOpen]);
+        return optionsMenuOpen || subtitlesMenuOpen || audioMenuOpen || speedMenuOpen || statisticsMenuOpen || castDevicesMenuOpen || streamingServerMenuOpen || sourcesMenuOpen || sideDrawerOpen || searchPanelOpen || chatPanelOpen || nextVideoPopupOpen;
+    }, [optionsMenuOpen, subtitlesMenuOpen, audioMenuOpen, speedMenuOpen, statisticsMenuOpen, castDevicesMenuOpen, streamingServerMenuOpen, sourcesMenuOpen, sideDrawerOpen, searchPanelOpen, chatPanelOpen, nextVideoPopupOpen]);
 
     const closeMenus = React.useCallback(() => {
         closeOptionsMenu();
@@ -117,7 +148,11 @@ const Player = () => {
         closeSpeedMenu();
         closeStatisticsMenu();
         closeCastDevicesMenu();
+        closeStreamingServerMenu();
+        closeSourcesMenu();
         closeSideDrawer();
+        closeSearchPanel();
+        closeChatPanel();
     }, []);
 
     const castDevices = React.useMemo(() => {
@@ -157,6 +192,56 @@ const Player = () => {
         }
     }, [castDevicesMenuOpen, refreshCastDevices]);
 
+    const onStreamingServerUrlSelected = React.useCallback((url) => {
+        if (url !== profile.settings.streamingServerUrl) {
+            core.transport.dispatch({
+                action: 'Ctx',
+                args: {
+                    action: 'UpdateSettings',
+                    args: {
+                        ...profile.settings,
+                        streamingServerUrl: url,
+                    }
+                }
+            });
+        }
+        closeStreamingServerMenu();
+    }, [profile.settings]);
+
+    // Auto-fallback: if the active streaming server URL fails to connect (the real,
+    // observable "Err" status streamingServer.settings already exposes - see Settings'
+    // own URLsManager/Item.tsx), try the next configured URL instead of hanging forever.
+    // Only kicks in while actually trying to play something, and only tries each
+    // configured URL once per stream to avoid ping-ponging between two broken servers.
+    const triedStreamingServerUrls = React.useRef(new Set());
+    React.useEffect(() => {
+        triedStreamingServerUrls.current = new Set();
+    }, [player.selected?.stream]);
+    React.useEffect(() => {
+        if (player.selected?.stream && streamingServer.settings?.type === 'Err' && Array.isArray(ctx.streamingServerUrls) && ctx.streamingServerUrls.length > 1) {
+            triedStreamingServerUrls.current.add(profile.settings.streamingServerUrl);
+            const nextUrl = ctx.streamingServerUrls.find(({ url }) => !triedStreamingServerUrls.current.has(url));
+            if (nextUrl) {
+                toast.show({
+                    type: 'info',
+                    title: 'Switching streaming server',
+                    message: `"${profile.settings.streamingServerUrl}" isn't responding - trying "${nextUrl.url}" instead.`,
+                    timeout: 4000
+                });
+                core.transport.dispatch({
+                    action: 'Ctx',
+                    args: {
+                        action: 'UpdateSettings',
+                        args: {
+                            ...profile.settings,
+                            streamingServerUrl: nextUrl.url,
+                        }
+                    }
+                });
+            }
+        }
+    }, [player.selected?.stream, streamingServer.settings?.type, ctx.streamingServerUrls, profile.settings.streamingServerUrl]);
+
     const {
         streamSubtitles,
         allSubtitleTracks,
@@ -179,6 +264,61 @@ const Player = () => {
     const defaultAudioTrackSelected = React.useRef(false);
     const playingOnExternalDevice = React.useRef(false);
     const [error, setError] = React.useState(null);
+
+    // Auto-fallback to a different stream/source when the one actually playing fails outright
+    // (video.events' 'error' with .critical - the same real signal Error.js already renders
+    // from below, not a fabricated "not working" detector), and the same cross-addon streams
+    // list backs a manual "Switch Source" menu (SourcesMenu) for when a stream plays badly
+    // without ever firing that hard failure. Only fetches the full list (the same useMetaDetails
+    // hook MetaDetails' own StreamsList already uses) lazily, on an actual failure or when the
+    // user opens the menu - not eagerly on every player mount, which would mean a second full
+    // addon fetch on every successful playback too.
+    const streamFallbackUrlParams = React.useMemo(() => {
+        return error !== null || sourcesMenuOpen ? { type, id, videoId } : {};
+    }, [error, sourcesMenuOpen, type, id, videoId]);
+    const streamFallbackMetaDetails = useMetaDetails(streamFallbackUrlParams);
+    const sourcesLoading = streamFallbackMetaDetails.streams.some((streams) => streams.content.type === 'Loading');
+    const allStreams = React.useMemo(() => {
+        return streamFallbackMetaDetails.streams
+            .filter((streams) => streams.content.type === 'Ready')
+            .flatMap((streams) => streams.content.content.map((stream) => ({ ...stream, addonName: streams.addon.manifest.name })));
+    }, [streamFallbackMetaDetails.streams]);
+    const onSourceSelected = React.useCallback(() => {
+        closeSourcesMenu();
+    }, []);
+    const triedStreamPlayerLinks = React.useRef(new Set());
+    React.useEffect(() => {
+        triedStreamPlayerLinks.current = new Set();
+    }, [videoId]);
+    React.useEffect(() => {
+        if (error === null) {
+            return;
+        }
+
+        const failedStreamLink = player.selected?.stream?.deepLinks?.player;
+        if (typeof failedStreamLink === 'string') {
+            triedStreamPlayerLinks.current.add(failedStreamLink);
+        }
+
+        if (sourcesLoading) {
+            return;
+        }
+
+        const nextStream = allStreams.find((stream) => {
+            const link = stream.deepLinks?.player;
+            return typeof link === 'string' && !triedStreamPlayerLinks.current.has(link);
+        });
+
+        if (nextStream) {
+            toast.show({
+                type: 'info',
+                title: 'Trying another source',
+                message: 'That source failed to play - trying a different one.',
+                timeout: 4000
+            });
+            navigate(toPath(nextStream.deepLinks.player), { replace: true });
+        }
+    }, [error, sourcesLoading, allStreams]);
 
     const VIDEO_SCALES = ['contain', 'cover', 'fill'];
     const VIDEO_SCALE_LABELS = { contain: t('PLAYER_SCALE_FIT'), cover: t('PLAYER_SCALE_CROP'), fill: t('PLAYER_SCALE_STRETCH') };
@@ -373,7 +513,7 @@ const Player = () => {
     const onVideoDoubleClick = React.useCallback(() => {
         onPlayRequestedDebounced.cancel();
         onPauseRequestedDebounced.cancel();
-        toggleFullscreen();
+        toggleFullscreen(playerRef.current);
     }, [toggleFullscreen]);
 
     const onContainerMouseDown = React.useCallback((event) => {
@@ -395,8 +535,16 @@ const Player = () => {
         if (!event.nativeEvent.castDevicesMenuClosePrevented) {
             closeCastDevicesMenu();
         }
+        if (!event.nativeEvent.streamingServerMenuClosePrevented) {
+            closeStreamingServerMenu();
+        }
+        if (!event.nativeEvent.sourcesMenuClosePrevented) {
+            closeSourcesMenu();
+        }
 
         closeSideDrawer();
+        closeSearchPanel();
+        closeChatPanel();
     }, []);
 
     const onContainerMouseMove = React.useCallback((event) => {
@@ -945,6 +1093,7 @@ const Player = () => {
     }, []);
 
     return (
+        <MainNavBars route={'player'}>
         <div ref={playerRef} className={classnames(styles['player-container'], { [styles['overlayHidden']]: overlayHidden })}
             onMouseDown={onContainerMouseDown}
             onMouseMove={onContainerMouseMove}
@@ -1015,6 +1164,7 @@ const Player = () => {
                 title={player.title !== null ? player.title : ''}
                 backButton={true}
                 fullscreenButton={true}
+                fullscreenTarget={playerRef.current}
                 hdrInfo={video.state.hdrInfo}
                 onMouseMove={onBarMouseMove}
                 onMouseOver={onBarMouseMove}
@@ -1024,6 +1174,20 @@ const Player = () => {
                     <SideDrawerButton
                         className={classnames(styles['layer'], styles['side-drawer-button-layer'])}
                         onClick={toggleSideDrawer}
+                    />
+                    :
+                    null
+            }
+            {
+                !(video.state.buffering || !video.state.loaded) && error === null ?
+                    <CenterControls
+                        className={classnames(styles['center-controls-layer'])}
+                        paused={video.state.paused}
+                        seekTimeDuration={settings.seekTimeDuration}
+                        onSeekPrev={onSeekPrev}
+                        onSeekNext={onSeekNext}
+                        onPlayRequested={onPlayRequested}
+                        onPauseRequested={onPauseRequested}
                     />
                     :
                     null
@@ -1051,9 +1215,14 @@ const Player = () => {
                 onUnmuteRequested={onUnmuteRequested}
                 onVolumeChangeRequested={onVolumeChangeRequested}
                 onSeekRequested={onSeekRequested}
+                onSeekPrev={onSeekPrev}
+                onSeekNext={onSeekNext}
+                seekTimeDuration={settings.seekTimeDuration}
                 onToggleOptionsMenu={toggleOptionsMenu}
                 shellCastSupported={shellCastSupported}
                 onToggleCastDevicesMenu={toggleCastDevicesMenu}
+                onToggleStreamingServerMenu={toggleStreamingServerMenu}
+                onToggleSourcesMenu={toggleSourcesMenu}
                 onToggleSubtitlesMenu={toggleSubtitlesMenu}
                 onToggleAudioMenu={toggleAudioMenu}
                 onToggleSpeedMenu={toggleSpeedMenu}
@@ -1062,6 +1231,8 @@ const Player = () => {
                 onVideoScaleChanged={onVideoScaleChanged}
                 onToggleStatisticsMenu={toggleStatisticsMenu}
                 onToggleSideDrawer={toggleSideDrawer}
+                onToggleSearchPanel={toggleSearchPanel}
+                onToggleChatPanel={toggleChatPanel}
                 onMouseMove={onBarMouseMove}
                 onMouseOver={onBarMouseMove}
                 onTouchEnd={onContainerMouseLeave}
@@ -1097,6 +1268,25 @@ const Player = () => {
                     onDeviceSelected={onCastDeviceSelected}
                 />
             </Transition>
+            <Transition when={streamingServerMenuOpen} name={'fade'}>
+                <StreamingServerMenu
+                    className={classnames(styles['layer'], styles['menu-layer'])}
+                    urls={ctx.streamingServerUrls}
+                    selectedUrl={profile.settings.streamingServerUrl}
+                    status={streamingServer.settings?.type ?? null}
+                    onUrlSelected={onStreamingServerUrlSelected}
+                />
+            </Transition>
+            <Transition when={sourcesMenuOpen} name={'fade'}>
+                <SourcesMenu
+                    className={classnames(styles['layer'], styles['menu-layer'])}
+                    streams={allStreams}
+                    loading={sourcesLoading}
+                    videoId={videoId}
+                    selectedStreamLink={player.selected?.stream?.deepLinks?.player}
+                    onStreamSelected={onSourceSelected}
+                />
+            </Transition>
             <Transition when={sideDrawerOpen} name={'slide-left'}>
                 <SideDrawer
                     className={classnames(styles['layer'], styles['side-drawer-layer'])}
@@ -1104,6 +1294,19 @@ const Player = () => {
                     seriesInfo={player.seriesInfo}
                     closeSideDrawer={closeSideDrawer}
                     selected={player.selected?.streamRequest?.path?.id}
+                />
+            </Transition>
+            <Transition when={searchPanelOpen} name={'slide-left'}>
+                <SearchPanel
+                    className={classnames(styles['layer'], styles['side-drawer-layer'])}
+                    closeSearchPanel={closeSearchPanel}
+                />
+            </Transition>
+            <Transition when={chatPanelOpen} name={'slide-left'}>
+                <ChatPanel
+                    className={classnames(styles['layer'], styles['side-drawer-layer'])}
+                    compact
+                    closeChatPanel={closeChatPanel}
                 />
             </Transition>
             <Transition when={subtitlesMenuOpen} name={'fade'}>
@@ -1137,11 +1340,14 @@ const Player = () => {
                 />
             </Transition>
         </div>
+        </MainNavBars>
     );
 };
 
 const PlayerFallback = () => (
-    <div className={classnames(styles['player-container'])} />
+    <MainNavBars route={'player'}>
+        <div className={classnames(styles['player-container'])} />
+    </MainNavBars>
 );
 
 module.exports = withCoreSuspender(Player, PlayerFallback);

@@ -3,7 +3,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const classnames = require('classnames');
-const { default: Icon } = require('@stremio/stremio-icons/react');
+const { default: Icon } = require('stremio/components/Icon');
 const { t } = require('i18next');
 const { useCore } = require('stremio/core');
 const { useProfile, usePlatform, useToast, useBinaryState } = require('stremio/common');
@@ -121,7 +121,7 @@ const Stream = ({ className, videoId, videoReleased, addonName, name, descriptio
             markVideoAsWatched();
             toast.show({
                 type: 'success',
-                title: 'Stream opened in external player',
+                title: t('STREAM_OPENED_EXTERNAL'),
                 timeout: 4000
             });
         }
@@ -197,9 +197,43 @@ const Stream = ({ className, videoId, videoReleased, addonName, name, descriptio
         }
     }, [streamLink]);
 
+    // Scraper-style addons (Torrentio and friends) pack a multi-line free-text description:
+    // release title, then a "seeders / size / source" line, then language flags - no reliable
+    // cross-addon structure to actually parse (confirmed earlier this session), but splitting on
+    // the FIRST newline is a structural assumption true of any addon's multi-line description,
+    // not content-specific parsing - giving the release title its own bold line reads far better
+    // than one dense wall of text, without inventing or reformatting what the addon actually said.
+    const [descriptionTitle, descriptionRest] = React.useMemo(() => {
+        if (typeof description !== 'string' || description.length === 0) {
+            return [null, null];
+        }
+
+        const newlineIndex = description.indexOf('\n');
+        return newlineIndex === -1 ?
+            [description, null]
+            :
+            [description.slice(0, newlineIndex), description.slice(newlineIndex + 1)];
+    }, [description]);
+
     const renderThumbnailFallback = React.useCallback(() => (
         <Icon className={styles['placeholder-icon']} name={'ic_broken_link'} />
     ), []);
+
+    // Stremio's own addon SDK convention (not addon-specific guessing, unlike description
+    // parsing above): stream.name is "<Addon Name>\n<Quality>" for essentially every
+    // scraper-style addon (Torrentio and friends) - was rendered as one unbroken string in a
+    // 6rem badge, so "Torrentio\n1080p" collapsed (nowrap) into "Torrentio 1080p" and got
+    // ellipsis-truncated into unreadable mush. Splitting it back apart gives the addon its own
+    // clean badge and the quality its own small label instead.
+    const [addonLabel, qualityLabel] = React.useMemo(() => {
+        const label = typeof name === 'string' && name.length > 0 ? name : addonName;
+        if (typeof label !== 'string') {
+            return [null, null];
+        }
+
+        const newlineIndex = label.indexOf('\n');
+        return newlineIndex === -1 ? [label, null] : [label.slice(0, newlineIndex), label.slice(newlineIndex + 1).trim()];
+    }, [name, addonName]);
 
     const renderLabel = React.useMemo(() => function renderLabel({ className, children, ...props }) {
         return (
@@ -217,7 +251,7 @@ const Stream = ({ className, videoId, videoReleased, addonName, name, descriptio
                             </div>
                             :
                             <div className={styles['addon-name-container']} title={name || addonName}>
-                                <div className={styles['addon-name']}>{name || addonName}</div>
+                                <div className={styles['addon-name']}>{addonLabel}</div>
                             </div>
                     }
                     {
@@ -230,12 +264,31 @@ const Stream = ({ className, videoId, videoReleased, addonName, name, descriptio
                             null
                     }
                 </div>
-                <div className={styles['description-container']} title={description}>{description}</div>
+                <div className={styles['description-container']} title={description}>
+                    {
+                        descriptionTitle !== null ?
+                            <div className={styles['description-title']}>{descriptionTitle}</div>
+                            :
+                            null
+                    }
+                    {
+                        descriptionRest !== null ?
+                            <div className={styles['description-meta']}>{descriptionRest}</div>
+                            :
+                            null
+                    }
+                </div>
+                {
+                    qualityLabel !== null && qualityLabel.length > 0 ?
+                        <div className={styles['quality-label']}>{qualityLabel}</div>
+                        :
+                        null
+                }
                 <Icon className={styles['icon']} name={'play'} />
                 {children}
             </Button>
         );
-    }, [thumbnail, progress, addonName, name, description, href, target, download, onClick]);
+    }, [thumbnail, progress, addonName, name, description, descriptionTitle, descriptionRest, addonLabel, qualityLabel, href, target, download, onClick]);
 
     const renderMenu = React.useMemo(() => function renderMenu() {
         return (

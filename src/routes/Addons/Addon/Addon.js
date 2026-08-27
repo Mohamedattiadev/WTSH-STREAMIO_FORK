@@ -1,15 +1,52 @@
-// Copyright (C) 2017-2023 Smart code 203358507
+// Copyright (C) 2017-2026 Smart code 203358507
 
 const React = require('react');
 const PropTypes = require('prop-types');
 const classnames = require('classnames');
 const { useTranslation } = require('react-i18next');
-const { default: Icon } = require('@stremio/stremio-icons/react');
+const { default: Icon } = require('stremio/components/Icon');
 const { Button, Image } = require('stremio/components');
 const styles = require('./styles');
 
-const Addon = ({ className, id, name, version, logo, description, types, behaviorHints, installed, onInstall, onUninstall, onConfigure, onOpen, onShare, dataset }) => {
+// A small, fixed palette of gradient pairs (matching the design mockup's hand-picked hub-card
+// colors) so an addon without its own logo image gets a distinct, consistent color instead of a
+// generic icon - same addon always gets the same color across renders/sessions, picked by a
+// cheap deterministic hash over its id rather than at random.
+const LOGO_GRADIENTS = [
+    ['#FF7A45', '#FF3D2E'],
+    ['#7C9EFF', '#3D5AFE'],
+    ['#5CD6A9', '#1F9A6C'],
+    ['#FFD166', '#E8A02C'],
+    ['#C792EA', '#8657C4'],
+    ['#4FD1E8', '#2A93A8'],
+];
+
+const gradientForId = (id) => {
+    const key = typeof id === 'string' && id.length > 0 ? id : 'addon';
+    let hash = 0;
+    for (let i = 0; i < key.length; i++) {
+        hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+    }
+    const [from, to] = LOGO_GRADIENTS[hash % LOGO_GRADIENTS.length];
+    return `linear-gradient(135deg, ${from}, ${to})`;
+};
+
+const hostnameForUrl = (url) => {
+    if (typeof url !== 'string' || url.length === 0) {
+        return null;
+    }
+
+    try {
+        return new URL(url).hostname;
+    } catch (e) {
+        return null;
+    }
+};
+
+const Addon = ({ className, id, name, version, logo, description, transportUrl, behaviorHints, installed, onInstall, onUninstall, onConfigure, onOpen, onShare, dataset }) => {
     const { t } = useTranslation();
+    const displayName = typeof name === 'string' && name.length > 0 ? name : id;
+    const source = React.useMemo(() => hostnameForUrl(transportUrl), [transportUrl]);
     const onInstallClick = React.useCallback((event) => {
         event.stopPropagation();
         if (typeof onInstall === 'function') {
@@ -71,11 +108,11 @@ const Addon = ({ className, id, name, version, logo, description, types, behavio
         }
     }, [onOpenClick]);
     const renderLogoFallback = React.useCallback(() => (
-        <Icon className={styles['icon']} name={'addons'} />
-    ), []);
+        <div className={styles['logo-letter']}>{displayName.charAt(0).toUpperCase()}</div>
+    ), [displayName]);
     return (
         <Button className={classnames(className, styles['addon-container'])} onKeyDown={onKeyDown} onClick={onOpenClick}>
-            <div className={styles['logo-container']}>
+            <div className={styles['logo-container']} style={{ background: gradientForId(id) }}>
                 <Image
                     className={styles['logo']}
                     src={logo}
@@ -84,57 +121,51 @@ const Addon = ({ className, id, name, version, logo, description, types, behavio
                 />
             </div>
             <div className={styles['info-container']}>
-                <div className={styles['name-container']} title={typeof name === 'string' && name.length > 0 ? name : id}>
-                    {typeof name === 'string' && name.length > 0 ? name : id}
+                <div className={styles['name-row']}>
+                    <div className={styles['name-container']} title={displayName}>{displayName}</div>
+                    {
+                        typeof version === 'string' && version.length > 0 ?
+                            <div className={styles['version-container']} title={t('ADDON_VERSION_SHORT', {version})}>{t('ADDON_VERSION_SHORT', {version})}</div>
+                            :
+                            null
+                    }
                 </div>
-                {
-                    typeof version === 'string' && version.length > 0 ?
-                        <div className={styles['version-container']} title={t('ADDON_VERSION_SHORT', {version})}>{t('ADDON_VERSION_SHORT', {version})}</div>
-                        :
-                        null
-                }
-                {
-                    Array.isArray(types) && types.length > 0 ?
-                        <div className={styles['types-container']}>
-                            {
-                                types.length === 1 ?
-                                    types.join('')
-                                    :
-                                    types.slice(0, -1).join(', ') + ' & ' + types[types.length - 1]
-                            }
-                        </div>
-                        :
-                        null
-                }
                 {
                     typeof description === 'string' && description.length > 0 ?
                         <div className={styles['description-container']} title={description}>{description}</div>
                         :
                         null
                 }
+                {
+                    source !== null ?
+                        <div className={styles['source-container']}>
+                            <Icon className={styles['source-icon']} name={'globe'} />
+                            {source}
+                        </div>
+                        :
+                        null
+                }
             </div>
             <div className={styles['buttons-container']}>
-                <div className={styles['action-buttons-container']}>
-                    {
-                        !behaviorHints.configurationRequired && behaviorHints.configurable ?
-                            <Button className={styles['configure-button-container']} title={t('ADDON_CONFIGURE')} tabIndex={-1} onClick={configureButtonOnClick}>
-                                <Icon className={styles['icon']} name={'settings'} />
-                            </Button>
-                            :
-                            null
-                    }
-                    <Button
-                        className={installed ? styles['uninstall-button-container'] : styles['install-button-container']}
-                        title={installed ? t('ADDON_UNINSTALL') : behaviorHints.configurationRequired ? t('ADDON_CONFIGURE') : t('ADDON_INSTALL')}
-                        tabIndex={-1}
-                        onClick={installed ? onUninstallClick : behaviorHints.configurationRequired ? configureButtonOnClick : onInstallClick}
-                    >
-                        <div className={styles['label']}>{installed ? t('ADDON_UNINSTALL') : behaviorHints.configurationRequired ? t('ADDON_CONFIGURE') : t('ADDON_INSTALL')}</div>
-                    </Button>
-                </div>
+                {
+                    !behaviorHints.configurationRequired && behaviorHints.configurable ?
+                        <Button className={styles['configure-button-container']} title={t('ADDON_CONFIGURE')} tabIndex={-1} onClick={configureButtonOnClick}>
+                            <Icon className={styles['icon']} name={'settings'} />
+                            <div className={styles['label']}>{t('ADDON_CONFIGURE')}</div>
+                        </Button>
+                        :
+                        null
+                }
+                <Button
+                    className={installed ? styles['uninstall-button-container'] : styles['install-button-container']}
+                    title={installed ? t('ADDON_UNINSTALL') : behaviorHints.configurationRequired ? t('ADDON_CONFIGURE') : t('ADDON_INSTALL')}
+                    tabIndex={-1}
+                    onClick={installed ? onUninstallClick : behaviorHints.configurationRequired ? configureButtonOnClick : onInstallClick}
+                >
+                    <div className={styles['label']}>{installed ? t('ADDON_UNINSTALL') : behaviorHints.configurationRequired ? t('ADDON_CONFIGURE') : t('ADDON_INSTALL')}</div>
+                </Button>
                 <Button className={styles['share-button-container']} title={t('SHARE_ADDON')} tabIndex={-1} onClick={shareButtonOnClick}>
                     <Icon className={styles['icon']} name={'share'} />
-                    <div className={styles['label']}>{ t('SHARE_ADDON') }</div>
                 </Button>
             </div>
         </Button>
@@ -148,6 +179,7 @@ Addon.propTypes = {
     version: PropTypes.string,
     logo: PropTypes.string,
     description: PropTypes.string,
+    transportUrl: PropTypes.string,
     types: PropTypes.arrayOf(PropTypes.string),
     behaviorHints: PropTypes.shape({
         adult: PropTypes.bool,

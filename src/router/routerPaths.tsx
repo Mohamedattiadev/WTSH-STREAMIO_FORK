@@ -35,6 +35,11 @@ export default [
         element: <routes.Search />,
     },
     {
+        path: '/chat',
+        view: 1,
+        element: <routes.Chat />,
+    },
+    {
         path: '/metadetails/:type?/:id?/:videoId?',
         view: 2,
         element: <routes.MetaDetails />,
@@ -46,22 +51,27 @@ export default [
     },
     {
         path: '/addons/:type?/:transportUrl?/:catalogId?',
-        view: 3,
+        view: 1,
         element: <routes.Addons />,
     },
     {
         path: '/settings',
-        view: 3,
+        view: 1,
         element: <routes.Settings />,
     },
     {
+        // Was view: 4 (a stacked overlay above every other route, the entire mechanism behind
+        // the old fullscreen takeover) - now view: 1, same depth as every other content route,
+        // so it renders as a normal route swap inside the shared MainNavBars shell instead of
+        // painting over the whole app. See Player.js for the embedded-vs-fullscreen split this
+        // enables.
         path: '/player/:stream/:streamTransportUrl?/:metaTransportUrl?/:type?/:id?/:videoId?',
-        view: 4,
+        view: 1,
         element: <routes.Player />,
     },
     {
         path: '/',
-        view: 0,
+        view: 1,
         element: <routes.Board />,
     },
     {

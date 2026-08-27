@@ -10,30 +10,121 @@
     flex-direction: column;
 
     &.compact {
+        // A clean, contained poster block instead of the full detail page's blurred full-bleed
+        // backdrop - matches the mockup's own compact preview panel, where the poster reads as
+        // a distinct image block above the text rather than a hazy background behind it.
+        .compact-poster-container {
+            flex: none;
+            align-self: stretch;
+            height: 9rem;
+            border-radius: 1rem;
+            overflow: hidden;
+            margin-bottom: 1rem;
+
+            .compact-poster {
+                display: block;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                object-position: center 20%;
+            }
+        }
+
+        .tag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.6rem;
+
+            .tag {
+                flex: none;
+                height: 1.8rem;
+                padding: 0 0.8rem;
+                display: flex;
+                align-items: center;
+                border-radius: 1rem;
+                border: 0.06rem solid var(--overlay-color);
+                font-size: 0.8rem;
+                font-weight: 600;
+                color: var(--primary-foreground-color);
+                white-space: nowrap;
+
+                &:hover, &:focus {
+                    background-color: var(--overlay-color);
+                    outline: none;
+                }
+            }
+        }
+
         .meta-info-container {
-            .logo, .logo-placeholder {
+            .logo {
                 width: 100%;
                 height: 6rem;
             }
 
+            // The compact side panel (Discover/Search/Library) is much narrower than the full
+            // detail page this component also renders for - the same 1.7rem title that reads
+            // fine full-width was overwhelming this panel, filling most of its visible height
+            // before any real info showed. Matches the mockup's own compact preview, where the
+            // title is a modest heading, not a hero treatment.
+            .logo-placeholder {
+                width: 100%;
+                height: auto;
+                margin-bottom: 1rem;
+                font-size: 1.2rem;
+            }
+
             .runtime-release-info-container {
                 justify-content: space-between;
+                margin-top: 0.5rem;
 
                 .runtime-label, .release-info-label {
-                    margin: 1rem 0.4rem;
+                    margin: 0 0.4rem 0 0;
+                    font-size: 0.95rem;
                 }
             }
 
             .description-container {
                 max-height: none;
+                margin-top: 0.75rem;
+                font-size: 0.9rem;
+                line-height: 1.6em;
+            }
+
+            .meta-links {
+                margin-top: 0.9rem;
+
+                .label-container {
+                    margin-bottom: 0.5rem;
+                    font-size: 0.8rem;
+                }
+
+                .link-container {
+                    padding: 0.3rem 0.9rem;
+                    font-size: 0.85rem;
+                }
             }
         }
 
         .action-buttons-container {
-            justify-content: space-between;
+            // space-between reads fine with exactly one row of buttons, but this row wraps
+            // once real content (a longer "Remove from Library" pill, the calendar button)
+            // pushes it past the panel's width - space-between then centers a lone wrapped
+            // button with a big gap before it, reading as a broken orphaned row. flex-start +
+            // an explicit gap wraps naturally from the left instead, regardless of row count.
+            justify-content: flex-start;
+            gap: 0.75rem;
 
             .action-button:not(:last-child), .group-container:not(:last-child) {
                 margin-right: 0;
+            }
+
+            // Tighter than the base 0.75rem/1.3rem pill padding, matching the mockup's own more
+            // compact button sizing within a narrow panel - the Show/Trailer/Library pills fit
+            // one row far more often at this width.
+            .action-button:global(.wide) {
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
             }
         }
     }
@@ -83,8 +174,10 @@
         }
 
         .logo-placeholder {
+            font-family: var(--font-display);
+            font-weight: 800;
             font-size: 1.7rem;
-            color: @color-surface-light5-90;
+            color: var(--primary-foreground-color);
         }
 
         .runtime-release-info-container {
@@ -186,14 +279,18 @@
     
         .action-button {
             flex: none;
-            width: 4rem;
-            height: 4rem;
+            width: 2.75rem;
+            height: 2.75rem;
             margin-bottom: 1rem;
 
+            // The base 4rem/4rem circle sizing is for the icon-only variant (Share, etc.) -
+            // a labeled pill inherited that same forced 4rem height regardless of its much
+            // shorter content, reading as an oversized, chunky button next to 0.85rem text.
             &:global(.wide) {
                 width: auto;
-                padding: 0 2rem;
-                border-radius: 4rem;
+                height: auto;
+                padding: 0.75rem 1.3rem;
+                border-radius: 3rem;
             }
 
             &:not(:last-child) {
@@ -201,8 +298,10 @@
             }
 
             &.show-button {
+                background-color: var(--primary-accent-color);
+
                 &:hover, &:focus {
-                    background-color: var( --secondary-accent-color);
+                    background-color: var(--ember-2);
                     outline: none;
                 }
             }
@@ -245,7 +344,7 @@
             .action-button, .group-container {
                 padding: 0 1.5rem !important;
                 margin-right: 0rem !important;
-                height: 3rem;
+                height: 2.5rem;
                 border-radius: 2rem;
             }
         }

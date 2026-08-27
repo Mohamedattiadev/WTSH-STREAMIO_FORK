@@ -1,0 +1,482 @@
+{
+    "NOTIFICATIONS_PANEL_TITLE": {
+        "en-US": "Notifications",
+        "ar-AR": "الإشعارات",
+        "tr-TR": "Bildirimler",
+        "fr-FR": "Notifications",
+        "nl-NL": "Meldingen",
+        "es-ES": "Notificaciones"
+    },
+    "NOTIFICATIONS_NEW_EPISODE": {
+        "en-US": "New episode available",
+        "ar-AR": "حلقة جديدة متاحة",
+        "tr-TR": "Yeni bölüm mevcut",
+        "fr-FR": "Nouvel épisode disponible",
+        "nl-NL": "Nieuwe aflevering beschikbaar",
+        "es-ES": "Nuevo episodio disponible"
+    },
+    "NOTIFICATIONS_NEW_EPISODES": {
+        "en-US": "{{count}} new episodes available",
+        "ar-AR": "{{count}} حلقات جديدة متاحة",
+        "tr-TR": "{{count}} yeni bölüm mevcut",
+        "fr-FR": "{{count}} nouveaux épisodes disponibles",
+        "nl-NL": "{{count}} nieuwe afleveringen beschikbaar",
+        "es-ES": "{{count}} nuevos episodios disponibles"
+    },
+    "NOTIFICATIONS_EMPTY": {
+        "en-US": "You're all caught up.",
+        "ar-AR": "أنت على اطلاع بكل شيء.",
+        "tr-TR": "Her şey güncel.",
+        "fr-FR": "Vous êtes à jour.",
+        "nl-NL": "Je bent helemaal bij.",
+        "es-ES": "Estás al día."
+    },
+    "SOURCES_MENU_TITLE": {
+        "en-US": "Switch Source",
+        "ar-AR": "تبديل المصدر",
+        "tr-TR": "Kaynağı Değiştir",
+        "fr-FR": "Changer de source",
+        "nl-NL": "Bron wisselen",
+        "es-ES": "Cambiar fuente"
+    },
+    "SOURCES_MENU_LOADING": {
+        "en-US": "Loading other sources...",
+        "ar-AR": "جارٍ تحميل مصادر أخرى...",
+        "tr-TR": "Diğer kaynaklar yükleniyor...",
+        "fr-FR": "Chargement d'autres sources...",
+        "nl-NL": "Andere bronnen laden...",
+        "es-ES": "Cargando otras fuentes..."
+    },
+    "SOURCES_MENU_EMPTY": {
+        "en-US": "No other sources found.",
+        "ar-AR": "لم يتم العثور على مصادر أخرى.",
+        "tr-TR": "Başka kaynak bulunamadı.",
+        "fr-FR": "Aucune autre source trouvée.",
+        "nl-NL": "Geen andere bronnen gevonden.",
+        "es-ES": "No se encontraron otras fuentes."
+    },
+    "TRAILER_PLAY": {
+        "en-US": "Play Trailer",
+        "ar-AR": "تشغيل الإعلان",
+        "tr-TR": "Fragmanı Oynat",
+        "fr-FR": "Lire la bande-annonce",
+        "nl-NL": "Trailer afspelen",
+        "es-ES": "Reproducir tráiler"
+    },
+    "TRAILER_WATCH_NOW": {
+        "en-US": "Watch Now",
+        "ar-AR": "شاهد الآن",
+        "tr-TR": "Şimdi İzle",
+        "fr-FR": "Regarder maintenant",
+        "nl-NL": "Nu kijken",
+        "es-ES": "Ver ahora"
+    },
+    "TRAILER_NOT_NOW": {
+        "en-US": "Not Now",
+        "ar-AR": "ليس الآن",
+        "tr-TR": "Şimdi Değil",
+        "fr-FR": "Pas maintenant",
+        "nl-NL": "Niet nu",
+        "es-ES": "Ahora no"
+    },
+    "TRAILER_IN_LIBRARY": {
+        "en-US": "In Library",
+        "ar-AR": "في المكتبة",
+        "tr-TR": "Kitaplıkta",
+        "fr-FR": "Dans la bibliothèque",
+        "nl-NL": "In bibliotheek",
+        "es-ES": "En la biblioteca"
+    },
+    "STREAM_OPENED_EXTERNAL": {
+        "en-US": "Stream opened in external player",
+        "ar-AR": "تم فتح البث في مشغل خارجي",
+        "tr-TR": "Yayın harici bir oynatıcıda açıldı",
+        "fr-FR": "Flux ouvert dans un lecteur externe",
+        "nl-NL": "Stream geopend in externe speler",
+        "es-ES": "Transmisión abierta en un reproductor externo"
+    },
+    "TRAILER_ADD_LIBRARY": {
+        "en-US": "Library",
+        "ar-AR": "المكتبة",
+        "tr-TR": "Kitaplık",
+        "fr-FR": "Bibliothèque",
+        "nl-NL": "Bibliotheek",
+        "es-ES": "Biblioteca"
+    },
+    "Chat": {
+        "en-US": "Chat",
+        "ar-AR": "الدردشة",
+        "tr-TR": "Sohbet",
+        "fr-FR": "Discussion",
+        "nl-NL": "Chat",
+        "es-ES": "Chat"
+    },
+    "TOPBAR_WELCOME": {
+        "en-US": "Welcome,",
+        "ar-AR": "أهلاً بك،",
+        "tr-TR": "Hoş geldin,",
+        "fr-FR": "Bienvenue,",
+        "nl-NL": "Welkom,",
+        "es-ES": "Bienvenido,"
+    },
+    "CHAT_TITLE": {
+        "en-US": "Ask WTSH",
+        "ar-AR": "اسأل WTSH",
+        "tr-TR": "WTSH'a Sor",
+        "fr-FR": "Demander à WTSH",
+        "nl-NL": "Vraag WTSH",
+        "es-ES": "Preguntar a WTSH"
+    },
+    "CHAT_OPEN_FULL": {
+        "en-US": "Open full chat",
+        "ar-AR": "فتح الدردشة كاملة",
+        "tr-TR": "Sohbeti tam ekranda aç",
+        "fr-FR": "Ouvrir le chat complet",
+        "nl-NL": "Volledige chat openen",
+        "es-ES": "Abrir chat completo"
+    },
+    "CHAT_EMPTY_TITLE": {
+        "en-US": "Ask for a recommendation from your installed addons",
+        "ar-AR": "اطلب توصية من الإضافات المثبتة لديك",
+        "tr-TR": "Yüklü eklentilerinizden bir öneri isteyin",
+        "fr-FR": "Demandez une recommandation à vos extensions installées",
+        "nl-NL": "Vraag een aanbeveling van je geïnstalleerde add-ons",
+        "es-ES": "Pide una recomendación a tus complementos instalados"
+    },
+    "CHAT_SUGGESTION_FUNNY": {
+        "en-US": "Something funny under 2 hours",
+        "ar-AR": "شيء مضحك أقل من ساعتين",
+        "tr-TR": "2 saatten kısa komik bir şey",
+        "fr-FR": "Quelque chose de drôle en moins de 2 heures",
+        "nl-NL": "Iets grappigs onder de 2 uur",
+        "es-ES": "Algo divertido de menos de 2 horas"
+    },
+    "CHAT_SUGGESTION_SCIFI": {
+        "en-US": "Sci-fi movie like Interstellar",
+        "ar-AR": "فيلم خيال علمي مثل إنترستيلر",
+        "tr-TR": "Interstellar gibi bir bilim kurgu filmi",
+        "fr-FR": "Un film de science-fiction comme Interstellar",
+        "nl-NL": "Sciencefictionfilm zoals Interstellar",
+        "es-ES": "Película de ciencia ficción como Interstellar"
+    },
+    "CHAT_SUGGESTION_ANIMATED": {
+        "en-US": "Best animated movies",
+        "ar-AR": "أفضل أفلام الرسوم المتحركة",
+        "tr-TR": "En iyi animasyon filmleri",
+        "fr-FR": "Les meilleurs films d'animation",
+        "nl-NL": "Beste animatiefilms",
+        "es-ES": "Las mejores películas de animación"
+    },
+    "CHAT_SEARCHING_ADDONS": {
+        "en-US": "Searching your addons...",
+        "ar-AR": "جارٍ البحث في إضافاتك...",
+        "tr-TR": "Eklentileriniz taranıyor...",
+        "fr-FR": "Recherche dans vos extensions...",
+        "nl-NL": "Je add-ons doorzoeken...",
+        "es-ES": "Buscando en tus complementos..."
+    },
+    "CHAT_INPUT_PLACEHOLDER": {
+        "en-US": "Ask for a recommendation...",
+        "ar-AR": "اطلب توصية...",
+        "tr-TR": "Bir öneri isteyin...",
+        "fr-FR": "Demandez une recommandation...",
+        "nl-NL": "Vraag om een aanbeveling...",
+        "es-ES": "Pide una recomendación..."
+    },
+    "CHAT_SEND": {
+        "en-US": "Send",
+        "ar-AR": "إرسال",
+        "tr-TR": "Gönder",
+        "fr-FR": "Envoyer",
+        "nl-NL": "Verzenden",
+        "es-ES": "Enviar"
+    },
+    "CHAT_PERSIST_NOTE": {
+        "en-US": "Saved automatically - pick this conversation back up anytime from the chat icon.",
+        "ar-AR": "يُحفظ تلقائيًا - يمكنك متابعة هذه المحادثة في أي وقت من أيقونة الدردشة.",
+        "tr-TR": "Otomatik olarak kaydedilir - bu sohbete istediğiniz zaman sohbet simgesinden devam edebilirsiniz.",
+        "fr-FR": "Enregistré automatiquement - reprenez cette conversation à tout moment depuis l'icône de chat.",
+        "nl-NL": "Automatisch opgeslagen - pak dit gesprek op elk moment weer op via het chatpictogram.",
+        "es-ES": "Se guarda automáticamente - retoma esta conversación cuando quieras desde el icono de chat."
+    },
+    "ADD_TO_CALENDAR": {
+        "en-US": "Add to Calendar",
+        "ar-AR": "أضف إلى التقويم",
+        "tr-TR": "Takvime Ekle",
+        "fr-FR": "Ajouter au calendrier",
+        "nl-NL": "Toevoegen aan agenda",
+        "es-ES": "Añadir al calendario"
+    },
+    "ADD_TO_CALENDAR_SIGNIN_TITLE": {
+        "en-US": "Sign in required",
+        "ar-AR": "يلزم تسجيل الدخول",
+        "tr-TR": "Giriş yapmanız gerekiyor",
+        "fr-FR": "Connexion requise",
+        "nl-NL": "Inloggen vereist",
+        "es-ES": "Inicio de sesión necesario"
+    },
+    "ADD_TO_CALENDAR_SIGNIN_MSG": {
+        "en-US": "Sign in to \"Watch Reminders & Chat Sync\" in Settings to add calendar reminders.",
+        "ar-AR": "سجّل الدخول إلى \"تذكيرات المشاهدة ومزامنة الدردشة\" في الإعدادات لإضافة تذكيرات التقويم.",
+        "tr-TR": "Takvim hatırlatıcıları eklemek için Ayarlar'daki \"İzleme Hatırlatıcıları ve Sohbet Senkronizasyonu\"na giriş yapın.",
+        "fr-FR": "Connectez-vous à « Rappels de visionnage et synchronisation du chat » dans les paramètres pour ajouter des rappels au calendrier.",
+        "nl-NL": "Log in bij \"Kijkherinneringen & Chatsynchronisatie\" in Instellingen om agenda-herinneringen toe te voegen.",
+        "es-ES": "Inicia sesión en \"Recordatorios y sincronización de chat\" en Ajustes para añadir recordatorios al calendario."
+    },
+    "ADD_TO_CALENDAR_SUCCESS_TITLE": {
+        "en-US": "Added to calendar",
+        "ar-AR": "أُضيف إلى التقويم",
+        "tr-TR": "Takvime eklendi",
+        "fr-FR": "Ajouté au calendrier",
+        "nl-NL": "Toegevoegd aan agenda",
+        "es-ES": "Añadido al calendario"
+    },
+    "CALENDAR_ITEM_SCHEDULED": {
+        "en-US": "\"{{title}}\" was scheduled.",
+        "ar-AR": "تمت جدولة \"{{title}}\".",
+        "tr-TR": "\"{{title}}\" planlandı.",
+        "fr-FR": "« {{title}} » a été programmé.",
+        "nl-NL": "\"{{title}}\" is ingepland.",
+        "es-ES": "\"{{title}}\" ha sido programado."
+    },
+    "STREAMING_SERVER_MENU_TITLE": {
+        "en-US": "Streaming Server",
+        "ar-AR": "خادم البث",
+        "tr-TR": "Yayın Sunucusu",
+        "fr-FR": "Serveur de streaming",
+        "nl-NL": "Streamingserver",
+        "es-ES": "Servidor de streaming"
+    },
+    "STREAMING_SERVER_LOCAL": {
+        "en-US": "Local Server",
+        "ar-AR": "الخادم المحلي",
+        "tr-TR": "Yerel Sunucu",
+        "fr-FR": "Serveur local",
+        "nl-NL": "Lokale server",
+        "es-ES": "Servidor local"
+    },
+    "STREAMING_SERVER_SWITCHING_TITLE": {
+        "en-US": "Switching streaming server",
+        "ar-AR": "جارٍ تبديل خادم البث",
+        "tr-TR": "Yayın sunucusu değiştiriliyor",
+        "fr-FR": "Changement de serveur de streaming",
+        "nl-NL": "Streamingserver wisselen",
+        "es-ES": "Cambiando de servidor de streaming"
+    },
+    "STREAMING_SERVER_SETUP_HINT": {
+        "en-US": "This is what makes playback work — Stremio does not stream video from our servers. This runs a small server on your own device that fetches and streams the video privately, just for you.",
+        "ar-AR": "هذا ما يجعل التشغيل يعمل — لا يبث Stremio الفيديو من خوادمنا. هذا يشغّل خادمًا صغيرًا على جهازك يجلب الفيديو ويبثه بشكل خاص، لك فقط.",
+        "tr-TR": "Oynatmayı çalıştıran şey bu — Stremio videoyu kendi sunucularımızdan yayınlamaz. Bu, kendi cihazınızda küçük bir sunucu çalıştırarak videoyu yalnızca sizin için özel olarak getirir ve yayınlar.",
+        "fr-FR": "C'est ce qui permet la lecture — Stremio ne diffuse pas la vidéo depuis nos serveurs. Ceci exécute un petit serveur sur votre propre appareil qui récupère et diffuse la vidéo, en privé, rien que pour vous.",
+        "nl-NL": "Dit is wat afspelen mogelijk maakt — Stremio streamt geen video vanaf onze servers. Dit draait een kleine server op je eigen apparaat die de video privé ophaalt en streamt, alleen voor jou.",
+        "es-ES": "Esto es lo que hace posible la reproducción — Stremio no transmite el vídeo desde nuestros servidores. Esto ejecuta un pequeño servidor en tu propio dispositivo que obtiene y transmite el vídeo de forma privada, solo para ti."
+    },
+    "COPY_COMMAND": {
+        "en-US": "Copy command",
+        "ar-AR": "نسخ الأمر",
+        "tr-TR": "Komutu kopyala",
+        "fr-FR": "Copier la commande",
+        "nl-NL": "Opdracht kopiëren",
+        "es-ES": "Copiar comando"
+    },
+    "COMMAND_COPIED": {
+        "en-US": "Command copied — paste it in a terminal",
+        "ar-AR": "تم نسخ الأمر — الصقه في الطرفية",
+        "tr-TR": "Komut kopyalandı — bir terminale yapıştırın",
+        "fr-FR": "Commande copiée — collez-la dans un terminal",
+        "nl-NL": "Opdracht gekopieerd — plak deze in een terminal",
+        "es-ES": "Comando copiado — pégalo en una terminal"
+    },
+    "SWITCH_OS": {
+        "en-US": "Click to switch OS",
+        "ar-AR": "انقر لتبديل نظام التشغيل",
+        "tr-TR": "İşletim sistemini değiştirmek için tıklayın",
+        "fr-FR": "Cliquez pour changer de système",
+        "nl-NL": "Klik om van besturingssysteem te wisselen",
+        "es-ES": "Haz clic para cambiar de sistema operativo"
+    },
+    "GEMINI_LABEL": {
+        "en-US": "Ask WTSH (Gemini API Key)",
+        "ar-AR": "اسأل WTSH (مفتاح Gemini API)",
+        "tr-TR": "WTSH'a Sor (Gemini API Anahtarı)",
+        "fr-FR": "Demander à WTSH (clé API Gemini)",
+        "nl-NL": "Vraag WTSH (Gemini API-sleutel)",
+        "es-ES": "Preguntar a WTSH (clave de API de Gemini)"
+    },
+    "GEMINI_DESCRIPTION": {
+        "en-US": "Optional - use your own free Gemini key for Chat instead of relying on the app's shared key.",
+        "ar-AR": "اختياري - استخدم مفتاح Gemini المجاني الخاص بك للدردشة بدلاً من الاعتماد على المفتاح المشترك للتطبيق.",
+        "tr-TR": "İsteğe bağlı - uygulamanın paylaşılan anahtarına güvenmek yerine Sohbet için kendi ücretsiz Gemini anahtarınızı kullanın.",
+        "fr-FR": "Facultatif - utilisez votre propre clé Gemini gratuite pour le chat au lieu de la clé partagée de l'application.",
+        "nl-NL": "Optioneel - gebruik je eigen gratis Gemini-sleutel voor Chat in plaats van de gedeelde sleutel van de app.",
+        "es-ES": "Opcional - usa tu propia clave gratuita de Gemini para el chat en lugar de la clave compartida de la aplicación."
+    },
+    "GEMINI_GET_KEY": {
+        "en-US": "Get a key",
+        "ar-AR": "احصل على مفتاح",
+        "tr-TR": "Anahtar edinin",
+        "fr-FR": "Obtenir une clé",
+        "nl-NL": "Sleutel aanvragen",
+        "es-ES": "Obtener una clave"
+    },
+    "GEMINI_HOWTO_TOGGLE": {
+        "en-US": "How do I get a key?",
+        "ar-AR": "كيف أحصل على مفتاح؟",
+        "tr-TR": "Anahtarı nasıl alırım?",
+        "fr-FR": "Comment obtenir une clé ?",
+        "nl-NL": "Hoe krijg ik een sleutel?",
+        "es-ES": "¿Cómo obtengo una clave?"
+    },
+    "GEMINI_STEP_1": {
+        "en-US": "Open aistudio.google.com/app/apikey and sign in with any Google account.",
+        "ar-AR": "افتح aistudio.google.com/app/apikey وسجّل الدخول بأي حساب Google.",
+        "tr-TR": "aistudio.google.com/app/apikey adresini açın ve herhangi bir Google hesabıyla giriş yapın.",
+        "fr-FR": "Ouvrez aistudio.google.com/app/apikey et connectez-vous avec un compte Google.",
+        "nl-NL": "Open aistudio.google.com/app/apikey en log in met een Google-account.",
+        "es-ES": "Abre aistudio.google.com/app/apikey e inicia sesión con cualquier cuenta de Google."
+    },
+    "GEMINI_STEP_2": {
+        "en-US": "Click Create API key (accept the default project if it asks you to pick one - any project works).",
+        "ar-AR": "انقر على إنشاء مفتاح API (اقبل المشروع الافتراضي إذا طُلب منك اختيار واحد - أي مشروع يعمل).",
+        "tr-TR": "API Anahtarı Oluştur'a tıklayın (bir proje seçmenizi isterse varsayılan projeyi kabul edin - herhangi bir proje işe yarar).",
+        "fr-FR": "Cliquez sur Créer une clé API (acceptez le projet par défaut s'il vous est demandé d'en choisir un - n'importe quel projet fonctionne).",
+        "nl-NL": "Klik op API-sleutel maken (accepteer het standaardproject als je gevraagd wordt er een te kiezen - elk project werkt).",
+        "es-ES": "Haz clic en Crear clave de API (acepta el proyecto predeterminado si te pide elegir uno - cualquier proyecto sirve)."
+    },
+    "GEMINI_STEP_3": {
+        "en-US": "Copy the key it generates.",
+        "ar-AR": "انسخ المفتاح الذي يُنشأ.",
+        "tr-TR": "Oluşturulan anahtarı kopyalayın.",
+        "fr-FR": "Copiez la clé générée.",
+        "nl-NL": "Kopieer de gegenereerde sleutel.",
+        "es-ES": "Copia la clave que genera."
+    },
+    "GEMINI_STEP_4": {
+        "en-US": "Paste it into the field below and click Save.",
+        "ar-AR": "الصقه في الحقل أدناه وانقر على حفظ.",
+        "tr-TR": "Aşağıdaki alana yapıştırın ve Kaydet'e tıklayın.",
+        "fr-FR": "Collez-la dans le champ ci-dessous et cliquez sur Enregistrer.",
+        "nl-NL": "Plak deze in het veld hieronder en klik op Opslaan.",
+        "es-ES": "Pégala en el campo de abajo y haz clic en Guardar."
+    },
+    "GEMINI_PLACEHOLDER": {
+        "en-US": "Gemini API key",
+        "ar-AR": "مفتاح Gemini API",
+        "tr-TR": "Gemini API anahtarı",
+        "fr-FR": "Clé API Gemini",
+        "nl-NL": "Gemini API-sleutel",
+        "es-ES": "Clave de API de Gemini"
+    },
+    "GEMINI_SAVE": {
+        "en-US": "Save",
+        "ar-AR": "حفظ",
+        "tr-TR": "Kaydet",
+        "fr-FR": "Enregistrer",
+        "nl-NL": "Opslaan",
+        "es-ES": "Guardar"
+    },
+    "GEMINI_SAVED": {
+        "en-US": "Saved",
+        "ar-AR": "تم الحفظ",
+        "tr-TR": "Kaydedildi",
+        "fr-FR": "Enregistré",
+        "nl-NL": "Opgeslagen",
+        "es-ES": "Guardado"
+    },
+    "GEMINI_REMOVE": {
+        "en-US": "Remove",
+        "ar-AR": "إزالة",
+        "tr-TR": "Kaldır",
+        "fr-FR": "Supprimer",
+        "nl-NL": "Verwijderen",
+        "es-ES": "Quitar"
+    },
+    "LANGUAGE_MENU_TITLE": {
+        "en-US": "Change language",
+        "ar-AR": "تغيير اللغة",
+        "tr-TR": "Dili değiştir",
+        "fr-FR": "Changer de langue",
+        "nl-NL": "Taal wijzigen",
+        "es-ES": "Cambiar idioma"
+    },
+    "CALENDAR_YOUR_REMINDERS": {
+        "en-US": "Your Reminders",
+        "ar-AR": "تذكيراتك",
+        "tr-TR": "Hatırlatıcılarınız",
+        "fr-FR": "Vos rappels",
+        "nl-NL": "Jouw herinneringen",
+        "es-ES": "Tus recordatorios"
+    },
+    "CALENDAR_ADD_REMINDER": {
+        "en-US": "Add reminder",
+        "ar-AR": "إضافة تذكير",
+        "tr-TR": "Hatırlatıcı ekle",
+        "fr-FR": "Ajouter un rappel",
+        "nl-NL": "Herinnering toevoegen",
+        "es-ES": "Añadir recordatorio"
+    },
+    "CALENDAR_TITLE_PLACEHOLDER": {
+        "en-US": "Title",
+        "ar-AR": "العنوان",
+        "tr-TR": "Başlık",
+        "fr-FR": "Titre",
+        "nl-NL": "Titel",
+        "es-ES": "Título"
+    },
+    "CALENDAR_ADD_BUTTON": {
+        "en-US": "Add",
+        "ar-AR": "إضافة",
+        "tr-TR": "Ekle",
+        "fr-FR": "Ajouter",
+        "nl-NL": "Toevoegen",
+        "es-ES": "Añadir"
+    },
+    "CALENDAR_ADDING": {
+        "en-US": "Adding…",
+        "ar-AR": "جارٍ الإضافة…",
+        "tr-TR": "Ekleniyor…",
+        "fr-FR": "Ajout en cours…",
+        "nl-NL": "Toevoegen…",
+        "es-ES": "Añadiendo…"
+    },
+    "CALENDAR_SIGNIN_HINT": {
+        "en-US": "Sign in to \"Watch Reminders & Chat Sync\" in Settings to get reminders here.",
+        "ar-AR": "سجّل الدخول إلى \"تذكيرات المشاهدة ومزامنة الدردشة\" في الإعدادات لعرض التذكيرات هنا.",
+        "tr-TR": "Buradaki hatırlatıcıları görmek için Ayarlar'daki \"İzleme Hatırlatıcıları ve Sohbet Senkronizasyonu\"na giriş yapın.",
+        "fr-FR": "Connectez-vous à « Rappels de visionnage et synchronisation du chat » dans les paramètres pour voir vos rappels ici.",
+        "nl-NL": "Log in bij \"Kijkherinneringen & Chatsynchronisatie\" in Instellingen om hier herinneringen te zien.",
+        "es-ES": "Inicia sesión en \"Recordatorios y sincronización de chat\" en Ajustes para ver tus recordatorios aquí."
+    },
+    "CALENDAR_EMPTY_HINT": {
+        "en-US": "No reminders yet - ask \"Ask WTSH\" to schedule something, like \"I'll watch [title] on Friday\".",
+        "ar-AR": "لا توجد تذكيرات بعد - اطلب من \"اسأل WTSH\" جدولة شيء، مثل \"سأشاهد [العنوان] يوم الجمعة\".",
+        "tr-TR": "Henüz hatırlatıcı yok - \"WTSH'a Sor\"dan bir şey planlamasını isteyin, örneğin \"Cuma günü [başlık] izleyeceğim\".",
+        "fr-FR": "Pas encore de rappels - demandez à « Demander à WTSH » de programmer quelque chose, comme « Je regarderai [titre] vendredi ».",
+        "nl-NL": "Nog geen herinneringen - vraag \"Vraag WTSH\" iets in te plannen, zoals \"Ik ga [titel] vrijdag kijken\".",
+        "es-ES": "Aún no hay recordatorios - pídele a \"Preguntar a WTSH\" que programe algo, como \"Veré [título] el viernes\"."
+    },
+    "CALENDAR_REMOVE": {
+        "en-US": "Remove",
+        "ar-AR": "إزالة",
+        "tr-TR": "Kaldır",
+        "fr-FR": "Supprimer",
+        "nl-NL": "Verwijderen",
+        "es-ES": "Quitar"
+    },
+    "CALENDAR_VIA_CHAT": {
+        "en-US": "via chat",
+        "ar-AR": "عبر الدردشة",
+        "tr-TR": "sohbet üzerinden",
+        "fr-FR": "via le chat",
+        "nl-NL": "via chat",
+        "es-ES": "vía chat"
+    },
+    "REMINDER_PREVIEW_REMOVE": {
+        "en-US": "Remove reminder",
+        "ar-AR": "إزالة التذكير",
+        "tr-TR": "Hatırlatıcıyı kaldır",
+        "fr-FR": "Supprimer le rappel",
+        "nl-NL": "Herinnering verwijderen",
+        "es-ES": "Quitar recordatorio"
+    }
+}

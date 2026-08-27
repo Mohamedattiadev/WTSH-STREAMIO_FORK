@@ -2,6 +2,7 @@
 
 const path = require('path');
 const os = require('os');
+const crypto = require('crypto');
 const { execSync } = require('child_process');
 const webpack = require('webpack');
 const threadLoader = require('thread-loader');
@@ -12,7 +13,23 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const packageJson = require('./package.json');
 
-const COMMIT_HASH = execSync('git rev-parse HEAD').toString().trim();
+// Local-dev only: fills in process.env from .env/.env.local for whatever isn't already set
+// (dotenv never overrides real env vars, so this is a no-op on Vercel, which sets these via its
+// own project settings before the build even starts - see webpack.EnvironmentPlugin below).
+require('dotenv').config();
+require('dotenv').config({ path: '.env.local', override: true });
+
+// Used purely as a cache-busting path segment for build assets - doesn't need to be an actual
+// git hash. Vercel CLI deploys (not Git-integrated) upload a plain file tarball with no .git
+// directory, so `git rev-parse` has nothing to read there; VERCEL_GIT_COMMIT_SHA covers
+// Git-integrated Vercel builds, and a random fallback covers everything else.
+const COMMIT_HASH = (() => {
+    try {
+        return execSync('git rev-parse HEAD').toString().trim();
+    } catch (e) {
+        return process.env.VERCEL_GIT_COMMIT_SHA || crypto.randomUUID().replace(/-/g, '');
+    }
+})();
 
 const THREAD_LOADER = {
     loader: 'thread-loader',
@@ -185,8 +202,96 @@ module.exports = (env, argv) => ({
         host: '0.0.0.0',
         static: false,
         hot: false,
-        server: 'https',
-        liveReload: false
+        // Plain http by default so the local Streaming Server (http://127.0.0.1:11470,
+        // no TLS) is reachable — a secure (https) page has its outgoing http:// fetches
+        // auto-upgraded to https by the browser, which fails against a non-TLS server.
+        // Set DEV_SERVER_HTTPS=true to serve over https instead (needed to test
+        // Chromecast locally, which requires a secure origin).
+        server: process.env.DEV_SERVER_HTTPS === 'true' ? 'https' : 'http',
+        liveReload: false,
+        // The Streaming Server (whether a local native install or the stremio/server
+        // Docker image) doesn't send Access-Control-Allow-Origin for arbitrary dev
+        // origins, so a direct cross-origin fetch from the app gets CORS-blocked
+        // (confirmed: browser reports "No 'Access-Control-Allow-Origin' header").
+        // Proxying it under the app's own origin sidesteps CORS entirely — add
+        // `http://localhost:8080/streaming-server/` as a Streaming Server URL in
+        // Settings to use this instead of the direct 127.0.0.1:11470 URL.
+        proxy: [
+            {
+                context: ['/streaming-server'],
+                target: 'http://127.0.0.1:11470',
+                pathRewrite: { '^/streaming-server': '' },
+                changeOrigin: true,
+                ws: true
+            }
+        ],
+        // Vercel serverless functions under api/ don't run under plain `webpack serve` - only
+        // Vercel's own runtime (or `vercel dev`) executes them. This re-hosts api/chat.js's
+        // handler directly on the dev server's own (already-Express) app so `/api/chat` works
+        // identically to production without requiring a Vercel account/link for local dev.
+        setupMiddlewares: (middlewares, devServer) => {
+            devServer.app.post('/api/chat', (req, res) => {
+                let body = '';
+                req.on('data', (chunk) => { body += chunk; });
+                req.on('end', async () => {
+                    try {
+                        req.body = body.length > 0 ? JSON.parse(body) : {};
+                    } catch (error) {
+                        res.status(400).json({ error: 'Invalid JSON body' });
+                        return;
+                    }
+                    delete require.cache[require.resolve('./api/chat.js')];
+                    const handler = require('./api/chat.js');
+                    await handler(req, res);
+                });
+            });
+            // Same re-hosting as /api/chat above - devServer.app is Express, which already
+            // parses the query string onto req.query for a plain GET, no manual body buffering
+            // needed here.
+            devServer.app.get('/api/reviews', async (req, res) => {
+                delete require.cache[require.resolve('./api/reviews.js')];
+                const handler = require('./api/reviews.js');
+                await handler(req, res);
+            });
+            // Same re-hosting as /api/reviews above.
+            devServer.app.get('/api/hero-enrichment', async (req, res) => {
+                delete require.cache[require.resolve('./api/hero-enrichment.js')];
+                const handler = require('./api/hero-enrichment.js');
+                await handler(req, res);
+            });
+            // Same re-hosting as /api/reviews above - the cache/proxy layer's observability
+            // endpoint (api/_lib/cache). Only responds once CACHE_STATS_TOKEN is set.
+            devServer.app.get('/api/cache-stats', async (req, res) => {
+                delete require.cache[require.resolve('./api/cache-stats.js')];
+                const handler = require('./api/cache-stats.js');
+                await handler(req, res);
+            });
+            // Same re-hosting as /api/reviews above - the combined hero + reviews endpoint.
+            devServer.app.get('/api/board-hero', async (req, res) => {
+                for (const m of ['./api/board-hero.js', './api/hero-enrichment.js', './api/reviews.js']) {
+                    delete require.cache[require.resolve(m)];
+                }
+                const handler = require('./api/board-hero.js');
+                await handler(req, res);
+            });
+            // Same re-hosting as /api/chat above.
+            devServer.app.post('/api/link-account', (req, res) => {
+                let body = '';
+                req.on('data', (chunk) => { body += chunk; });
+                req.on('end', async () => {
+                    try {
+                        req.body = body.length > 0 ? JSON.parse(body) : {};
+                    } catch (_error) {
+                        res.status(400).json({ error: 'Invalid JSON body' });
+                        return;
+                    }
+                    delete require.cache[require.resolve('./api/link-account.js')];
+                    const handler = require('./api/link-account.js');
+                    await handler(req, res);
+                });
+            });
+            return middlewares;
+        }
     },
     optimization: {
         minimize: true,
@@ -211,6 +316,8 @@ module.exports = (env, argv) => ({
         new webpack.ProgressPlugin(),
         new webpack.EnvironmentPlugin({
             SENTRY_DSN: null,
+            SUPABASE_URL: null,
+            SUPABASE_ANON_KEY: null,
             ...env,
             SERVICE_WORKER_DISABLED: false,
             DEBUG: argv.mode !== 'production',
@@ -230,6 +337,7 @@ module.exports = (env, argv) => ({
             patterns: [
                 { from: 'assets/favicons', to: 'favicons' },
                 { from: 'assets/images', to: 'images' },
+                { from: 'assets/fonts', to: 'assets/fonts' },
                 { from: 'assets/screenshots/*.webp', to: 'screenshots/[name][ext]' },
                 { from: '.well-known', to: '.well-known' },
                 { from: 'manifest.json', to: 'manifest.json' },

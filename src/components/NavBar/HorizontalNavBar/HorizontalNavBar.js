@@ -4,17 +4,21 @@ const React = require('react');
 const { useNavigate } = require('react-router');
 const PropTypes = require('prop-types');
 const classnames = require('classnames');
-const { default: Icon } = require('@stremio/stremio-icons/react');
+const { default: Icon } = require('stremio/components/Icon');
 const { Button, Image } = require('stremio/components');
 const { useFullscreen } = require('stremio/common/Fullscreen');
+const useProfile = require('stremio/common/useProfile');
 const { useHorizontalNavGamepadNavigation } = require('stremio/services/GamepadNavigation');
 const SearchBar = require('./SearchBar');
 const NavMenu = require('./NavMenu');
+const NotificationsMenu = require('./NotificationsMenu');
+const { default: LanguageMenu } = require('./LanguageMenu');
 const styles = require('./styles');
 const { t } = require('i18next');
 
-const HorizontalNavBar = React.memo(({ className, route, query, title, backButton, searchBar, fullscreenButton, navMenu, originPath, hdrInfo, ...props }) => {
+const HorizontalNavBar = React.memo(({ className, route, query, title, backButton, searchBar, fullscreenButton, fullscreenTarget, navMenu, originPath, hdrInfo, ...props }) => {
     const navigate = useNavigate();
+    const profile = useProfile();
     const backButtonOnClick = React.useCallback(() => {
         if (originPath) {
             navigate(originPath, { replace: true });
@@ -23,9 +27,54 @@ const HorizontalNavBar = React.memo(({ className, route, query, title, backButto
         }
     }, [originPath, navigate]);
     const [fullscreen, requestFullscreen, exitFullscreen, , supported] = useFullscreen();
+    // fullscreenTarget (e.g. the Player route's own video+controls container) fullscreens just
+    // that element instead of the whole app - undefined defaults to whole-document fullscreen,
+    // the existing behavior every other route's topbar button keeps.
+    const onFullscreenButtonClick = React.useCallback(() => {
+        fullscreen ? exitFullscreen() : requestFullscreen(fullscreenTarget);
+    }, [fullscreen, exitFullscreen, requestFullscreen, fullscreenTarget]);
+    // Email is the only real identity field stremio-core exposes (no display name) - the
+    // local-part before "@" is used as a readable name, and its first two letters as the
+    // avatar's initials. Both derive from the user's own real email, nothing invented.
+    const displayName = React.useMemo(() => {
+        if (profile.auth === null) {
+            return null;
+        }
+        const email = profile.auth.user.email;
+        return typeof email === 'string' && email.length > 0 ? email.split('@')[0] : null;
+    }, [profile.auth]);
+    const initials = React.useMemo(() => {
+        return displayName !== null ? displayName.slice(0, 2).toUpperCase() : null;
+    }, [displayName]);
     const renderNavMenuLabel = React.useCallback(({ ref, className, onClick, children, }) => (
-        <Button ref={ref} className={classnames(className, styles['button-container'], styles['menu-button-container'])} tabIndex={-1} onClick={onClick}>
-            <Icon className={styles['icon']} name={'person-outline'} />
+        <Button ref={ref} className={classnames(className, styles['avatar-group-container'])} tabIndex={-1} onClick={onClick}>
+            {
+                displayName !== null ?
+                    <div className={styles['welcome-text']}>{t('TOPBAR_WELCOME')} <strong>{displayName}</strong></div>
+                    :
+                    null
+            }
+            <div className={styles['avatar-container']}>
+                {
+                    initials !== null ?
+                        <div className={styles['avatar-initials']}>{initials}</div>
+                        :
+                        <Icon className={styles['icon']} name={'person-outline'} />
+                }
+            </div>
+            <Icon className={styles['avatar-chevron']} name={'caret-down'} />
+            {children}
+        </Button>
+    ), [displayName, initials]);
+    const renderNotificationsLabel = React.useCallback(({ ref, className, onClick, children, count }) => (
+        <Button ref={ref} className={classnames(className, styles['button-container'], styles['notifications-button-container'])} title={t('NOTIFICATIONS_PANEL_TITLE')} tabIndex={-1} onClick={onClick}>
+            <Icon className={styles['icon']} name={'notifications'} />
+            {
+                count > 0 ?
+                    <div className={styles['notifications-badge']}>{count > 9 ? '9+' : count}</div>
+                    :
+                    null
+            }
             {children}
         </Button>
     ), []);
@@ -68,10 +117,22 @@ const HorizontalNavBar = React.memo(({ className, route, query, title, backButto
                         null
                 }
                 {
+                    navMenu ?
+                        <NotificationsMenu renderLabel={renderNotificationsLabel} />
+                        :
+                        null
+                }
+                {
                     supported && fullscreenButton ?
-                        <Button className={styles['button-container']} title={fullscreen ? t('EXIT_FULLSCREEN') : t('ENTER_FULLSCREEN')} tabIndex={-1} onClick={fullscreen ? exitFullscreen : requestFullscreen}>
+                        <Button className={styles['button-container']} title={fullscreen ? t('EXIT_FULLSCREEN') : t('ENTER_FULLSCREEN')} tabIndex={-1} onClick={onFullscreenButtonClick}>
                             <Icon className={styles['icon']} name={fullscreen ? 'minimize' : 'maximize'} />
                         </Button>
+                        :
+                        null
+                }
+                {
+                    navMenu ?
+                        <LanguageMenu />
                         :
                         null
                 }
@@ -96,6 +157,7 @@ HorizontalNavBar.propTypes = {
     backButton: PropTypes.bool,
     searchBar: PropTypes.bool,
     fullscreenButton: PropTypes.bool,
+    fullscreenTarget: PropTypes.instanceOf(typeof HTMLElement !== 'undefined' ? HTMLElement : Object),
     navMenu: PropTypes.bool,
     originPath: PropTypes.string,
     hdrInfo: PropTypes.shape({

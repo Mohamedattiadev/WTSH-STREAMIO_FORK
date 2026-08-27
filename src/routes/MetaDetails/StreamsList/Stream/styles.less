@@ -17,17 +17,22 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 1rem;
-    padding: 0.5rem 1rem;
-    margin-bottom: 0.5rem;
-    border-radius: var(--border-radius);
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.6rem;
+    border: 0.06rem solid var(--overlay-color);
+    border-radius: 0.85rem;
+    background-color: rgba(255, 255, 255, 0.02);
+    transition: border-color 0.15s ease-out, background-color 0.15s ease-out;
 
     &:hover, &:focus {
-        background-color: var(--overlay-color);
+        border-color: var(--primary-accent-color-soft);
+        background-color: var(--surface-elevated-color);
     }
 
     &:hover, &:focus, &:global(.selected) {
         .icon {
             opacity: 1;
+            background-color: var(--primary-accent-color);
         }
     }
 
@@ -35,33 +40,49 @@
         flex: none;
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.6rem;
 
         .thumbnail {
             display: block;
-            height: 5rem;
-            width: 8rem;
+            height: 4rem;
+            width: 6.5rem;
+            border-radius: 0.5rem;
             object-fit: cover;
             object-position: center;
-            opacity: 0.9;
         }
 
         .placeholder-icon {
             display: block;
-            height: 5rem;
-            width: 8rem;
+            height: 4rem;
+            width: 6.5rem;
             padding: 1rem;
+            border-radius: 0.5rem;
             color: var(--primary-foreground-color);
             background-color: var(--overlay-color);
             opacity: 0.25;
         }
 
+        .addon-name-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 2rem;
+            padding: 0 0.7rem;
+            border-radius: 0.5rem;
+            background: linear-gradient(135deg, var(--ember), var(--ember-2));
+        }
+
         .addon-name {
-            width: 7rem;
-            font-size: 1.1rem;
-            text-align: left;
-            white-space: pre-wrap;
-            color: var(--primary-foreground-color);
+            width: auto;
+            max-width: 6rem;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.78rem;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #20100a;
         }
 
         .progress-bar-container {
@@ -91,25 +112,73 @@
 
     .description-container {
         flex: 1;
+        min-width: 0;
         display: flex;
         flex-direction: column;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        white-space: pre;
-        overflow-y: visible;
-        text-overflow: ellipsis;
-        color: var(--primary-foreground-color);
+        gap: 0.2rem;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: var(--muted-foreground-color);
+
+        // Was a single nowrap+ellipsis line - a real release filename ("Silo S03E08 Gray Goo
+        // 2160p ATVP WEB-DL DDP5.1 Atmos DV HDR H265-FLUX") routinely runs well past what one
+        // line can show, so it got chopped mid-word into something unreadable. Two lines gives
+        // it enough room to actually read the title, matching the same clamp technique already
+        // used just below for .description-meta.
+        .description-title {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            font-weight: 600;
+            color: var(--primary-foreground-color);
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        // -webkit-line-clamp only truncates a -webkit-box, not a flex/block container - this
+        // whole block used to be `display: flex` with overflow-y: visible, so the clamp never
+        // actually applied, and `white-space: pre` (vs. pre-line) meant embedded newlines were
+        // kept but nothing could wrap, so one long raw addon line (a common shape from scraper
+        // addons like Torrentio - title, then a "seeders / size / source" line, then language
+        // flags) would run past the card's width instead of wrapping or truncating. This is a
+        // structural fix (how the text box lays out and clips), not addon-specific parsing.
+        .description-meta {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            white-space: pre-line;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.8rem;
+            opacity: 0.85;
+        }
     }
-    
+
+    // The quality tag (e.g. "1080p") split off of stream.name's "<Addon Name>\n<Quality>"
+    // convention (see Stream.js) - its own small pill next to the play icon instead of being
+    // squeezed into the addon-name badge above, where it used to collapse into one unreadable,
+    // ellipsis-truncated string with the addon's own name.
+    .quality-label {
+        flex: none;
+        padding: 0.25rem 0.6rem;
+        border-radius: 1rem;
+        background-color: var(--overlay-color);
+        color: var(--muted-foreground-color);
+        font-size: 0.72rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
     .icon {
         flex: none;
-        width: 3rem;
-        height: 3rem;
+        width: 2.75rem;
+        height: 2.75rem;
         padding: 0.7rem;
         border-radius: 50%;
-        opacity: 0;
-        color: var(--primary-foreground-color);
-        background-color: var(--secondary-accent-color);
+        opacity: 0.7;
+        color: var(--secondary-foreground-color);
+        background-color: rgba(255, 255, 255, 0.08);
+        transition: opacity 0.15s ease-out, background-color 0.15s ease-out;
     }
 
     .menu-icon {

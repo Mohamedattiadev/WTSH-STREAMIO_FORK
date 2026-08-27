@@ -3,6 +3,37 @@
 @import (reference) '~stremio/common/screen-sizes.less';
 @import (reference) '~@stremio/stremio-colors/less/stremio-colors.less';
 
+// Ember Rail type system: Unbounded for display (wordmark, hero titles, section headers),
+// Manrope for body copy, IBM Plex Mono for data-ish labels (badges, timestamps, ratings).
+// Self-hosted (like PlusJakartaSans/TwemojiFlags below) rather than a Google Fonts @import -
+// a remote `@import url(...)` gets silently dropped by the CSS bundling pipeline here (it
+// never survives into the built stylesheet), and self-hosting is what keeps fonts available
+// under the app's offline service worker anyway. Unbounded/Manrope are variable fonts, so one
+// file per family covers the whole weight range used (400-800).
+@font-face {
+    font-family: 'Unbounded';
+    src: url('/assets/fonts/Unbounded-Variable.woff2') format('woff2');
+    font-weight: 400 800;
+}
+
+@font-face {
+    font-family: 'Manrope';
+    src: url('/assets/fonts/Manrope-Variable.woff2') format('woff2');
+    font-weight: 400 800;
+}
+
+@font-face {
+    font-family: 'IBM Plex Mono';
+    src: url('/assets/fonts/IBMPlexMono-Regular.woff2') format('woff2');
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: 'IBM Plex Mono';
+    src: url('/assets/fonts/IBMPlexMono-Medium.woff2') format('woff2');
+    font-weight: 500;
+}
+
 @font-face {
     font-family: 'PlusJakartaSans';
     src: url('/assets/fonts/PlusJakartaSans.ttf') format('truetype');
@@ -47,8 +78,8 @@
     --landscape-shape-ratio: 0.5625;
     --poster-shape-ratio: 1.464;
     --scroll-bar-size: 6px;
-    --horizontal-nav-bar-size: 5.5rem;
-    --vertical-nav-bar-size: 6rem;
+    --horizontal-nav-bar-size: 4.5rem;
+    --vertical-nav-bar-size: 4.75rem;
     --focus-outline-size: 2px;
     --color-facebook: #1877F1;
     --color-x: #000000;
@@ -58,20 +89,42 @@
     --color-placeholder: #60606080;
     --color-placeholder-text: @color-surface-50;
     --color-placeholder-background: @color-surface-dark5-20;
-    --primary-background-color: rgba(12, 11, 17, 1);
-    --secondary-background-color: rgba(26, 23, 62, 1);
-    --primary-foreground-color: rgba(255, 255, 255, 0.9);
-    --secondary-foreground-color: rgb(12, 11, 17, 1);
-    --primary-accent-color: rgb(123, 91, 245);
-    --secondary-accent-color: rgba(34, 179, 101, 1);
-    --tertiary-accent-color: rgba(246, 199, 0, 1);
-    --quaternary-accent-color: rgba(18, 69, 166, 1);
-    --overlay-color: rgba(255, 255, 255, 0.05);
-    --modal-background-color: rgba(15, 13, 32, 1);
-    --outer-glow: 0px 0px 15px rgba(123, 91, 245, 0.37);
-    --warning-accent-color: rgba(255, 165, 0, 1);
-    --danger-accent-color: rgba(220, 38, 38, 1);  
-    --border-radius: 0.75rem;
+    // Ember Rail palette. --ember/--ember-2 are the raw gradient stops (used directly for
+    // gradients, glows and the mono/rating accents); the semantic --primary-* / --*-accent-*
+    // tokens below are what components should reference day to day.
+    --ember: rgb(255, 95, 54);
+    --ember-2: rgb(255, 61, 46);
+    --ember-soft: rgb(255, 176, 136);
+    --surface-ink: rgba(12, 10, 12, 1);
+    --surface-panel: rgba(20, 16, 19, 1);
+    --surface-panel-2: rgba(29, 20, 23, 1);
+    --muted-foreground-color: rgba(119, 116, 126, 1);
+    --primary-background-color: var(--surface-ink);
+    --secondary-background-color: var(--surface-panel);
+    --primary-foreground-color: rgba(245, 242, 236, 0.92);
+    --secondary-foreground-color: rgba(32, 16, 10, 1);
+    --primary-accent-color: var(--ember);
+    --primary-accent-color-soft: rgba(255, 95, 54, 0.1);
+    --secondary-accent-color: rgba(92, 214, 169, 1);
+    --tertiary-accent-color: var(--ember-2);
+    --quaternary-accent-color: var(--ember);
+    --overlay-color: rgba(255, 255, 255, 0.055);
+    --surface-elevated-color: rgba(255, 255, 255, 0.04);
+    --card-hover-shadow: 0 16px 30px -12px rgba(255, 95, 54, 0.35), 0 0 0 1px rgba(255, 95, 54, 0.1);
+    --modal-background-color: var(--surface-panel-2);
+    --modal-blur: 24px;
+    --outer-glow: 0px 0px 20px rgba(255, 95, 54, 0.4);
+    --warning-accent-color: rgba(255, 209, 102, 1);
+    --danger-accent-color: rgba(255, 107, 107, 1);
+    --border-radius: 0.35rem;
+    --font-display: 'Unbounded', 'PlusJakartaSans', sans-serif;
+    --font-body: 'Manrope', 'PlusJakartaSans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-size-display: 3rem;
+    --font-size-h1: 2rem;
+    --font-size-h2: 1.375rem;
+    --font-size-body: 1rem;
+    --font-size-caption: 0.8125rem;
     --top-overlay-size: @top-overlay-size;
     --bottom-overlay-size: @bottom-overlay-size;
     --overlap-size: @overlap-size;
@@ -157,7 +210,7 @@ svg {
 html {
     width: @html-width;
     height: @html-height;
-    font-family: 'PlusJakartaSans', 'Arial', 'Helvetica', 'TwemojiFlags', 'sans-serif';
+    font-family: 'Manrope', 'PlusJakartaSans', 'Arial', 'Helvetica', 'TwemojiFlags', 'sans-serif';
     overflow: auto;
     overscroll-behavior: none;
     user-select: none;
@@ -174,12 +227,29 @@ html {
     body {
         width: 100%;
         height: 100%;
-        background: linear-gradient(41deg, var(--primary-background-color) 0%, var(--secondary-background-color) 100%);
+        position: relative;
+        background:
+            radial-gradient(circle at top right, var(--primary-accent-color-soft) 0%, transparent 45%),
+            linear-gradient(41deg, var(--primary-background-color) 0%, var(--secondary-background-color) 100%);
         -webkit-font-smoothing: antialiased;
+
+        &::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.4;
+            mix-blend-mode: overlay;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+        }
 
         :global(#app) {
             position: relative;
-            z-index: 0;
+            z-index: 1;
             width: 100%;
             height: 100%;
 
@@ -187,7 +257,13 @@ html {
                 position: absolute;
                 top: calc(1.2 * var(--horizontal-nav-bar-size) + var(--safe-area-inset-top));
                 right: var(--safe-area-inset-right);
-                bottom: calc(1.2 * var(--horizontal-nav-bar-size) + var(--safe-area-inset-bottom, 0rem));
+                // Was 1.2 * --horizontal-nav-bar-size alone (~5.4rem/86px), which left only ~5px
+                // of clearance above ChatFab's own top edge (bottom:1.5rem + height:3.6rem =
+                // 5.1rem/82px from this same edge) - not enough of a gap once combined with this
+                // container's own `overflow: visible` letting a tall toast's real content spill
+                // past its box, right onto the fab. The extra 1.5rem is a real safety margin, not
+                // a rounding tweak.
+                bottom: calc(1.2 * var(--horizontal-nav-bar-size) + 1.5rem + var(--safe-area-inset-bottom, 0rem));
                 left: auto;
                 z-index: 1;
                 padding: 0 calc(0.5 * var(--horizontal-nav-bar-size));
@@ -223,6 +299,34 @@ html {
             }
         }
     }
+}
+
+// The vertical nav rail mirrors to the right edge under dir="rtl" (plain flexbox row reversal -
+// see App.js), but .toasts-container above stays pinned to the physical right edge regardless,
+// since env(safe-area-inset-*) and `right` are both physical, not logical - confirmed live, in
+// Arabic this landed toasts directly on top of the now-right-side rail's nav tabs and its toggle
+// button. A standalone top-level rule, not nested inside the `html { ... }` block above, because
+// nesting `:global(html[dir='rtl']) &` in there doubled the `html` ancestor in the compiled
+// selector (`html[dir="rtl"] html body #app ...`), which can never match a real document.
+:global(html[dir='rtl'] #app) {
+    .toasts-container {
+        right: auto;
+        left: var(--safe-area-inset-left);
+    }
+}
+
+// Mirrors "go back"/"previous"/"next" chevrons under RTL, so they still point toward where the
+// action actually goes now that the whole layout reads right-to-left (a Prev button pointing
+// left is correct in LTR - in RTL, "previous" is the right-hand direction). See Icon.tsx's
+// data-icon-name attribute. Deliberately opt-in to just these two icon names, not every icon
+// this component ever renders - most icons here aren't directional at all (play, settings, ...),
+// and :not(.rail-toggle-icon) excludes the one directional icon that already composes its own
+// rotate(180deg) for expand/collapse (see VerticalNavBar/styles.less, which handles its own RTL
+// case directly instead, since combining a mirror with that rotation needs both transforms
+// composed together, not one silently overriding the other).
+:global(html[dir='rtl']) svg[data-icon-name='chevron-back']:not(.rail-toggle-icon),
+:global(html[dir='rtl']) svg[data-icon-name='chevron-forward']:not(.rail-toggle-icon) {
+    transform: scaleX(-1);
 }
 
 @media only screen and (min-width: @xxlarge) {

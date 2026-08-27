@@ -1,0 +1,335 @@
+// Copyright (C) 2017-2026 Smart code 203358507
+
+@padding: 1rem;
+
+.chat-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    padding: @padding;
+
+    .header {
+        flex: none;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+
+        .header-icon {
+            flex: none;
+            width: 1.5rem;
+            height: 1.5rem;
+            color: var(--primary-accent-color);
+        }
+
+        .header-title {
+            flex: 1;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            color: var(--primary-foreground-color);
+        }
+
+        .header-actions {
+            flex: none;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.15rem;
+        }
+
+        .close-button {
+            flex: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background-color: var(--overlay-color);
+
+            &:hover {
+                background-color: var(--primary-accent-color-soft);
+            }
+
+            .icon {
+                width: 1.2rem;
+                height: 1.2rem;
+                color: var(--primary-foreground-color);
+            }
+        }
+    }
+
+    .message-list {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        overflow-y: auto;
+        padding-bottom: 1rem;
+
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            padding: 2rem 1rem;
+            text-align: center;
+
+            .empty-title {
+                font-size: 1.1rem;
+                color: var(--primary-foreground-color);
+                opacity: 0.6;
+                max-width: 30rem;
+            }
+
+            .suggestions {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+
+                .suggestion-chip {
+                    padding: 0.5rem 1rem;
+                    border-radius: 2rem;
+                    border: 0.1rem solid var(--primary-accent-color-soft);
+                    background-color: var(--overlay-color);
+                    color: var(--primary-foreground-color);
+                    font-size: 0.85rem;
+                    transition: background-color 0.15s ease-out, border-color 0.15s ease-out;
+
+                    &:hover {
+                        background-color: var(--primary-accent-color-soft);
+                        border-color: var(--primary-accent-color);
+                    }
+                }
+            }
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: 100%;
+
+            &.message-user {
+                align-items: flex-end;
+
+                .message-bubble {
+                    background-color: var(--primary-accent-color);
+                    color: var(--secondary-foreground-color);
+                    font-weight: 600;
+                    border-bottom-right-radius: 0.3rem;
+                }
+            }
+
+            &.message-assistant {
+                align-items: flex-start;
+
+                .message-bubble {
+                    background-color: var(--overlay-color);
+                    border: 0.06rem solid var(--overlay-color);
+                    color: var(--primary-foreground-color);
+                    border-bottom-left-radius: 0.3rem;
+                }
+            }
+
+            .message-bubble {
+                max-width: 34rem;
+                padding: 0.75rem 1rem;
+                border-radius: 1rem;
+                font-size: 0.95rem;
+                line-height: 1.4;
+                white-space: pre-wrap;
+
+                .progress-label {
+                    margin-bottom: 0.4rem;
+                    font-size: 0.8rem;
+                    color: var(--muted-foreground-color);
+                }
+
+                .typing-indicator {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 0.3rem;
+
+                    .dot {
+                        width: 0.4rem;
+                        height: 0.4rem;
+                        border-radius: 50%;
+                        background-color: var(--primary-foreground-color);
+                        opacity: 0.5;
+                        animation: chat-typing-dot 1.2s infinite ease-in-out;
+
+                        &:nth-child(2) {
+                            animation-delay: 0.15s;
+                        }
+
+                        &:nth-child(3) {
+                            animation-delay: 0.3s;
+                        }
+                    }
+                }
+            }
+
+            .results-row {
+                display: flex;
+                flex-direction: row;
+                gap: 0.75rem;
+                width: 100%;
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+
+                .result-item {
+                    flex: none;
+                    width: 10rem;
+                }
+            }
+        }
+    }
+
+    .input-row {
+        flex: none;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.75rem;
+
+        .input {
+            flex: 1;
+            height: 2.75rem;
+            padding: 0 1rem;
+            border-radius: 0.75rem;
+            background-color: var(--overlay-color);
+            border: 0.06rem solid var(--overlay-color);
+            color: var(--primary-foreground-color);
+            font-size: 0.9rem;
+            transition: border-color 0.15s ease-out;
+
+            &:focus {
+                border-color: var(--primary-accent-color);
+            }
+
+            &.disabled {
+                opacity: 0.6;
+            }
+        }
+
+        .send-button {
+            flex: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.75rem;
+            height: 2.75rem;
+            border-radius: 50%;
+            background-color: var(--primary-accent-color);
+
+            &:hover {
+                background-color: var(--ember-2, var(--primary-accent-color));
+            }
+
+            &.disabled {
+                opacity: 0.4;
+            }
+
+            .icon {
+                width: 1.15rem;
+                height: 1.15rem;
+                color: var(--secondary-foreground-color);
+            }
+        }
+    }
+
+    .persist-note {
+        flex: none;
+        margin-top: 0.5rem;
+        font-size: 0.7rem;
+        text-align: center;
+        color: var(--muted-foreground-color);
+    }
+
+    // Distinct from .compact below (the in-Player side-drawer, deliberately full-height/wide) -
+    // this is the small ChatFab floating popup. It was rendering the exact same header as the
+    // full-page Chat route (a 1.5rem icon, 1.3rem title, two 2.5rem filled circular buttons)
+    // crammed into a 24rem-wide popup, which read as visually heavy next to the mockup's own
+    // popup header - a plain title and small icon-only buttons with no persistent background.
+    &.popup {
+        .header {
+            margin-bottom: 0.75rem;
+
+            .header-title {
+                font-size: 1rem;
+            }
+
+            .close-button {
+                width: 1.8rem;
+                height: 1.8rem;
+                background-color: transparent;
+
+                &:hover {
+                    background-color: var(--overlay-color);
+                }
+
+                .icon {
+                    width: 0.9rem;
+                    height: 0.9rem;
+                    color: var(--muted-foreground-color);
+                }
+
+                &:hover .icon {
+                    color: var(--primary-foreground-color);
+                }
+            }
+        }
+    }
+
+    &.compact {
+        // The base .chat-panel rule above sets height: 100% - harmless in its other context (a
+        // plain flow child that should fill its parent), but combined with the top/bottom this
+        // gets positioned with in Player (.side-drawer-layer in Player/styles.less), height and
+        // bottom together over-constrain the box the exact same way a fixed 100dvh did (and the
+        // same way SideDrawer's did) - the browser keeps top + height and silently drops bottom,
+        // running the panel past the control bar. auto here lets top/bottom alone determine it.
+        height: auto;
+        width: 40rem;
+        max-width: 90vw;
+        padding-top: calc(@padding + var(--safe-area-inset-top));
+        border-top-left-radius: 1.1rem;
+        border-bottom-left-radius: 1.1rem;
+        background-color: var(--modal-background-color);
+        box-shadow: 0 1.35rem 2.7rem rgba(0, 0, 0, 0.4), 0 1.1rem 0.85rem rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(15px);
+        z-index: 1;
+
+        .message-list {
+            .results-row {
+                .result-item {
+                    width: 8rem;
+                }
+            }
+
+            .message-bubble {
+                max-width: 100%;
+            }
+        }
+    }
+}
+
+@keyframes chat-typing-dot {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+    30% {
+        transform: translateY(-0.25rem);
+        opacity: 1;
+    }
+}

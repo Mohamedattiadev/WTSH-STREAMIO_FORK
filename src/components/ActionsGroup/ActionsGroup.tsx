@@ -2,7 +2,7 @@
 
 import classNames from 'classnames';
 import React from 'react';
-import Icon from '@stremio/stremio-icons/react';
+import Icon from 'stremio/components/Icon';
 import { Tooltip } from 'stremio/common/Tooltips';
 import styles from './ActionsGroup.less';
 

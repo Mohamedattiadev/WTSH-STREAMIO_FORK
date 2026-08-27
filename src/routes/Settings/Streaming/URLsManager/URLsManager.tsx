@@ -1,18 +1,36 @@
 // Copyright (C) 2017-2024 Smart code 203358507
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from './URLsManager.less';
 import { Button } from 'stremio/components';
 import Item from './Item';
 import AddItem from './AddItem';
-import Icon from '@stremio/stremio-icons/react';
+import Icon from 'stremio/components/Icon';
+import useToast from 'stremio/common/Toast/useToast';
+import { SETUP_COMMANDS, PLATFORM_LABEL, detectPlatform, type Platform } from 'stremio/common/streamingServerSetupCommand';
 import useStreamingServerUrls from './useStreamingServerUrls';
 
 const URLsManager = () => {
     const { t } = useTranslation();
+    const toast = useToast();
     const [addMode, setAddMode] = useState(false);
+    const [platform, setPlatform] = useState<Platform>(detectPlatform);
+    const command = useMemo(() => SETUP_COMMANDS[platform], [platform]);
     const { streamingServerUrls, addServerUrl, reloadServer } = useStreamingServerUrls();
+
+    const onTogglePlatform = useCallback(() => {
+        setPlatform((prev) => prev === 'unix' ? 'windows' : 'unix');
+    }, []);
+
+    const onCopyCommand = useCallback(() => {
+        navigator.clipboard.writeText(command);
+        toast.show({
+            type: 'success',
+            title: t('COMMAND_COPIED'),
+            timeout: 2500,
+        });
+    }, [command, t, toast]);
 
     const onAdd = () => {
         setAddMode(true);
@@ -54,6 +72,30 @@ const URLsManager = () => {
                     <Icon name={'reset'} className={styles['icon']} />
                     <div className={styles['label']}>{t('RELOAD')}</div>
                 </Button>
+            </div>
+            <div className={styles['setup-row']}>
+                <div className={styles['setup-hint']}>
+                    {t('STREAMING_SERVER_SETUP_HINT')}
+                </div>
+                <div className={styles['command-box']}>
+                    <button
+                        type={'button'}
+                        className={styles['platform-badge']}
+                        title={t('SWITCH_OS')}
+                        onClick={onTogglePlatform}
+                    >
+                        {PLATFORM_LABEL[platform]}
+                    </button>
+                    <code className={styles['command-text']} title={command}>{command}</code>
+                    <Button
+                        className={styles['copy-button']}
+                        title={t('COPY_COMMAND')}
+                        onClick={onCopyCommand}
+                        tabIndex={-1}
+                    >
+                        <Icon className={styles['icon']} name={'copy'} />
+                    </Button>
+                </div>
             </div>
         </div>
     );

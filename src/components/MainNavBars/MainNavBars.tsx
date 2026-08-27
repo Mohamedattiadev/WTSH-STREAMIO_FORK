@@ -3,6 +3,8 @@
 import React, { memo } from 'react';
 import classnames from 'classnames';
 import { VerticalNavBar, HorizontalNavBar } from 'stremio/components/NavBar';
+import ChatFab from 'stremio/components/ChatFab';
+import ChatIcon from 'stremio/components/ChatIcon';
 import { useContentGamepadNavigation, useVerticalNavGamepadNavigation } from 'stremio/services/GamepadNavigation';
 import styles from './MainNavBars.less';
 
@@ -10,6 +12,7 @@ const TABS = [
     { id: 'board', label: 'Board', icon: 'home', href: '/' },
     { id: 'discover', label: 'Discover', icon: 'discover', href: '/discover' },
     { id: 'library', label: 'Library', icon: 'library', href: '/library' },
+    { id: 'chat', label: 'Chat', iconComponent: ChatIcon, href: '/chat' },
     { id: 'calendar', label: 'Calendar', icon: 'calendar', href: '/calendar' },
     { id: 'addons', label: 'ADDONS', icon: 'addons', href: '/addons' },
     { id: 'settings', label: 'SETTINGS', icon: 'settings', href: '/settings' },
@@ -27,27 +30,45 @@ const MainNavBars = memo(({ className, route, query, children }: Props) => {
     const contentRef = React.useRef(null);
 
     const navRoute = route === 'continue_watching' ? 'library' : (route ?? '');
-    useContentGamepadNavigation(contentRef, navRoute);
+    // Player already runs its own useContentGamepadNavigation scoped to just its video/controls
+    // (a different id, 'player-video' - see Player.js) - this generic one covers the whole
+    // content column including the info panel below the video, and having both active at once
+    // for the same route caused competing focus jumps on every analog-stick event.
+    useContentGamepadNavigation(contentRef, navRoute, route !== 'player');
     useVerticalNavGamepadNavigation(navRef, navRoute);
 
     return (
         <div className={classnames(className, styles['main-nav-bars-container'])}>
-            <HorizontalNavBar
-                className={styles['horizontal-nav-bar']}
-                route={route}
-                query={query}
-                backButton={false}
-                searchBar={true}
-                fullscreenButton={true}
-                navMenu={true}
-            />
             <VerticalNavBar
                 ref={navRef}
                 className={styles['vertical-nav-bar']}
                 selected={route}
                 tabs={TABS}
             />
-            <div ref={contentRef} className={styles['nav-content-container']}>{children}</div>
+            <div className={styles['main-column']}>
+                <HorizontalNavBar
+                    className={styles['horizontal-nav-bar']}
+                    route={route}
+                    query={query}
+                    backButton={false}
+                    searchBar={true}
+                    fullscreenButton={true}
+                    navMenu={true}
+                />
+                <div ref={contentRef} className={styles['nav-content-container']}>{children}</div>
+            </div>
+            {
+                // Player has its own in-player chat entry point via ControlBar's chat button
+                // (opens the same ChatPanel this FAB would) - was already excluded before Player
+                // embedded into this shared shell, since it used to render standalone with no
+                // MainNavBars involved at all. Confirmed live: once embedded, this generic
+                // "show on every non-chat route" rule started rendering a second, redundant chat
+                // button floating over the video on top of the control bar's own one.
+                route !== 'chat' && route !== 'player' ?
+                    <ChatFab />
+                    :
+                    null
+            }
         </div>
     );
 });

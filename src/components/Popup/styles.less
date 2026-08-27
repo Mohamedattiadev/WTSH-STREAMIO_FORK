@@ -2,8 +2,33 @@
 
 @import (reference) '~@stremio/stremio-colors/less/stremio-colors.less';
 
+// Visual styling for .menu-container, split out from .label-container below so it applies
+// whether this renders in-place (nested under .label-container, the default) or portaled to
+// document.body (Popup's `portal` mode - see Popup.js). A portaled node is no longer a
+// descendant of .label-container at all, so anything scoped under that ancestor (as all of this
+// used to be) silently stops applying - confirmed live: the language switcher dropdown (a
+// portal-mode Popup) had no background, border-radius, or shadow at all, just plain unstyled
+// text floating over the page, because every one of those rules requires an ancestor it no
+// longer has once portaled.
+.menu-container {
+    // Neither this element's own .label-container ancestor (non-portal mode) nor a hero/content
+    // section elsewhere on the page (e.g. Board's Hero, whose .info-container sits at z-index:1)
+    // establishes its own stacking context, so a plain z-index:1 here ends up competing directly
+    // against that content at the shared ancestor's stacking level - and losing, since the
+    // content comes later in DOM order. Raised well above ChatFab (5) and any in-page content,
+    // but below true full-screen overlays like BottomSheet (99). menu-container-portal below
+    // sets its own z-index for the portaled case.
+    z-index: 10;
+    overflow: hidden;
+    visibility: hidden;
+    border-radius: var(--border-radius);
+    background-color: var(--modal-background-color);
+    box-shadow: var(--outer-glow);
+    cursor: auto;
+}
+
 .label-container {
-    // IOS specific 
+    // IOS specific
     // prevents showing the default context-menu when long pressing an anchor in safari.
     -webkit-touch-callout: none !important;
 
@@ -11,14 +36,10 @@
     overflow: visible;
 
     .menu-container {
+        // Positioning only - this genuinely only makes sense relative to this ancestor, unlike
+        // the visual styling above, so it stays scoped here (non-portal mode; portal mode gets
+        // its own position: fixed from .menu-container-portal instead).
         position: absolute;
-        z-index: 1;
-        overflow: hidden;
-        visibility: hidden;
-        border-radius: var(--border-radius);
-        background-color: var(--modal-background-color);
-        box-shadow: var(--outer-glow);
-        cursor: auto;
 
         &.menu-direction-top-left {
             top: initial;
@@ -51,5 +72,23 @@
             left: 0;
             visibility: visible;
         }
+    }
+}
+
+// Popup's `portal` mode (see Popup.js) renders this same .menu-container in a portal to
+// document.body instead of nesting it under .label-container, so this modifier can't be scoped
+// under .label-container either - the portaled node is no longer its descendant. Position is set
+// inline (top/left, computed from the label's own on-screen position) instead of via the
+// menu-direction-* modifiers above, which only make sense relative to that ancestor.
+.menu-container-portal {
+    position: fixed;
+    // Above App's toast layer (1) and Popup's own in-place menu-container (10, this ancestor
+    // can never actually reach that high against a toast anyway - see Popup.js) but below a
+    // true full-screen overlay like BottomSheet (99).
+    z-index: 20;
+    visibility: hidden;
+
+    &.visible {
+        visibility: visible;
     }
 }

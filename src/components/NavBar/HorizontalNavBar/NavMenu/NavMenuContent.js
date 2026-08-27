@@ -5,7 +5,7 @@ const { useNavigate } = require('react-router');
 const PropTypes = require('prop-types');
 const classnames = require('classnames');
 const { useTranslation } = require('react-i18next');
-const { default: Icon } = require('@stremio/stremio-icons/react');
+const { default: Icon } = require('stremio/components/Icon');
 const { useCore } = require('stremio/core');
 const { Button } = require('stremio/components');
 const { useFullscreen } = require('stremio/common/Fullscreen');
@@ -81,7 +81,11 @@ const NavMenuContent = ({ onClick }) => {
                     <div className={styles['email-container']}>
                         <div className={styles['email-label']}>{profile.auth === null ? t('ANONYMOUS_USER') : profile.auth.user.email}</div>
                     </div>
-                    <Button className={styles['logout-button-container']} title={profile.auth === null ? `${t('LOG_IN')} / ${t('SIGN_UP')}` : t('LOG_OUT')} onClick={handleAuth}>
+                    <Button
+                        className={classnames(styles['logout-button-container'], { [styles['primary']]: profile.auth === null })}
+                        title={profile.auth === null ? `${t('LOG_IN')} / ${t('SIGN_UP')}` : t('LOG_OUT')}
+                        onClick={handleAuth}
+                    >
                         <div className={styles['logout-label']}>{profile.auth === null ? `${t('LOG_IN')} / ${t('SIGN_UP')}` : t('LOG_OUT')}</div>
                     </Button>
                 </div>
@@ -122,14 +126,6 @@ const NavMenuContent = ({ onClick }) => {
                 <Button className={styles['nav-menu-option-container']} title={ t('PRIVACY_POLICY') } href={'https://www.stremio.com/privacy'} target={'_blank'}>
                     <div className={styles['nav-menu-option-label']}>{ t('PRIVACY_POLICY') }</div>
                 </Button>
-                {
-                    profile.auth !== null ?
-                        <Button className={styles['nav-menu-option-container']} title={ t('USER_PANEL') } href={'https://www.stremio.com/acc-settings'} target={'_blank'}>
-                            <div className={styles['nav-menu-option-label']}>{ t('USER_PANEL') }</div>
-                        </Button>
-                        :
-                        null
-                }
             </div>
         </div>
     );

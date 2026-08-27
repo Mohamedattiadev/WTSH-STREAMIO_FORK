@@ -81,11 +81,20 @@
                         display: none;
                         align-items: center;
                         justify-content: center;
-                        width: 3rem;
-                        height: 3rem;
+                        width: 2.75rem;
+                        height: 2.75rem;
                         margin-left: 1.5rem;
-                        border-radius: var(--border-radius);
+                        border-radius: 0.7rem;
                         background-color: var(--overlay-color);
+                        transition: background-color 0.15s ease-out, color 0.15s ease-out;
+
+                        &:hover {
+                            background-color: var(--primary-accent-color-soft);
+
+                            .filter-icon {
+                                color: var(--ember-soft);
+                            }
+                        }
 
                         .filter-icon {
                             flex: none;
@@ -119,11 +128,15 @@
                     min-width: 10rem;
                     max-width: 15rem;
                     padding: 1rem;
-                    background-color: var(--secondary-accent-color);
+                    background-color: var(--primary-accent-color);
 
                     &:hover {
-                        outline: var(--focus-outline-size) solid var(--secondary-accent-color);
+                        outline: var(--focus-outline-size) solid var(--primary-accent-color);
                         background-color: transparent;
+
+                        .label {
+                            color: var(--primary-foreground-color);
+                        }
                     }
 
                     &:focus {
@@ -134,7 +147,7 @@
                         max-height: 2.4em;
                         font-weight: 500;
                         text-align: center;
-                        color: var(--primary-foreground-color);
+                        color: var(--secondary-foreground-color);
                     }
                 }
             }
@@ -211,11 +224,15 @@
 
         .meta-preview-container {
             flex: none;
-            align-self: stretch;
-            width: 29rem;
-            padding: 2rem 2.5rem;
-            border-radius: var(--border-radius) 0 0 var(--border-radius);
+            align-self: center;
+            width: 22rem;
+            max-height: calc(100% - 3rem);
+            margin: 1.5rem 1.5rem 1.5rem 0;
+            padding: 1.5rem 1.75rem;
+            border-radius: 1rem;
+            border: 0.06rem solid var(--overlay-color);
             background-color: var(--modal-background-color);
+            overflow-y: auto;
         }
     }
 }
@@ -253,7 +270,7 @@
         .discover-content {
             .catalog-container {
                 .meta-items-container {
-                    grid-template-columns: repeat(10, 1fr);
+                    grid-template-columns: repeat(10, minmax(0, 1fr));
                 }
             }
         }
@@ -265,7 +282,7 @@
         .discover-content {
             .catalog-container {
                 .meta-items-container {
-                    grid-template-columns: repeat(9, 1fr);
+                    grid-template-columns: repeat(9, minmax(0, 1fr));
                 }
             }
         }
@@ -277,7 +294,7 @@
         .discover-content {
             .catalog-container {
                 .meta-items-container {
-                    grid-template-columns: repeat(8, 1fr);
+                    grid-template-columns: repeat(8, minmax(0, 1fr));
                 }
             }
         }
@@ -289,7 +306,7 @@
         .discover-content {
             .catalog-container {
                 .meta-items-container {
-                    grid-template-columns: repeat(7, 1fr);
+                    grid-template-columns: repeat(7, minmax(0, 1fr));
                 }
             }
         }
@@ -301,7 +318,7 @@
         .discover-content {
             .catalog-container {
                 .meta-items-container {
-                    grid-template-columns: repeat(6, 1fr);
+                    grid-template-columns: repeat(6, minmax(0, 1fr));
                 }
             }
         }
@@ -313,7 +330,7 @@
         .discover-content {
             .catalog-container {
                 .meta-items-container {
-                    grid-template-columns: repeat(5, 1fr);
+                    grid-template-columns: repeat(5, minmax(0, 1fr));
                 }
             }
         }
@@ -325,7 +342,7 @@
         .discover-content {
             .catalog-container {
                 .meta-items-container {
-                    grid-template-columns: repeat(4, 1fr);
+                    grid-template-columns: repeat(4, minmax(0, 1fr));
                 }
             }
         }
@@ -337,7 +354,7 @@
         .discover-content {
             .catalog-container {
                 .meta-items-container {
-                    grid-template-columns: repeat(5, 1fr);
+                    grid-template-columns: repeat(5, minmax(0, 1fr));
                     margin-right: 0;
                 }
             }
@@ -354,7 +371,7 @@
         .discover-content {
             .catalog-container {
                 .meta-items-container {
-                    grid-template-columns: repeat(4, 1fr);
+                    grid-template-columns: repeat(4, minmax(0, 1fr));
                     margin-right: 0;
                 }
             }
@@ -387,7 +404,7 @@
                 }
 
                 .meta-items-container {
-                    grid-template-columns: repeat(3, 1fr);
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
                 }
             }
         }

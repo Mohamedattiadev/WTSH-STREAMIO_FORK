@@ -19,12 +19,22 @@
     flex-direction: column;
     padding: @padding;
     padding-top: calc(@padding + var(--safe-area-inset-top));
-    height: 100dvh;
+    // No explicit height at all now (was 100dvh, then 100% - see below for why both were
+    // wrong). This same element also carries .layer and .side-drawer-layer (Player/styles.less
+    // applies them directly to this component's own root, not a separate wrapper), which
+    // position it absolutely with both `top` (below the mini-topbar) and `bottom: 0` set. An
+    // absolutely-positioned box with top, height, AND bottom all specified is over-constrained -
+    // the browser satisfies top+height and silently drops bottom, which is exactly what a fixed
+    // height (100dvh, then 100%, both computed independently of this element's own top offset)
+    // did: the box's own height stayed the container's *full* height regardless of top, pushing
+    // its bottom edge that same distance past the container's actual bottom edge - overlapping
+    // the control bar and, for a series with a long episode list, running off the bottom of the
+    // screen entirely. Leaving height unspecified lets top+bottom determine it correctly instead.
     max-width: 35rem;
     overflow-y: auto;
     position: relative;
-    border-top-left-radius: var(--border-radius);
-    border-bottom-left-radius: var(--border-radius);
+    border-top-left-radius: 1.1rem;
+    border-bottom-left-radius: 1.1rem;
     background-color: var(--modal-background-color);
     box-shadow: 0 1.35rem 2.7rem var(--color-background-dark5-40), 0 1.1rem 0.85rem var(--color-background-dark5-20);
     backdrop-filter: blur(15px);
@@ -43,7 +53,13 @@
     }
 
     .close-button {
-        display: none;
+        // Was display:none outside phone-portrait, relying on the SideDrawerButton edge tab
+        // (now hidden behind this drawer when open - see SideDrawerButton.less) as the only
+        // way to close it on desktop. Now that this drawer opens by default, it needs its own
+        // always-visible close affordance regardless of viewport.
+        display: flex;
+        align-items: center;
+        justify-content: center;
         position: absolute;
         top: calc(1.3rem + var(--safe-area-inset-top));
         right: 1.3rem;
@@ -72,10 +88,16 @@
         }
     }
 
+    // .info and .series-content/.videos each used to cap their own height and scroll
+    // independently (a percentage split between "info" and "episode list" competing for the
+    // drawer's own bounded height) - confirmed live this read as two separate, confusing
+    // scrollbars (one for the description/genres area, another lower down for episodes) instead
+    // of one natural scroll from the title down through the episode list. Neither has its own
+    // height cap or overflow anymore; both just flow in normal document order and the single
+    // overflow-y:auto on .side-drawer itself (above) is the only scroll container now.
     .info {
+        flex: none;
         padding: @padding;
-        min-height: 0;
-        overflow-y: auto;
 
         .side-drawer-meta-preview {
             .description-container {
@@ -92,36 +114,21 @@
     }
 
     .series-content {
-        flex: 2;
+        flex: none;
         display: flex;
         flex-direction: column;
-        min-height: 0;
-
-        .videos {
-            flex: 1;
-            min-height: 0;
-            overflow-y: auto;
-        }
     }
 }
 
 @media @phone-portrait {
     .side-drawer {
         max-width: 100dvw;
-
-        .close-button {
-            display: block;
-        }
     }
 }
 
 @media @phone-landscape {
     .side-drawer {
         max-width: 50dvw;
-
-        .info {
-            max-height: 40dvh;
-        }
 
         .dropdown.open {
             max-height: calc(3rem * 4);

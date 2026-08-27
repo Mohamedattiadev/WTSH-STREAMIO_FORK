@@ -8,7 +8,7 @@ const { useModalsContainer } = require('stremio/router/ModalsContainerContext');
 const Modal = require('stremio/router/Modal');
 const { default: useRouteFocused } = require('stremio/common/useRouteFocused');
 const { default: Button } = require('stremio/components/Button');
-const { default: Icon } = require('@stremio/stremio-icons/react');
+const { default: Icon } = require('stremio/components/Icon');
 const styles = require('./styles');
 
 const ModalDialog = ({ className, title, buttons, children, dataset, onCloseRequest, background, ...props }) => {
@@ -62,7 +62,12 @@ const ModalDialog = ({ className, title, buttons, children, dataset, onCloseRequ
     return (
         <Modal ref={modalContainerRef} {...props} className={classnames(className, styles['modal-container'])} onMouseDown={onModalContainerMouseDown}>
             <div className={styles['modal-dialog-container']} onMouseDown={onModalDialogContainerMouseDown}>
-                <div className={styles['modal-dialog-background']} style={{backgroundImage: `url('${background}')`}} />
+                {
+                    typeof background === 'string' && background.length > 0 ?
+                        <div className={styles['modal-dialog-background']} style={{ backgroundImage: `url('${background}')` }} />
+                        :
+                        null
+                }
                 <Button className={styles['close-button-container']} title={t('BUTTON_CLOSE')} onClick={closeButtonOnClick}>
                     <Icon className={styles['icon']} name={'close'} />
                 </Button>

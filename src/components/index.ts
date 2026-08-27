@@ -5,12 +5,15 @@ import Checkbox from './Checkbox';
 import Chips from './Chips';
 import ColorInput from './ColorInput';
 import ContextMenu from './ContextMenu';
+import ChatFab from './ChatFab';
+import ChatIcon from './ChatIcon';
 import ContinueWatchingItem from './ContinueWatchingItem';
 import DelayedRenderer from './DelayedRenderer';
 import EventModal from './EventModal';
 import HorizontalScroll from './HorizontalScroll';
 import Image from './Image';
 import LibItem from './LibItem';
+import Logo from './Logo';
 import MainNavBars from './MainNavBars';
 import MetaItem from './MetaItem';
 import MetaPreview from './MetaPreview';
@@ -28,6 +31,7 @@ import Slider from './Slider';
 import ShortcutsGroup from './ShortcutsGroup';
 import TextInput from './TextInput';
 import Toggle from './Toggle';
+import TrailerModal from './TrailerModal';
 import Transition from './Transition';
 import UpdateBanner from './UpdateBanner';
 import Video from './Video';
@@ -41,12 +45,15 @@ export {
     Chips,
     ColorInput,
     ContextMenu,
+    ChatFab,
+    ChatIcon,
     ContinueWatchingItem,
     DelayedRenderer,
     EventModal,
     HorizontalScroll,
     Image,
     LibItem,
+    Logo,
     MainNavBars,
     MetaItem,
     MetaPreview,
@@ -65,6 +72,7 @@ export {
     ShortcutsGroup,
     TextInput,
     Toggle,
+    TrailerModal,
     Transition,
     UpdateBanner,
     Video,

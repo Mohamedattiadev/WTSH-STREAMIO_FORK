@@ -2,16 +2,17 @@
 
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import Icon from '@stremio/stremio-icons/react';
+import Icon from 'stremio/components/Icon';
 import { Button } from 'stremio/components';
 import styles from './Details.less';
 
 type Props = {
     selected: CalendarDate | null,
     items: CalendarItem[],
+    onVideoSelect?: (deepLink: string) => void,
 };
 
-const Details = ({ selected, items }: Props) => {
+const Details = ({ selected, items, onVideoSelect }: Props) => {
     const { t } = useTranslation();
     const videos = useMemo(() => {
         return items.find(({ date }) => date.day === selected?.day)?.items ?? [];
@@ -21,7 +22,12 @@ const Details = ({ selected, items }: Props) => {
         <div className={styles['details']}>
             {
                 videos.map(({ id, name, season, episode, deepLinks }) => (
-                    <Button className={styles['video']} key={id} href={deepLinks.metaDetailsStreams}>
+                    <Button
+                        className={styles['video']}
+                        key={id}
+                        href={typeof onVideoSelect === 'function' ? undefined : deepLinks.metaDetailsStreams}
+                        onClick={typeof onVideoSelect === 'function' ? () => onVideoSelect(deepLinks.metaDetailsStreams) : undefined}
+                    >
                         <div className={styles['name']}>
                             {name}
                         </div>

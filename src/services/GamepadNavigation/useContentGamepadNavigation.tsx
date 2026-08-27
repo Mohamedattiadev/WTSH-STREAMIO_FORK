@@ -21,13 +21,17 @@ const getActiveScope = (fallback: HTMLDivElement | null): HTMLElement | null => 
 
 const useContentGamepadNavigation = (
     sectionRef: React.RefObject<HTMLDivElement>,
-    gamepadHandlerId: string
+    gamepadHandlerId: string,
+    enabled: boolean = true
 ) => {
     const gamepad = useGamepad();
     const lastFocused = useRef<HTMLDivElement | null>(null);
     const wasInOverlay = useRef(false);
 
     useEffect(() => {
+        if (!enabled) {
+            return undefined;
+        }
         const handleGamepadNavigation = (
             direction: 'left' | 'right' | 'up' | 'down'
         ) => {
@@ -138,7 +142,7 @@ const useContentGamepadNavigation = (
             gamepad?.off('analog', gamepadHandlerId);
             gamepad?.off('buttonA', gamepadHandlerId);
         };
-    }, [gamepad, gamepadHandlerId, sectionRef]);
+    }, [gamepad, gamepadHandlerId, sectionRef, enabled]);
 };
 
 export default useContentGamepadNavigation;

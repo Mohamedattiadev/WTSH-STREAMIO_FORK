@@ -1,22 +1,32 @@
 .section {
     position: relative;
-    max-width: 35rem;
+    // The mockup's own equivalent (.settings-body) has no max-width at all - it just fills
+    // whatever space is left next to the fixed-width menu column. Going fully uncapped read
+    // badly on a real ultrawide monitor though (a lone "Log out" link or the account email
+    // row stretching across 2+ feet of screen), so this raises the cap generously instead of
+    // removing it outright - enough to close the dead-space gap at normal desktop widths
+    // while still keeping rows a readable length on very wide viewports.
+    max-width: 56rem;
     display: flex;
     flex-direction: column;
     align-items: start;
-    padding: 3rem 0;
+    padding: 1.1rem 1.25rem 1.25rem;
+    margin: 1.25rem 0;
+    border-radius: 1rem;
+    border: 0.06rem solid var(--overlay-color);
+    background-color: var(--surface-elevated-color);
     overflow: visible;
 
-    &:not(:last-child) {
-        border-bottom: thin solid var(--overlay-color);
-    }
-    
     .label {
         flex: none;
         align-self: stretch;
-        font-size: 1.8rem;
-        line-height: 3.4rem;
-        margin-bottom: 2rem;
+        font-family: var(--font-display);
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: normal;
+        text-transform: none;
+        line-height: 1.3;
+        margin-bottom: 0.75rem;
         color: var(--primary-foreground-color);
     }
 }

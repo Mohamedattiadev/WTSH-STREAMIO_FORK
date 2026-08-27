@@ -34,15 +34,15 @@
     transition: border-color 0.1s ease-out;
 
     &:first-child {
-        border-radius: var(--border-radius) 0 0 0;
+        border-radius: 0.85rem 0 0 0;
     }
 
     &:nth-child(7) {
-        border-radius: 0 var(--border-radius) 0 0;
+        border-radius: 0 0.85rem 0 0;
     }
 
     &:last-child {
-        border-radius: 0 0 var(--border-radius) 0;
+        border-radius: 0 0 0.85rem 0;
     }
 
     .heading {
@@ -95,8 +95,8 @@
                 height: 2rem;
                 padding: 0.5rem;
                 border-radius: 50%;
-                color: var(--primary-foreground-color);
-                background-color: var(--secondary-accent-color);
+                color: var(--secondary-foreground-color);
+                background-color: var(--primary-accent-color);
                 opacity: 0;
             }
 
@@ -119,6 +119,35 @@
 
                 .poster {
                     opacity: 0.5;
+                }
+            }
+        }
+
+        .reminder-item {
+            .reminder-icon {
+                width: 1.1rem;
+                height: 1.1rem;
+                padding: 0;
+                background-color: var(--ember, var(--primary-accent-color));
+            }
+
+            .reminder-poster-placeholder {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                width: 100%;
+                aspect-ratio: 2 / 3;
+                border-radius: inherit;
+                background-color: var(--overlay-color);
+
+                .icon {
+                    position: static;
+                    opacity: 0.6;
+                    background-color: transparent;
+                    width: 1.2rem;
+                    height: 1.2rem;
+                    padding: 0;
                 }
             }
         }

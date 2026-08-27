@@ -3,18 +3,21 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const classnames = require('classnames');
-const { default: Icon } = require('@stremio/stremio-icons/react');
+const { default: Icon } = require('stremio/components/Icon');
 const { Image } = require('stremio/components');
 const styles = require('./styles');
 const { Link } = require('react-router-dom');
 
-const NavTabButton = ({ className, logo, icon, label, href, selected, onClick }) => {
+const NavTabButton = ({ className, logo, icon, iconComponent: IconComponent, label, href, selected, expanded, onClick }) => {
     const renderLogoFallback = React.useCallback(() => (
-        typeof icon === 'string' && icon.length > 0 ?
-            <Icon className={styles['icon']} name={icon} />
+        typeof IconComponent === 'function' ?
+            <IconComponent className={styles['icon']} outline={!selected} />
             :
-            null
-    ), [icon]);
+            typeof icon === 'string' && icon.length > 0 ?
+                <Icon className={styles['icon']} name={icon} />
+                :
+                null
+    ), [icon, IconComponent, selected]);
     const onDoubleClick = () => {
         const scrollableElements = document.querySelectorAll('div');
 
@@ -25,7 +28,7 @@ const NavTabButton = ({ className, logo, icon, label, href, selected, onClick })
         });
     };
     return (
-        <Link className={classnames(className, styles['nav-tab-button-container'], { 'selected': selected })} title={label} tabIndex={-1} to={href} onClick={onClick} onDoubleClick={onDoubleClick}>
+        <Link className={classnames(className, styles['nav-tab-button-container'], { 'selected': selected, 'expanded': expanded })} aria-label={label} data-label={label} tabIndex={-1} to={href} onClick={onClick} onDoubleClick={onDoubleClick}>
             {
                 typeof logo === 'string' && logo.length > 0 ?
                     <Image
@@ -35,10 +38,13 @@ const NavTabButton = ({ className, logo, icon, label, href, selected, onClick })
                         renderFallback={renderLogoFallback}
                     />
                     :
-                    typeof icon === 'string' && icon.length > 0 ?
-                        <Icon className={styles['icon']} name={selected ? icon : `${icon}-outline`} />
+                    typeof IconComponent === 'function' ?
+                        <IconComponent className={styles['icon']} outline={!selected} />
                         :
-                        null
+                        typeof icon === 'string' && icon.length > 0 ?
+                            <Icon className={styles['icon']} name={selected ? icon : `${icon}-outline`} />
+                            :
+                            null
             }
             {
                 typeof label === 'string' && label.length > 0 ?
@@ -54,9 +60,11 @@ NavTabButton.propTypes = {
     className: PropTypes.string,
     logo: PropTypes.string,
     icon: PropTypes.string,
+    iconComponent: PropTypes.elementType,
     label: PropTypes.string,
     href: PropTypes.string,
     selected: PropTypes.bool,
+    expanded: PropTypes.bool,
     onClick: PropTypes.func
 };
 

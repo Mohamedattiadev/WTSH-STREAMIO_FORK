@@ -4,45 +4,174 @@
 @import (reference) '~stremio/common/screen-sizes.less';
 
 .warning-container {
+    // This is positioned (via the board-warning-container class Board passes in) with only
+    // bottom/left/right set, no top - the old code relied on the browser sizing height purely
+    // from content, which broke on the mobile Board layout (confirmed live: stretched to
+    // 681px tall with mostly dead space once the prior hard-coded height: 7rem - which
+    // incidentally masked this - was removed for clipping content instead). Neither
+    // height: fit-content nor height: min-content + top: auto changed that measured value in
+    // further live checks, so rather than keep fighting the exact stretch mechanism, this caps
+    // it with max-height + scroll as a safety net: real content never needs anywhere near this
+    // much space, so the scrollbar should never actually appear in practice, but it guarantees
+    // the box can never overlap/clip its own content again even if something about the sizing
+    // behavior here isn't fully understood.
+    max-height: 20rem;
+    overflow-y: auto;
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: 1rem;
-    background-color: @color-accent5-dark3;
-    border-radius: 0.5rem;
-    box-shadow: 0rem 0.25rem 1rem rgba(0, 0, 0, 0.48), 0rem 0.5rem 3rem rgba(0, 0, 0, 0.64);
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border: 0.06rem solid rgba(255, 255, 255, 0.08);
+    border-left: 0.2rem solid var(--warning-accent-color);
+    border-radius: var(--border-radius);
+    background-color: var(--modal-background-color);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--card-hover-shadow);
+
+    .top-row {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem 1rem;
+    }
+
+    .warning-icon-container {
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 50%;
+        background-color: rgba(255, 209, 102, 0.12);
+    }
+
+    .warning-icon {
+        flex: none;
+        width: 1.2rem;
+        height: 1.2rem;
+        color: var(--warning-accent-color);
+    }
 
     .warning-statement {
-        flex: 1;
-        font-size: 1.2rem;
-        max-height: 2.4em;
-        color: @color-surface-light5-90;
+        flex: 1 1 12rem;
+        min-width: 0;
+        font-size: 1rem;
+        color: var(--primary-foreground-color);
     }
 
     .actions {
         display: flex;
-        gap: 1rem;
+        flex: none;
+        margin-left: auto;
+        gap: 0.75rem;
 
         .action {
             flex: none;
-            padding: 0.5rem 1rem;
-            color: @color-surface-light5-90;
-            background-color: rgba(0, 0, 0, 0.24);
-            border-radius: var(--border-radius);
-    
+            padding: 0.6rem 1.1rem;
+            color: var(--primary-foreground-color);
+            background-color: var(--overlay-color);
+            border-radius: 3rem;
+            transition: background-color 0.15s ease-out;
+
             &:first-child {
                 margin-left: 0;
             }
-    
+
             .label {
-                font-size: 1.2rem;
-                color: @color-surface-light5-90;
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: var(--primary-foreground-color);
             }
-    
+
             &:hover {
+                background-color: var(--primary-accent-color-soft);
+
                 .label {
-                    text-decoration: underline;
+                    text-decoration: none;
+                    color: var(--primary-accent-color);
                 }
+            }
+        }
+    }
+
+    .setup-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 0.06rem solid rgba(255, 255, 255, 0.08);
+    }
+
+    .setup-hint {
+        // --secondary-foreground-color is near-black (rgba(32,16,10,1)) - meant for text
+        // sitting on top of the ember-accent buttons elsewhere in the app, not for text on
+        // this component's own dark background. Confirmed live: with that color this whole
+        // sentence rendered but was functionally invisible (near-black on near-black).
+        font-size: 0.8rem;
+        line-height: 1.4;
+        color: var(--muted-foreground-color);
+    }
+
+    .command-box {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        height: 2.4rem;
+        padding: 0 0.3rem 0 0.3rem;
+        border-radius: 1.2rem;
+        background-color: var(--overlay-color);
+        overflow: hidden;
+
+        .platform-badge {
+            flex: none;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--primary-accent-color);
+            background-color: var(--primary-accent-color-soft);
+            border: none;
+            border-radius: 1rem;
+            cursor: pointer;
+            white-space: nowrap;
+
+            &:hover {
+                filter: brightness(1.15);
+            }
+        }
+
+        .command-text {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            white-space: pre;
+            text-overflow: ellipsis;
+            font-family: var(--font-mono, monospace);
+            font-size: 0.8rem;
+            color: var(--primary-foreground-color);
+        }
+
+        .copy-button {
+            flex: none;
+            width: 1.8rem;
+            height: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 100%;
+            background-color: var(--surface-elevated-color);
+
+            &:hover {
+                outline: var(--focus-outline-size) solid var(--primary-foreground-color);
+            }
+
+            .icon {
+                flex: none;
+                width: 0.9rem;
+                height: 0.9rem;
+                margin: 0;
+                color: var(--primary-foreground-color);
             }
         }
     }
@@ -50,12 +179,66 @@
 
 @media only screen and (max-width: @minimum) {
     .warning-container {
-        flex-direction: column;
-        text-align: center;
-        padding: 1rem 0.5rem;
+        padding: 1rem;
+        gap: 0.75rem;
+
+        // Icon + statement stay on one compact row (this reads better and takes far less
+        // vertical space than stacking them, which is what this used to do); actions drop to
+        // their own full-width row of two equal buttons instead of small centered pills, so
+        // they're easy to tap. The one thing actually removed on narrow screens is the
+        // explanatory sentence below the divider - the least essential line, and the single
+        // biggest contributor to the height this container used to be hard-clamped to
+        // (Board/styles.less's own mobile rule forced height: 7rem here, far short of what
+        // the full stacked content needed - confirmed live, it caused real overlap/clipping).
+        // top-row's base rule already wraps (flex-wrap: wrap) - the actual bug here was that
+        // an earlier version of this rule set flex-wrap: nowrap while .actions below claims
+        // 100% width, which contradicted itself: nowrap crammed icon+statement+actions onto
+        // one line while actions still demanded full width, squeezing the statement text to
+        // nothing (confirmed live: the "Streaming server is not available." sentence vanished
+        // entirely). Letting it wrap means icon+statement share the first line (comfortably,
+        // since together they're well under 100%) and actions naturally drop to their own
+        // full-width second line.
+        .warning-statement {
+            font-size: 0.92rem;
+        }
 
         .actions {
-            justify-content: space-around;
+            flex: 0 0 100%;
+            margin-left: 0;
+
+            .action {
+                flex: 1;
+                text-align: center;
+                padding: 0.6rem 0.5rem;
+
+                .label {
+                    font-size: 0.82rem;
+                }
+            }
+        }
+
+        .setup-hint {
+            display: none;
+        }
+
+        .command-box {
+            height: auto;
+            padding: 0.5rem;
+            flex-wrap: wrap;
+
+            .platform-badge {
+                order: -1;
+            }
+
+            .command-text {
+                flex: 1 1 100%;
+                order: 1;
+                white-space: nowrap;
+            }
+
+            .copy-button {
+                order: 2;
+            }
         }
     }
 }

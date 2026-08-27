@@ -2,6 +2,7 @@
 
 const Addons = require('./Addons');
 const Board = require('./Board');
+const Chat = require('./Chat');
 const Discover = require('./Discover');
 const Library = require('./Library');
 const Calendar = require('./Calendar').default;
@@ -15,6 +16,7 @@ const Intro = require('./Intro');
 module.exports = {
     Addons,
     Board,
+    Chat,
     Discover,
     Library,
     Calendar,

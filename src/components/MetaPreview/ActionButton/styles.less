@@ -24,8 +24,8 @@
 
         .icon {
             display: block;
-            height: 1.75rem;
-            width: 1.75rem;
+            height: 1.15rem;
+            width: 1.15rem;
             color: var(--primary-foreground-color);
             opacity: 0.9;
         }
@@ -47,6 +47,23 @@
             text-align: center;
             color: var(--primary-foreground-color);
             opacity: 0.9;
+        }
+    }
+
+    // The icon-only circle above is sized for a 4rem circle - a labeled pill is much
+    // shorter, so that same icon read as oversized next to its own label (confirmed live
+    // against a real screenshot, not just from the numbers).
+    &:global(.wide) {
+        gap: 0.55rem;
+
+        .icon-container .icon {
+            height: 1.15rem;
+            width: 1.15rem;
+        }
+
+        .label-container .label {
+            font-size: 0.85rem;
+            font-weight: 700;
         }
     }
 }

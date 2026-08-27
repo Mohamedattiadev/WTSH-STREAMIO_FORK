@@ -2,7 +2,7 @@
 
 import React, { useMemo, useCallback, useState, useRef, forwardRef, memo } from 'react';
 import classNames from 'classnames';
-import Icon from '@stremio/stremio-icons/react';
+import Icon from 'stremio/components/Icon';
 import { useCore } from 'stremio/core';
 import { CONSTANTS } from 'stremio/common';
 import { MetaPreview, Video } from 'stremio/components';
@@ -96,6 +96,7 @@ const SideDrawer = memo(forwardRef<HTMLDivElement, Props>(({ seriesInfo, classNa
                     compact={true}
                     name={metaItem.name}
                     logo={metaItem.logo}
+                    poster={metaItem.poster}
                     runtime={metaItem.runtime}
                     releaseInfo={metaItem.releaseInfo}
                     released={metaItem.released}

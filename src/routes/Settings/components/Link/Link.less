@@ -13,4 +13,38 @@
             text-decoration: underline;
         }
     }
+
+    &.row {
+        align-self: stretch;
+        height: auto;
+        justify-content: space-between;
+        padding: 0.7rem 0;
+        border-top: 0.06rem solid var(--overlay-color);
+
+        &:first-child {
+            border-top: none;
+        }
+
+        .label {
+            color: var(--primary-foreground-color);
+        }
+
+        .chevron-icon {
+            flex: none;
+            width: 0.85rem;
+            height: 0.85rem;
+            color: var(--muted-foreground-color);
+        }
+
+        &:hover {
+            .label {
+                text-decoration: none;
+                color: var(--ember-soft);
+            }
+        }
+
+        &.danger .label {
+            color: var(--danger-accent-color);
+        }
+    }
 }

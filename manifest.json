@@ -1,7 +1,7 @@
 {
-    "name": "Stremio Web",
-    "short_name": "Stremio",
-    "description": "Freedom To Stream",
+    "name": "WTSH",
+    "short_name": "WTSH",
+    "description": "Just Watch",
     "background_color": "#0c0b11",
     "theme_color": "#2a2843",
     "orientation": "any",
@@ -71,14 +71,14 @@
             "sizes": "1440x900",
             "type": "image/webp",
             "form_factor": "wide",
-            "label": "Homescreen of Stremio"
+            "label": "Homescreen of WTSH"
         },
         {
             "src": "screenshots/board_narrow.webp",
             "sizes": "414x896",
             "type": "image/webp",
             "form_factor": "narrow",
-            "label": "Homescreen of Stremio"
+            "label": "Homescreen of WTSH"
         }
     ]
 }

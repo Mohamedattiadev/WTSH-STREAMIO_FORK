@@ -1,0 +1,119 @@
+.gemini-api-key {
+    .body {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .description {
+        max-width: 26rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: var(--muted-foreground-color);
+    }
+
+    .link {
+        color: var(--ember-soft);
+
+        &:hover {
+            color: var(--ember);
+        }
+    }
+
+    .how-to {
+        max-width: 26rem;
+        margin-bottom: 1rem;
+
+        summary {
+            cursor: pointer;
+            width: fit-content;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--muted-foreground-color);
+
+            &:hover {
+                color: var(--primary-foreground-color);
+            }
+
+            &::marker {
+                color: var(--ember-soft);
+            }
+        }
+
+        ol {
+            margin: 0.6rem 0 0;
+            padding-left: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            font-size: 0.82rem;
+            line-height: 1.5;
+            color: var(--muted-foreground-color);
+        }
+
+        strong {
+            color: var(--primary-foreground-color);
+        }
+    }
+
+    .form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        max-width: 22rem;
+    }
+
+    .input {
+        all: unset;
+        box-sizing: border-box;
+        width: 100%;
+        height: 2.6rem;
+        padding: 0 0.9rem;
+        border-radius: 0.6rem;
+        background-color: var(--overlay-color);
+        border: 0.06rem solid var(--overlay-color);
+        color: var(--primary-foreground-color);
+        font-size: 0.85rem;
+        transition: border-color 0.15s ease-out;
+
+        &:focus {
+            border-color: var(--primary-accent-color);
+        }
+    }
+
+    .actions {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.9rem;
+        flex-wrap: wrap;
+    }
+
+    .save-button {
+        all: unset;
+        box-sizing: border-box;
+        cursor: pointer;
+        flex: none;
+        height: 2.5rem;
+        padding: 0 1.1rem;
+        border-radius: 0.6rem;
+        background-color: var(--primary-accent-color);
+        color: var(--secondary-foreground-color);
+        font-size: 0.85rem;
+        font-weight: 700;
+    }
+
+    .clear-button {
+        all: unset;
+        box-sizing: border-box;
+        cursor: pointer;
+        flex: none;
+        font-size: 0.78rem;
+        color: var(--muted-foreground-color);
+
+        &:hover {
+            color: var(--danger-accent-color);
+        }
+    }
+}

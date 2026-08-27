@@ -21,6 +21,19 @@
     filters-modal-content: modal-dialog-content;
 }
 
+// CSS Modules hashes class names per file, so a bare `.description-container` nested selector
+// here would compile against a class this file's own module generates, never the one Addon's
+// component actually renders - same cross-file scoping gotcha TrailerModal/styles.less and
+// MetaItem/styles.less already document. This pulls in the real compiled class name so the
+// featured-hub-strip's description clamp below actually applies.
+:import('~stremio/routes/Addons/Addon/styles.less') {
+    addon-description: description-container;
+    addon-name: name-container;
+    addon-configure-button: configure-button-container;
+    addon-button-label: label;
+    addon-button-icon: icon;
+}
+
 .addons-container {
     height: calc(100% - var(--safe-area-inset-bottom));
     background-color: transparent;
@@ -38,12 +51,87 @@
             z-index: 1;
         }
 
+        .tabs-container {
+            flex: none;
+            align-self: stretch;
+            display: flex;
+            flex-direction: row;
+            gap: 1.6rem;
+            padding: 1.5rem 1.5rem 0 1.5rem;
+            border-bottom: 0.06rem solid var(--overlay-color);
+            overflow-x: auto;
+            z-index: 2;
+
+            .tab {
+                flex: none;
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                height: auto;
+                padding: 0 0.1rem 0.7rem;
+                position: relative;
+                opacity: 1;
+                background-color: transparent;
+                transition: color 0.15s ease-out;
+
+                &:hover {
+                    .label {
+                        color: var(--primary-foreground-color);
+                    }
+                }
+
+                &:focus {
+                    outline-color: var(--primary-accent-color);
+                }
+
+                &.selected {
+                    &::after {
+                        content: '';
+                        position: absolute;
+                        left: 0;
+                        right: 0;
+                        bottom: -0.06rem;
+                        height: 0.13rem;
+                        border-radius: 0.13rem;
+                        background-color: var(--ember);
+                    }
+
+                    .label {
+                        color: var(--primary-foreground-color);
+                    }
+
+                    .tab-count {
+                        color: var(--ember-soft);
+                        background-color: rgba(255, 95, 54, 0.12);
+                    }
+                }
+
+                .label {
+                    font-size: 0.88rem;
+                    font-weight: 600;
+                    color: var(--muted-foreground-color);
+                    transition: color 0.15s ease-out;
+                }
+
+                .tab-count {
+                    font-family: var(--font-mono);
+                    font-size: 0.65rem;
+                    color: var(--muted-foreground-color);
+                    background-color: rgba(255, 255, 255, 0.06);
+                    padding: 0.1rem 0.42rem;
+                    border-radius: 0.7rem;
+                }
+            }
+        }
+
         .selectable-inputs-container {
             flex: none;
             align-self: stretch;
             display: flex;
             flex-direction: row;
-            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.6rem;
             padding: 1.5rem;
             overflow: visible;
             z-index: 2;
@@ -54,16 +142,16 @@
                 flex-direction: row;
                 align-items: center;
                 justify-content: center;
-                height: 3rem;
-                margin-right: 1.5rem;
-                padding: 0 1.5rem;
-                border-radius: 3rem;
-                background-color: var(--secondary-accent-color);
+                gap: 0.35rem;
+                height: 2.4rem;
+                padding: 0 0.9rem;
+                margin-left: auto;
+                border-radius: 0.6rem;
+                background-color: var(--primary-accent-color);
                 z-index: 3;
 
                 &:hover {
-                    outline: var(--focus-outline-size) solid var(--secondary-accent-color);
-                    background-color: transparent;
+                    opacity: 0.85;
                 }
 
                 &:focus {
@@ -72,59 +160,77 @@
 
                 .icon {
                     flex: none;
-                    width: 1.2rem;
-                    height: 1.2rem;
-                    margin-right: 0.5rem;
-                    color: var(--primary-foreground-color);
+                    width: 1rem;
+                    height: 1rem;
+                    color: #20100a;
                 }
 
                 .add-button-label {
-                    flex-grow: 0;
-                    flex-shrink: 1;
-                    flex-basis: auto;
-                    max-height: 2.4em;
-                    font-size: 1rem;
+                    flex: none;
+                    font-size: 0.8rem;
                     font-weight: 700;
-                    color: var(--primary-foreground-color);
+                    color: #20100a;
                 }
             }
 
             .select-input-container {
-                background-color: var(--overlay-color);
-                flex-grow: 0;
-                flex-shrink: 1;
-                flex-basis: 15rem;
-                margin-right: 1.5rem;
+                background-color: rgba(255, 255, 255, 0.04);
+                border: 0.06rem solid var(--overlay-color);
+                flex: none;
+                height: 2.5rem;
+                border-radius: 0.65rem;
 
                 .multiselect-menu-container {
                     overflow: auto;
                 }
             }
 
-            .spacing {
-                flex: 1;
-            }
-
             .search-bar {
-                flex-grow: 0;
-                flex-shrink: 1;
-                flex-basis: 18rem;
+                flex: 1;
+                max-width: 20rem;
+                height: 2.5rem;
+                padding: 0 0.85rem;
+                border-radius: 0.65rem;
+                background-color: rgba(255, 255, 255, 0.04);
+                border: 0.06rem solid var(--overlay-color);
+                box-shadow: none;
+                backdrop-filter: none;
+
+                .search-input {
+                    font-size: 0.82rem;
+                }
+
+                .icon {
+                    width: 0.95rem;
+                    height: 0.95rem;
+                }
             }
 
             .filter-button {
                 flex: none;
-                display: none;
+                display: flex;
                 align-items: center;
-                justify-content: center;
-                width: 3rem;
-                height: 3rem;
-                border-radius: var(--border-radius);
-                background-color: var(--overlay-color);
+                gap: 0.35rem;
+                height: 2.4rem;
+                padding: 0 0.9rem;
+                border-radius: 0.6rem;
+                border: 0.06rem solid rgba(255, 255, 255, 0.16);
+                background-color: transparent;
+
+                &:hover {
+                    background-color: rgba(255, 255, 255, 0.06);
+                }
 
                 .filter-icon {
                     flex: none;
-                    width: 1.4rem;
-                    height: 1.4rem;
+                    width: 0.85rem;
+                    height: 0.85rem;
+                    color: var(--primary-foreground-color);
+                }
+
+                .filter-label {
+                    font-size: 0.8rem;
+                    font-weight: 700;
                     color: var(--primary-foreground-color);
                 }
             }
@@ -145,6 +251,116 @@
 
             .addon {
                 margin-bottom: 1.5rem;
+            }
+        }
+
+        .featured-hub-strip {
+            flex: none;
+            align-self: stretch;
+            padding: 0 1.5rem 1.25rem;
+
+            .featured-hub-head {
+                display: flex;
+                flex-direction: row;
+                align-items: baseline;
+                justify-content: space-between;
+                margin-bottom: 0.75rem;
+
+                .featured-hub-title {
+                    font-size: 1.1rem;
+                    font-weight: 700;
+                    color: var(--primary-foreground-color);
+                }
+
+                .featured-hub-see-all {
+                    font-size: 0.85rem;
+                    color: var(--muted-foreground-color);
+
+                    &:hover {
+                        color: var(--primary-accent-color);
+                    }
+                }
+            }
+
+            .featured-hub-scroll {
+                display: flex;
+                flex-direction: row;
+                // Addon is a horizontal row component built for full-width lists (its own
+                // buttons-container wraps and its height is unbounded to accommodate that) -
+                // without this, the flex row's default align-items:stretch made every card
+                // match whichever one happened to wrap its buttons onto a second line,
+                // producing cards that stretched to fill the whole page height.
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .featured-hub-addon {
+                flex: none;
+                // Was 24rem - real addon names (e.g. "IndiaStreams") were still only getting a
+                // few characters before the min-width floor below kicked in, truncating to
+                // "Indi…". Widened the card and gave the name a much more generous floor so a
+                // real, longer name has actual room instead of just enough to avoid literally
+                // collapsing to 0.
+                width: 28rem;
+                // Every card needs the exact same footprint regardless of how many lines its
+                // name/description wrap to (a 1-line name next to a 2-line name previously
+                // produced visibly uneven row heights) - fixed height + clipping the name to 2
+                // lines (matching the description's own clamp below) keeps every card identical
+                // while still showing real long names in full in the overwhelming majority of
+                // cases.
+                height: 8.5rem;
+                overflow: hidden;
+
+                // Squeezing Addon's row layout into a card this narrow means its name and
+                // version badge no longer have the wide-list room they normally can rely on -
+                // the name label has no flex/min-width of its own (harmless there, real
+                // elsewhere - see Addon/styles.less), so under this narrower width it was
+                // collapsing to 0 and showing no name text at all. Scoped here rather than
+                // changed on the shared component, since the wide-list layout doesn't need it
+                // and giving the name flex:1 there would shove every row's version badge to the
+                // far right.
+                .addon-name {
+                    flex: 1 1 auto;
+                    min-width: 7rem;
+                    // The shared row's base rule truncates to a single line with an ellipsis
+                    // (fine at its normal full-list width, where there's always room) - still
+                    // cut real names like "IndiaStreams" or "ArabCinemeta" down to ~9 characters
+                    // even after the width/min-width bumps above. Clamping to 2 lines instead
+                    // shows the full real name in almost every case, while keeping every card's
+                    // height identical (see the fixed height above) instead of growing per-name.
+                    display: -webkit-box;
+                    -webkit-box-orient: vertical;
+                    -webkit-line-clamp: 2;
+                    white-space: normal;
+                    overflow: hidden;
+                }
+
+                .addon-description {
+                    display: -webkit-box;
+                    -webkit-box-orient: vertical;
+                    -webkit-line-clamp: 2;
+                    overflow: hidden;
+                }
+
+                // Matches the reference design: this card is too narrow for a labeled Configure
+                // pill next to Install/Share, and the gear icon alone already reads clearly here
+                // (Share is icon-only for the same reason - see share-button-container in
+                // Addon/styles.less). Scoped to the featured strip only, so the full-width addon
+                // lists elsewhere keep the labeled Configure button.
+                .addon-configure-button {
+                    width: 2.4rem;
+                    padding: 0;
+
+                    .addon-button-label {
+                        display: none;
+                    }
+
+                    .addon-button-icon {
+                        width: 1rem;
+                        height: 1rem;
+                        color: var(--primary-foreground-color);
+                    }
+                }
             }
         }
     }
@@ -289,25 +505,38 @@
                 .add-button-container {
                     z-index: 1;
                     position: fixed;
-                    right: 0;
-                    bottom: calc(3rem + var(--horizontal-nav-bar-size));
+                    // Left, not right, so it doesn't stack on top of ChatFab (also fixed,
+                    // bottom-right, on every route via MainNavBars).
+                    left: 1rem;
+                    bottom: calc(var(--vertical-nav-bar-size) + var(--safe-area-inset-bottom) + 1rem);
+                    // A full "+ Add addon" pill sitting fixed over a scrolling list inevitably
+                    // scrolls over card text underneath it - shrinking to an icon-only circle
+                    // (same treatment as ChatFab, which solves the identical problem) keeps it
+                    // reachable without permanently/mostly covering whatever card lands there.
+                    width: 3.2rem;
+                    height: 3.2rem;
+                    margin-right: 0;
+                    padding: 0;
+                    border-radius: 50%;
+                    box-shadow: 0 10px 26px -6px rgba(255, 61, 46, 0.45);
+
+                    .icon {
+                        margin-right: 0;
+                    }
+
+                    .add-button-label {
+                        display: none;
+                    }
                 }
 
                 .select-input-container {
                     display: none;
                 }
 
-                .spacing {
-                    display: none;
-                }
-
                 .search-bar {
                     flex-basis: 100%;
+                    max-width: none;
                     margin-right: 1rem;
-                }
-
-                .filter-button {
-                    display: flex;
                 }
             }
         }

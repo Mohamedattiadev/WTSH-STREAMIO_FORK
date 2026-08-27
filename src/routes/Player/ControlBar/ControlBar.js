@@ -3,8 +3,8 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const classnames = require('classnames');
-const { default: Icon } = require('@stremio/stremio-icons/react');
-const { Button } = require('stremio/components');
+const { default: Icon } = require('stremio/components/Icon');
+const { Button, ChatIcon } = require('stremio/components');
 const { useServices } = require('stremio/services');
 const SeekBar = require('./SeekBar');
 const VolumeSlider = require('./VolumeSlider');
@@ -40,13 +40,20 @@ const ControlBar = React.forwardRef(({
     onUnmuteRequested,
     onVolumeChangeRequested,
     onSeekRequested,
+    onSeekPrev,
+    onSeekNext,
+    seekTimeDuration,
     onToggleSubtitlesMenu,
     onToggleAudioMenu,
     onToggleSpeedMenu,
     onToggleSideDrawer,
+    onToggleSearchPanel,
+    onToggleChatPanel,
     onToggleOptionsMenu,
     shellCastSupported,
     onToggleCastDevicesMenu,
+    onToggleStreamingServerMenu,
+    onToggleSourcesMenu,
     videoScale,
     videoScaleLabel,
     onVideoScaleChanged,
@@ -57,6 +64,28 @@ const ControlBar = React.forwardRef(({
     const { chromecast } = useServices();
     const platform = usePlatform();
     const [chromecastServiceActive, setChromecastServiceActive] = React.useState(() => chromecast.active);
+    // Real download link straight from the current stream's own deep links (the same field
+    // OptionsMenu's buried "Download Video" option already used) - only ever shown when a
+    // real one exists, never fabricated for streams (most torrent streams) that don't offer it.
+    const downloadUrl = stream?.deepLinks?.externalPlayer?.download ?? null;
+    // Deliberately not platform.openExternal() here - that routes any non-whitelisted host
+    // (which every real torrent/debrid download link is, by nature) through the
+    // stremio.com/warning interstitial first, turning one click into "new tab -> warning page
+    // -> click through -> finally reaches the file." A direct <a download> click is the real
+    // one-hop download this button promises; openExternal's warning page still protects every
+    // other external link in the app (addon sources, share links, etc.) unchanged.
+    const onDownloadButtonClick = React.useCallback(() => {
+        if (typeof downloadUrl !== 'string') {
+            return;
+        }
+        const anchor = document.createElement('a');
+        anchor.href = downloadUrl;
+        anchor.download = '';
+        anchor.rel = 'noopener noreferrer';
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+    }, [downloadUrl]);
     const [buttonsMenuOpen, , , toggleButtonsMenu] = useBinaryState(false);
     const onSubtitlesButtonMouseDown = React.useCallback((event) => {
         event.nativeEvent.subtitlesMenuClosePrevented = true;
@@ -70,6 +99,12 @@ const ControlBar = React.forwardRef(({
     const onVideosButtonMouseDown = React.useCallback((event) => {
         event.nativeEvent.videosMenuClosePrevented = true;
     }, []);
+    const onSearchButtonMouseDown = React.useCallback((event) => {
+        event.nativeEvent.searchPanelClosePrevented = true;
+    }, []);
+    const onChatButtonMouseDown = React.useCallback((event) => {
+        event.nativeEvent.chatPanelClosePrevented = true;
+    }, []);
     const onOptionsButtonMouseDown = React.useCallback((event) => {
         event.nativeEvent.optionsMenuClosePrevented = true;
     }, []);
@@ -79,6 +114,23 @@ const ControlBar = React.forwardRef(({
     const onCastDevicesButtonMouseDown = React.useCallback((event) => {
         event.nativeEvent.castDevicesMenuClosePrevented = true;
     }, []);
+    const onStreamingServerButtonMouseDown = React.useCallback((event) => {
+        event.nativeEvent.streamingServerMenuClosePrevented = true;
+    }, []);
+    const onSourcesButtonMouseDown = React.useCallback((event) => {
+        event.nativeEvent.sourcesMenuClosePrevented = true;
+    }, []);
+    const seekSeconds = typeof seekTimeDuration === 'number' ? Math.round(seekTimeDuration / 1000) : null;
+    const onSeekPrevButtonClick = React.useCallback((event) => {
+        if (typeof onSeekPrev === 'function') {
+            onSeekPrev(event);
+        }
+    }, [onSeekPrev]);
+    const onSeekNextButtonClick = React.useCallback((event) => {
+        if (typeof onSeekNext === 'function') {
+            onSeekNext(event);
+        }
+    }, [onSeekNext]);
     const onPlayPauseButtonClick = React.useCallback(() => {
         if (paused) {
             if (typeof onPlayRequested === 'function') {
@@ -139,9 +191,27 @@ const ControlBar = React.forwardRef(({
                 playbackSpeed={playbackSpeed}
             />
             <div className={styles['control-bar-buttons-container']}>
+                {
+                    typeof onSeekPrev === 'function' ?
+                        <Button className={classnames(styles['control-bar-button'], styles['skip-button'])} title={t('PLAYER_SEEK_BACKWARD')} tabIndex={-1} onClick={onSeekPrevButtonClick}>
+                            <Icon className={styles['icon']} name={'skip-back'} />
+                            {seekSeconds !== null ? <div className={styles['skip-label']}>{seekSeconds}</div> : null}
+                        </Button>
+                        :
+                        null
+                }
                 <Button className={classnames(styles['control-bar-button'], { 'disabled': typeof paused !== 'boolean' })} title={paused ? t('PLAYER_PLAY') : t('PLAYER_PAUSE')} tabIndex={-1} onClick={onPlayPauseButtonClick}>
                     <Icon className={styles['icon']} name={typeof paused !== 'boolean' || paused ? 'play' : 'pause'} />
                 </Button>
+                {
+                    typeof onSeekNext === 'function' ?
+                        <Button className={classnames(styles['control-bar-button'], styles['skip-button'])} title={t('PLAYER_SEEK_FORWARD')} tabIndex={-1} onClick={onSeekNextButtonClick}>
+                            <Icon className={styles['icon']} name={'skip-forward'} />
+                            {seekSeconds !== null ? <div className={styles['skip-label']}>{seekSeconds}</div> : null}
+                        </Button>
+                        :
+                        null
+                }
                 {
                     nextVideo !== null ?
                         <Button className={classnames(styles['control-bar-button'])} title={t('PLAYER_NEXT_VIDEO')} tabIndex={-1} onClick={onNextVideoButtonClick}>
@@ -174,6 +244,23 @@ const ControlBar = React.forwardRef(({
                         : null
                 }
                 <div className={styles['spacing']} />
+                {
+                    typeof downloadUrl === 'string' ?
+                        <Button className={styles['control-bar-button']} title={t('CTX_DOWNLOAD_VIDEO')} tabIndex={-1} onClick={onDownloadButtonClick}>
+                            <Icon className={styles['icon']} name={'download'} />
+                        </Button>
+                        :
+                        null
+                }
+                {
+                    metaItem?.content?.videos?.length > 0 ?
+                        <Button className={styles['episodes-button']} title={'Episodes'} tabIndex={-1} onMouseDown={onVideosButtonMouseDown} onClick={onToggleSideDrawer}>
+                            <Icon className={styles['icon']} name={'episodes'} />
+                            <div className={styles['label']}>Episodes</div>
+                        </Button>
+                        :
+                        null
+                }
                 <Button className={styles['control-bar-buttons-menu-button']} onClick={toggleButtonsMenu}>
                     <Icon className={styles['icon']} name={'more-vertical'} />
                 </Button>
@@ -184,11 +271,17 @@ const ControlBar = React.forwardRef(({
                                 <Icon className={styles['icon']} name={'network'} />
                             </Button>
                     }
-                    <Button className={classnames(styles['control-bar-button'], { 'disabled': playbackSpeed === null })} tabIndex={-1} onMouseDown={onSpeedButtonMouseDown} onClick={onToggleSpeedMenu}>
-                        <Icon className={styles['icon']} name={'speed'} />
+                    <Button className={classnames(styles['control-bar-button'], styles['speed-chip'], { 'disabled': playbackSpeed === null })} title={t('PLAYER_SPEED')} tabIndex={-1} onMouseDown={onSpeedButtonMouseDown} onClick={onToggleSpeedMenu}>
+                        <span className={styles['speed-chip-label']}>{typeof playbackSpeed === 'number' ? `${playbackSpeed}x` : '1x'}</span>
                     </Button>
                     <Button className={classnames(styles['control-bar-button'], { 'disabled': castButtonDisabled })} tabIndex={-1} onMouseDown={onCastDevicesButtonMouseDown} onClick={onChromecastButtonClick}>
                         <Icon className={styles['icon']} name={'cast'} />
+                    </Button>
+                    <Button className={styles['control-bar-button']} title={'Streaming Server'} tabIndex={-1} onMouseDown={onStreamingServerButtonMouseDown} onClick={onToggleStreamingServerMenu}>
+                        <Icon className={styles['icon']} name={'server'} />
+                    </Button>
+                    <Button className={styles['control-bar-button']} title={'Switch Source'} tabIndex={-1} onMouseDown={onSourcesButtonMouseDown} onClick={onToggleSourcesMenu}>
+                        <Icon className={styles['icon']} name={'sources'} />
                     </Button>
                     <Button className={classnames(styles['control-bar-button'], { 'disabled': !Array.isArray(subtitlesTracks) || subtitlesTracks.length === 0 })} tabIndex={-1} onMouseDown={onSubtitlesButtonMouseDown} onClick={onToggleSubtitlesMenu}>
                         <Icon className={styles['icon']} name={'subtitles'} />
@@ -196,14 +289,12 @@ const ControlBar = React.forwardRef(({
                     <Button className={classnames(styles['control-bar-button'], { 'disabled': !Array.isArray(audioTracks) || audioTracks.length === 0 })} tabIndex={-1} onMouseDown={onAudioButtonMouseDown} onClick={onToggleAudioMenu}>
                         <Icon className={styles['icon']} name={'audio-tracks'} />
                     </Button>
-                    {
-                        metaItem?.content?.videos?.length > 0 ?
-                            <Button className={styles['control-bar-button']} tabIndex={-1} onMouseDown={onVideosButtonMouseDown} onClick={onToggleSideDrawer}>
-                                <Icon className={styles['icon']} name={'episodes'} />
-                            </Button>
-                            :
-                            null
-                    }
+                    <Button className={styles['control-bar-button']} title={'Search'} tabIndex={-1} onMouseDown={onSearchButtonMouseDown} onClick={onToggleSearchPanel}>
+                        <Icon className={styles['icon']} name={'search'} />
+                    </Button>
+                    <Button className={styles['control-bar-button']} title={'Ask WTSH'} tabIndex={-1} onMouseDown={onChatButtonMouseDown} onClick={onToggleChatPanel}>
+                        <ChatIcon className={styles['icon']} outline />
+                    </Button>
                     <Button className={classnames(styles['control-bar-button'], { 'disabled': videoScale === null })} title={videoScaleLabel} tabIndex={-1} onClick={onVideoScaleChanged}>
                         <Icon className={styles['icon']} name={VIDEO_SCALE_ICONS[videoScale || 'contain']} />
                     </Button>
@@ -241,13 +332,20 @@ ControlBar.propTypes = {
     onUnmuteRequested: PropTypes.func,
     onVolumeChangeRequested: PropTypes.func,
     onSeekRequested: PropTypes.func,
+    onSeekPrev: PropTypes.func,
+    onSeekNext: PropTypes.func,
+    seekTimeDuration: PropTypes.number,
     onToggleSubtitlesMenu: PropTypes.func,
     onToggleAudioMenu: PropTypes.func,
     onToggleSpeedMenu: PropTypes.func,
     onToggleSideDrawer: PropTypes.func,
+    onToggleSearchPanel: PropTypes.func,
+    onToggleChatPanel: PropTypes.func,
     onToggleOptionsMenu: PropTypes.func,
     shellCastSupported: PropTypes.bool,
     onToggleCastDevicesMenu: PropTypes.func,
+    onToggleStreamingServerMenu: PropTypes.func,
+    onToggleSourcesMenu: PropTypes.func,
     onToggleStatisticsMenu: PropTypes.func,
     onMouseOver: PropTypes.func,
     onMouseMove: PropTypes.func,
