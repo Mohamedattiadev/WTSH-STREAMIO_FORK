@@ -20,6 +20,8 @@ const styles = require('./styles');
 const { AddonPlaceholder } = require('./AddonPlaceholder');
 const RegionalHub = require('./RegionalHub');
 const AddonHub = require('./AddonHub');
+const PersonalAddons = require('./PersonalAddons');
+const StreamingSetup = require('./StreamingSetup');
 const useAddonManifests = require('./RegionalHub/useAddonManifests');
 const useAddonActions = require('./RegionalHub/useAddonActions');
 const CuratedAddonCard = require('./RegionalHub/CuratedAddonCard');
@@ -262,136 +264,147 @@ const Addons = () => {
                             </Button>
                         </div>
                 }
-                {
-                    !regionalHubOpen && !hubOpen && installedAddons.selected !== null && FEATURED_HUB_ADDONS.length > 0 ?
-                        <div className={styles['featured-hub-strip']}>
-                            <div className={styles['featured-hub-head']}>
-                                <div className={styles['featured-hub-title']}>{'From the Addon Hub'}</div>
-                                <Button className={styles['featured-hub-see-all']} title={'Hub'} onClick={goToHub}>
-                                    {'See all'}
-                                </Button>
-                            </div>
-                            <HorizontalScroll className={styles['featured-hub-scroll']}>
-                                {FEATURED_HUB_ADDONS.map((curated) => (
-                                    <CuratedAddonCard
-                                        key={curated.transportUrl}
-                                        className={styles['featured-hub-addon']}
-                                        curated={curated}
-                                        manifest={featuredManifestsByUrl[curated.transportUrl]}
-                                        installed={typeof featuredManifestsByUrl[curated.transportUrl]?.id === 'string' && installedAddonIds.has(featuredManifestsByUrl[curated.transportUrl].id)}
-                                        onInstall={featuredActions.onInstall}
-                                        onUninstall={featuredActions.onUninstall}
-                                        onConfigure={featuredActions.onConfigure}
-                                        onOpen={featuredActions.onOpen}
-                                    />
-                                ))}
-                            </HorizontalScroll>
-                            {
-                                typeof featuredActions.detailsTransportUrl === 'string' ?
-                                    <AddonDetailsModal
-                                        transportUrl={featuredActions.detailsTransportUrl}
-                                        onCloseRequest={featuredActions.closeDetails}
-                                    />
-                                    :
-                                    null
-                            }
-                        </div>
-                        :
-                        null
-                }
-                {
-                    regionalHubOpen ?
-                        <RegionalHub className={styles['addons-list-container']} installedIds={installedAddonIds} />
-                        :
-                        hubOpen ?
-                            <AddonHub className={styles['addons-list-container']} installedIds={installedAddonIds} />
+                <div className={styles['addons-scroll']}>
+                    {
+                        isMyTab ?
+                            <React.Fragment>
+                                <StreamingSetup className={styles['personal-addons-container']} installedIds={installedAddonIds} />
+                                <PersonalAddons className={styles['personal-addons-container']} />
+                            </React.Fragment>
                             :
-                        installedAddons.selected !== null ?
-                            installedAddons.selectable.types.length === 0 ?
-                                <div className={styles['message-container']}>
-                                    {t('NO_ADDONS')}
+                            null
+                    }
+                    {
+                        !regionalHubOpen && !hubOpen && installedAddons.selected !== null && FEATURED_HUB_ADDONS.length > 0 ?
+                            <div className={styles['featured-hub-strip']}>
+                                <div className={styles['featured-hub-head']}>
+                                    <div className={styles['featured-hub-title']}>{'From the Addon Hub'}</div>
+                                    <Button className={styles['featured-hub-see-all']} title={'Hub'} onClick={goToHub}>
+                                        {'See all'}
+                                    </Button>
                                 </div>
-                                :
-                                installedAddons.catalog.length === 0 ?
-                                    <div className={styles['message-container']}>
-                                        {t('NO_ADDONS_FOR_TYPE')}
-                                    </div>
-                                    :
-                                    <div className={styles['addons-list-container']}>
-                                        {
-                                            installedAddons.catalog
-                                                .filter(searchFilterPredicate)
-                                                .map((addon, index) => (
-                                                    <Addon
-                                                        key={index}
-                                                        className={classnames(styles['addon'], 'animation-fade-in')}
-                                                        id={addon.manifest.id}
-                                                        name={addon.manifest.name}
-                                                        version={addon.manifest.version}
-                                                        logo={addon.manifest.logo}
-                                                        transportUrl={addon.transportUrl}
-                                                        description={addon.manifest.description}
-                                                        types={addon.manifest.types}
-                                                        behaviorHints={addon.manifest.behaviorHints}
-                                                        installed={addon.installed}
-                                                        onInstall={onAddonInstall}
-                                                        onUninstall={onAddonUninstall}
-                                                        onConfigure={onAddonConfigure}
-                                                        onOpen={onAddonOpen}
-                                                        onShare={onAddonShare}
-                                                        dataset={{ addon }}
-                                                    />
-                                                ))
-                                        }
-                                    </div>
+                                <HorizontalScroll className={styles['featured-hub-scroll']}>
+                                    {FEATURED_HUB_ADDONS.map((curated) => (
+                                        <CuratedAddonCard
+                                            key={curated.transportUrl}
+                                            className={styles['featured-hub-addon']}
+                                            curated={curated}
+                                            manifest={featuredManifestsByUrl[curated.transportUrl]}
+                                            installed={typeof featuredManifestsByUrl[curated.transportUrl]?.id === 'string' && installedAddonIds.has(featuredManifestsByUrl[curated.transportUrl].id)}
+                                            onInstall={featuredActions.onInstall}
+                                            onUninstall={featuredActions.onUninstall}
+                                            onConfigure={featuredActions.onConfigure}
+                                            onOpen={featuredActions.onOpen}
+                                        />
+                                    ))}
+                                </HorizontalScroll>
+                                {
+                                    typeof featuredActions.detailsTransportUrl === 'string' ?
+                                        <AddonDetailsModal
+                                            transportUrl={featuredActions.detailsTransportUrl}
+                                            onCloseRequest={featuredActions.closeDetails}
+                                        />
+                                        :
+                                        null
+                                }
+                            </div>
                             :
-                            remoteAddons.selected !== null ?
-                                remoteAddons.catalog.content.type === 'Err' ?
-                                    <div className={styles['message-container']}>
-                                        {remoteAddons.catalog.content.content}
-                                    </div>
+                            null
+                    }
+                    {
+                        regionalHubOpen ?
+                            <RegionalHub className={styles['addons-list-container']} installedIds={installedAddonIds} />
+                            :
+                            hubOpen ?
+                                <AddonHub className={styles['addons-list-container']} installedIds={installedAddonIds} />
+                                :
+                                installedAddons.selected !== null ?
+                                    installedAddons.selectable.types.length === 0 ?
+                                        <div className={styles['message-container']}>
+                                            {t('NO_ADDONS')}
+                                        </div>
+                                        :
+                                        installedAddons.catalog.length === 0 ?
+                                            <div className={styles['message-container']}>
+                                                {t('NO_ADDONS_FOR_TYPE')}
+                                            </div>
+                                            :
+                                            <div className={styles['addons-list-container']}>
+                                                {
+                                                    installedAddons.catalog
+                                                        .filter(searchFilterPredicate)
+                                                        .map((addon, index) => (
+                                                            <Addon
+                                                                key={index}
+                                                                className={classnames(styles['addon'], 'animation-fade-in')}
+                                                                id={addon.manifest.id}
+                                                                name={addon.manifest.name}
+                                                                version={addon.manifest.version}
+                                                                logo={addon.manifest.logo}
+                                                                transportUrl={addon.transportUrl}
+                                                                description={addon.manifest.description}
+                                                                types={addon.manifest.types}
+                                                                behaviorHints={addon.manifest.behaviorHints}
+                                                                installed={addon.installed}
+                                                                onInstall={onAddonInstall}
+                                                                onUninstall={onAddonUninstall}
+                                                                onConfigure={onAddonConfigure}
+                                                                onOpen={onAddonOpen}
+                                                                onShare={onAddonShare}
+                                                                dataset={{ addon }}
+                                                            />
+                                                        ))
+                                                }
+                                            </div>
                                     :
-                                    remoteAddons.catalog.content.type === 'Loading' ?
+                                    remoteAddons.selected !== null ?
+                                        remoteAddons.catalog.content.type === 'Err' ?
+                                            <div className={styles['message-container']}>
+                                                {remoteAddons.catalog.content.content}
+                                            </div>
+                                            :
+                                            remoteAddons.catalog.content.type === 'Loading' ?
+                                                <div className={styles['addons-list-container']}>
+                                                    {Array.from({ length: 6 }).map((_, index) => (
+                                                        <AddonPlaceholder key={index} className={styles['addon']} />
+                                                    ))}
+                                                </div>
+                                                :
+                                                <div className={styles['addons-list-container']}>
+                                                    {
+                                                        remoteAddons.catalog.content.content
+                                                            .filter(searchFilterPredicate)
+                                                            .map((addon, index) => (
+                                                                <Addon
+                                                                    key={index}
+                                                                    className={classnames(styles['addon'], 'animation-fade-in')}
+                                                                    id={addon.manifest.id}
+                                                                    name={addon.manifest.name}
+                                                                    version={addon.manifest.version}
+                                                                    logo={addon.manifest.logo}
+                                                                    transportUrl={addon.transportUrl}
+                                                                    description={addon.manifest.description}
+                                                                    types={addon.manifest.types}
+                                                                    behaviorHints={addon.manifest.behaviorHints}
+                                                                    installed={addon.installed}
+                                                                    onInstall={onAddonInstall}
+                                                                    onUninstall={onAddonUninstall}
+                                                                    onConfigure={onAddonConfigure}
+                                                                    onOpen={onAddonOpen}
+                                                                    onShare={onAddonShare}
+                                                                    dataset={{ addon }}
+                                                                />
+                                                            ))
+                                                    }
+                                                </div>
+                                        :
                                         <div className={styles['addons-list-container']}>
                                             {Array.from({ length: 6 }).map((_, index) => (
                                                 <AddonPlaceholder key={index} className={styles['addon']} />
                                             ))}
                                         </div>
-                                        :
-                                        <div className={styles['addons-list-container']}>
-                                            {
-                                                remoteAddons.catalog.content.content
-                                                    .filter(searchFilterPredicate)
-                                                    .map((addon, index) => (
-                                                        <Addon
-                                                            key={index}
-                                                            className={classnames(styles['addon'], 'animation-fade-in')}
-                                                            id={addon.manifest.id}
-                                                            name={addon.manifest.name}
-                                                            version={addon.manifest.version}
-                                                            logo={addon.manifest.logo}
-                                                            transportUrl={addon.transportUrl}
-                                                            description={addon.manifest.description}
-                                                            types={addon.manifest.types}
-                                                            behaviorHints={addon.manifest.behaviorHints}
-                                                            installed={addon.installed}
-                                                            onInstall={onAddonInstall}
-                                                            onUninstall={onAddonUninstall}
-                                                            onConfigure={onAddonConfigure}
-                                                            onOpen={onAddonOpen}
-                                                            onShare={onAddonShare}
-                                                            dataset={{ addon }}
-                                                        />
-                                                    ))
-                                            }
-                                        </div>
-                                :
-                                <div className={styles['addons-list-container']}>
-                                    {Array.from({ length: 6 }).map((_, index) => (
-                                        <AddonPlaceholder key={index} className={styles['addon']} />
-                                    ))}
-                                </div>
-                }
+                    }
+                </div>
             </div>
             {
                 filtersModalOpen ?

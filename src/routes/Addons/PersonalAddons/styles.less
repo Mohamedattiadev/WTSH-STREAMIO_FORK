@@ -99,13 +99,6 @@
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
-        // This panel sits in the fixed-height .addons-content column as flex:none, so without
-        // a cap a long saved list pushes the main installed-addons list off screen with nothing
-        // scrollable. Bound it to ~6 rows and let it scroll inside the panel.
-        max-height: 21rem;
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        padding-right: 0.25rem;
 
         .item {
             // In a flex-column scroll container the default flex-shrink:1 collapses each row

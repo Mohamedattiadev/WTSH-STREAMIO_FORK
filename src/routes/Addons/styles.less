@@ -51,6 +51,18 @@
             z-index: 1;
         }
 
+        // Everything below the tabs + filter row scrolls together as one page, so the "My" tab's
+        // StreamingSetup card + personal-sources panel don't fight the addon list for a fixed
+        // slice of height (it now behaves like the Official / Community tabs).
+        .addons-scroll {
+            flex: 1;
+            min-height: 0;
+            align-self: stretch;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
         .tabs-container {
             flex: none;
             align-self: stretch;
@@ -174,10 +186,13 @@
             }
 
             .select-input-container {
+                // No explicit height: this class lands on MultiselectMenu's outer wrapper div,
+                // not its inner button - the wrapper has no height of its own in the base
+                // component, so it naturally hugs the button's real (3rem) height instead of
+                // drawing a shorter background/border box that clips the label text.
                 background-color: rgba(255, 255, 255, 0.04);
                 border: 0.06rem solid var(--overlay-color);
                 flex: none;
-                height: 2.5rem;
                 border-radius: 0.65rem;
 
                 .multiselect-menu-container {
@@ -245,13 +260,19 @@
         }
 
         .addons-list-container {
-            flex: 1;
+            // sits inside .addons-scroll now - flow at natural height, the wrapper scrolls
+            flex: none;
             align-self: stretch;
-            overflow-y: auto;
 
             .addon {
                 margin-bottom: 1.5rem;
             }
+        }
+
+        .personal-addons-container {
+            flex: none;
+            align-self: stretch;
+            padding: 0 1.5rem 1.25rem;
         }
 
         .featured-hub-strip {
@@ -509,6 +530,16 @@
                     // bottom-right, on every route via MainNavBars).
                     left: 1rem;
                     bottom: calc(var(--vertical-nav-bar-size) + var(--safe-area-inset-bottom) + 1rem);
+
+                    // ChatFab mirrors to bottom-LEFT under dir="rtl" (see its own styles.less) -
+                    // staying at left:1rem here would put this button right back on top of it in
+                    // Arabic, the exact collision the LTR left-placement was chosen to avoid.
+                    // Mirroring to the right keeps the same "opposite corner from ChatFab"
+                    // relationship in both directions.
+                    :global(html[dir='rtl']) & {
+                        left: auto;
+                        right: 1rem;
+                    }
                     // A full "+ Add addon" pill sitting fixed over a scrolling list inevitably
                     // scrolls over card text underneath it - shrinking to an icon-only circle
                     // (same treatment as ChatFab, which solves the identical problem) keeps it
