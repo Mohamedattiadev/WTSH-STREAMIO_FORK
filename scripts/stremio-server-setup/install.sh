@@ -25,7 +25,12 @@ DATA_DIR="$HOME/.stremio-server-data"
 PIDFILE="$DATA_DIR/tunnel.pid"
 LOGFILE="$DATA_DIR/tunnel.log"
 URLFILE="$DATA_DIR/current-url.txt"
+CMDFILE="$DATA_DIR/setup-command.txt"
 mkdir -p "$DATA_DIR"
+
+# Remember the exact command that started this, so the app can show it again later
+# ("cat ~/.stremio-server-data/setup-command.txt") without the user rebuilding it.
+printf '%s\n' 'curl -fsSL https://raw.githubusercontent.com/Mohamedattiadev/WTSH-STREAMIO_FORK/stremio-server-setup/scripts/stremio-server-setup/install.sh | bash' > "$CMDFILE"
 
 # ---------- 1. detect OS ----------
 step "Checking your system"
@@ -140,12 +145,17 @@ fi
 step "Starting the Stremio Streaming Server"
 NEEDS_RECREATE=0
 if $DOCKER inspect stremio-server >/dev/null 2>&1; then
-    if $DOCKER inspect stremio-server --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -q '^NO_CORS=.\+'; then
+    HAS_NO_CORS=$($DOCKER inspect stremio-server --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -q '^NO_CORS=.\+' && echo 1 || echo 0)
+    NET_MODE=$($DOCKER inspect stremio-server --format '{{.HostConfig.NetworkMode}}' 2>/dev/null)
+    if [ "$HAS_NO_CORS" != "1" ]; then
+        warn "Existing container has CORS enabled (would show 'Error' in the app) — recreating it"
+        NEEDS_RECREATE=1
+    elif [ "$NET_MODE" != "host" ]; then
+        warn "Existing container is on bridge networking (torrent playback stalls at ~99%) — recreating it with --network host"
+        NEEDS_RECREATE=1
+    else
         $DOCKER start stremio-server >/dev/null 2>&1 || true
         ok "Container already existed — made sure it's running"
-    else
-        warn "Existing container has CORS enabled (would show 'Error' in the app) — recreating it with NO_CORS=1"
-        NEEDS_RECREATE=1
     fi
 else
     NEEDS_RECREATE=1
@@ -153,8 +163,12 @@ fi
 
 if [ "$NEEDS_RECREATE" = "1" ]; then
     $DOCKER rm -f stremio-server >/dev/null 2>&1 || true
+    # --network host (not -p 11470:11470): the built-in BitTorrent engine needs to accept
+    # INCOMING peer connections to sustain a stream. Under Docker's default bridge network no
+    # peer port is published, so it only ever gets a handful of outbound peers and playback
+    # stalls at ~99% ("Buffering..."). Host networking still exposes 11470/12470 on the host.
     $DOCKER run -d --name stremio-server --restart unless-stopped \
-        -p 11470:11470 -p 12470:12470 \
+        --network host \
         -e NO_CORS=1 \
         -v stremio-server-data:/root/.stremio-server \
         stremio/server:latest >/dev/null || die "Could not start the streaming server container"

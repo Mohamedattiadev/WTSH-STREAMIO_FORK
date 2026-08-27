@@ -6,6 +6,6 @@
         { "source": "/((?!api/|addon/).*)", "destination": "/index.html" }
     ],
     "crons": [
-        { "path": "/api/cron/prefetch", "schedule": "0 */6 * * *" }
+        { "path": "/api/cron/prefetch", "schedule": "0 3 * * *" }
     ]
 }

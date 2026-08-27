@@ -42,7 +42,7 @@ the addon function already set are kept — the CDN and this cache are complemen
 | `api/_lib/tmdb.js` | `tmdbFind(imdbId)` — cached IMDb→TMDB id lookup, shared so the hero and the reviews row cost one `/find`, not two. |
 | `api/cache-stats.js` | `GET /api/cache-stats` — hit rate, latency percentiles, dedup counts, cache size. Token-gated. |
 | `api/board-hero.js` | `GET /api/board-hero?imdbId=&type=` — enrichment + reviews in one response; a fan-in over the same two cache entries, no duplicate storage. |
-| `api/cron/prefetch.js` | `GET /api/cron/prefetch` — Vercel Cron warms the catalog rows every 6h. Off unless `PREFETCH_ENABLED=true` + `CRON_SECRET`. |
+| `api/cron/prefetch.js` | `GET /api/cron/prefetch` — Vercel Cron warms the catalog rows daily. Off unless `PREFETCH_ENABLED=true` + `CRON_SECRET`. |
 | `scripts/cache-benchmark.js` | `pnpm benchmark:cache` — before/after against a local synthetic upstream. |
 | `tests/cache.test.js` | `pnpm test:cache`. |
 | `docker-compose.yml` | Valkey + REST shim for local dev. |
@@ -161,7 +161,7 @@ Synthetic upstream at 120 ms latency, 1000 requests, concurrency 50, 20 distinct
 - **MGET batching** — the catalog page's `tmdbId → imdbId` lookups are read in one Redis `MGET`
   instead of ~20 sequential GETs. Warm catalog page: ~139 ms → ~24 ms.
 - **Background prefetch** — `api/cron/prefetch.js` + a `vercel.json` cron warms the 10 catalog
-  rows every 6h so the first visitor after a TTL expiry gets a hit. Off by default.
+  rows daily so the first visitor after a TTL expiry gets a hit. Off by default.
 - **`waitUntil`** — `reviews.js`, `hero-enrichment.js` and the addon pass `api/_lib/wait-until`
   into `getOrFetch`, so SWR refreshes finish on the platform keep-alive when `@vercel/functions`
   is installed (detached-promise fallback otherwise).
